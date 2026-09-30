@@ -51,6 +51,13 @@ func main(){
  runtime:=simulation.NewRuntime(runner,simulation.TierScheduler{Policy:simulation.LifecyclePolicy{ActivePercent:20,RecentPercent:30,BackgroundPercent:30}})
 
  go func(){ticker:=time.NewTicker(time.Second);defer ticker.Stop();for now:=range ticker.C{ws.Tick();runtime.Tick(now)}}()
+ if dbStore.SQL!=nil {
+  go func(){ticker:=time.NewTicker(time.Minute);defer ticker.Stop();for range ticker.C{
+   payments,err:=store.JobRepository{DB:dbStore}.SettleDueSalaries(context.Background(),60)
+   if err!=nil {log.Printf("salary settlement: %v",err);continue}
+   for _,pay:=range payments {evs.Publish("job.salary.paid",pay.PlayerID,pay.PlayerID,map[string]any{"amount":pay.Amount,"jobId":pay.JobID,"xp":25,"level":pay.Level})}
+  }}()
+ }
  router:=api.NewRouter(ws,as,ts,is,es,os,js,ps,ss,evs)
  if dbStore.SQL!=nil {
   pr:=store.PlayerRepository{DB:dbStore}
