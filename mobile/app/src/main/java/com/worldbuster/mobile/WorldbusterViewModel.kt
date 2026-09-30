@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 data class WorldbusterUiState(
@@ -22,6 +23,9 @@ data class WorldbusterUiState(
 
 class WorldbusterViewModel(application: Application) : AndroidViewModel(application) {
     private val repository = WorldbusterRepository(application)
+
+    private var refreshJob: Job? = null
+    private var authJob: Job? = null
 
     private val _uiState = MutableStateFlow(
         WorldbusterUiState(
@@ -66,8 +70,9 @@ class WorldbusterViewModel(application: Application) : AndroidViewModel(applicat
     }
 
     fun authenticate(username: String, password: String, register: Boolean) {
-        _uiState.value = _uiState.value.copy(authBusy = true, error = "")
-        viewModelScope.launch {
+        authJob?.cancel()
+        authJob = viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(authBusy = true, error = "")
             val result = repository.authenticate(username, password, register)
             val response = result.getOrNull()
             if (result.isFailure) {
@@ -91,8 +96,9 @@ class WorldbusterViewModel(application: Application) : AndroidViewModel(applicat
 
     fun refresh() {
         if (!_uiState.value.authenticated) return
-        _uiState.value = _uiState.value.copy(loading = true)
-        viewModelScope.launch {
+        refreshJob?.cancel()
+        refreshJob = viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(loading = true)
             val result = repository.refresh(_uiState.value.dashboard)
             if (result.unauthorized) {
                 _uiState.value = _uiState.value.copy(authenticated = false, dashboard = DashboardView(), syncState = SyncState.AUTH, loading = false, error = result.message)
@@ -103,6 +109,8 @@ class WorldbusterViewModel(application: Application) : AndroidViewModel(applicat
     }
 
     fun logout() {
+        refreshJob?.cancel()
+        authJob?.cancel()
         viewModelScope.launch {
             repository.logout()
             _uiState.value = WorldbusterUiState(syncState = SyncState.AUTH)
