@@ -80,14 +80,14 @@ func main(){
    result,err:=store.ProductionRepository{DB:dbStore}.RunCycle(context.Background(),100)
    if err!=nil {log.Printf("production cycle: %v",err)} else if result.Produced>0 {publishEvent(evs,"world.production.cycle","world","world",map[string]any{"businessesProcessed":result.Processed,"produced":result.Produced,"inputsConsumed":result.InputsConsumed,"outputsCreated":result.OutputsCreated,"laborSpent":result.LaborSpent})}
    territory,tberr:=store.TerritoryRepository{DB:dbStore}.ResolveConsequences(context.Background(),250)
-   if tberr!=nil {log.Printf("territory consequences: %v",tberr)} else if territory.ControlChanges>0 || territory.StabilityChanges>0 {evs.Publish("world.territory.cycle","world","world",map[string]any{"territories":territory.TerritoriesProcessed,"controlChanges":territory.ControlChanges,"stabilityChanges":territory.StabilityChanges})}
+   if tberr!=nil {log.Printf("territory consequences: %v",tberr)} else if territory.ControlChanges>0 || territory.StabilityChanges>0 {publishEvent(evs,"world.territory.cycle","world","world",map[string]any{"territories":territory.TerritoriesProcessed,"controlChanges":territory.ControlChanges,"stabilityChanges":territory.StabilityChanges})}
    balance,berr:=store.EconomyBalanceRepository{DB:dbStore}.Rebalance(context.Background(),250)
-   if berr==nil && balance.PriceChanges>0 { worldEventsRepo:=store.WorldEventRepository{DB:dbStore}; if we,err:=worldEventsRepo.Create(context.Background(),"market-fluctuation",1,"central",map[string]any{"priceChanges":balance.PriceChanges}); err==nil { evs.Publish("world.event.created","world",we.ID,map[string]any{"code":we.Code,"severity":we.Severity}); newsRepo:=store.NewsRepository{DB:dbStore}; if _,nerr:=newsRepo.Publish(context.Background(),we.ID,"Market conditions shift","Local market prices changed across "+fmt.Sprint(balance.PriceChanges)+" tracked assets.","ECONOMY",1,"central"); nerr!=nil {log.Printf("news publish: %v",nerr)} } }
-   if berr!=nil {log.Printf("economy rebalance: %v",berr)} else if balance.PriceChanges>0 {evs.Publish("world.economy.rebalanced","world","world",map[string]any{"assets":balance.ProcessedAssets,"priceChanges":balance.PriceChanges,"supply":balance.TotalSupply,"demand":balance.TotalDemand})}
+   if berr==nil && balance.PriceChanges>0 { worldEventsRepo:=store.WorldEventRepository{DB:dbStore}; if we,err:=worldEventsRepo.Create(context.Background(),"market-fluctuation",1,"central",map[string]any{"priceChanges":balance.PriceChanges}); err==nil { publishEvent(evs,"world.event.created","world",we.ID,map[string]any{"code":we.Code,"severity":we.Severity}); newsRepo:=store.NewsRepository{DB:dbStore}; if _,nerr:=newsRepo.Publish(context.Background(),we.ID,"Market conditions shift","Local market prices changed across "+fmt.Sprint(balance.PriceChanges)+" tracked assets.","ECONOMY",1,"central"); nerr!=nil {log.Printf("news publish: %v",nerr)} } }
+   if berr!=nil {log.Printf("economy rebalance: %v",berr)} else if balance.PriceChanges>0 {publishEvent(evs,"world.economy.rebalanced","world","world",map[string]any{"assets":balance.ProcessedAssets,"priceChanges":balance.PriceChanges,"supply":balance.TotalSupply,"demand":balance.TotalDemand})}
 
    payments,err:=store.JobRepository{DB:dbStore}.SettleDueSalaries(context.Background(),60)
    if err!=nil {log.Printf("salary settlement: %v",err);continue}
-   for _,pay:=range payments {evs.Publish("job.salary.paid",pay.PlayerID,pay.PlayerID,map[string]any{"amount":pay.Amount,"jobId":pay.JobID,"xp":25,"level":pay.Level})}
+   for _,pay:=range payments {publishEvent(evs,"job.salary.paid",pay.PlayerID,pay.PlayerID,map[string]any{"amount":pay.Amount,"jobId":pay.JobID,"xp":25,"level":pay.Level})}
   }}()
  }
  router:=api.NewRouter(ws,as,ts,is,es,orgService,js,ps,ss,evs)
@@ -119,6 +119,8 @@ if dbStore.SQL!=nil {
  server:=&http.Server{Addr:":8080",Handler:router.Handler(),ReadHeaderTimeout:5*time.Second,ReadTimeout:15*time.Second,WriteTimeout:15*time.Second,IdleTimeout:60*time.Second}
  log.Println("Worldbuster server listening on :8080");log.Fatal(server.ListenAndServe())
 }
+
+func publishEvent(s *events.Service,t,actor,target string,payload map[string]any){if _,err:=s.Publish(t,actor,target,payload);err!=nil{log.Printf("event publish: %v",err)}}
 
 func prodRepoCreate(dbStore *store.DB,b simulation.BusinessState) (string,error) {
  return (store.SimulationRepository{DB:dbStore}).CreateBusiness(context.Background(),b)
