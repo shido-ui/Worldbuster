@@ -24,3 +24,19 @@ CREATE TABLE IF NOT EXISTS simulated_social_events (
  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 CREATE INDEX IF NOT EXISTS idx_sim_social_events_character_time ON simulated_social_events(character_id,created_at DESC);
+
+CREATE TABLE IF NOT EXISTS simulated_reputation (
+ character_id UUID PRIMARY KEY REFERENCES simulated_characters(character_id) ON DELETE CASCADE,
+ public_score INTEGER NOT NULL DEFAULT 0 CHECK (public_score BETWEEN -1000 AND 1000),
+ trust_score INTEGER NOT NULL DEFAULT 0 CHECK (trust_score BETWEEN -1000 AND 1000),
+ updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE TABLE IF NOT EXISTS simulated_reputation_history (
+ id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+ character_id UUID NOT NULL REFERENCES simulated_characters(character_id) ON DELETE CASCADE,
+ source TEXT NOT NULL,
+ public_delta INTEGER NOT NULL DEFAULT 0,
+ trust_delta INTEGER NOT NULL DEFAULT 0,
+ reason TEXT NOT NULL,
+ created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
