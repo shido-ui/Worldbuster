@@ -15,12 +15,7 @@ type Asset={id:string;symbol?:string;name:string;lastPrice?:number};
 type NewsItem={id:string;title:string;summary?:string;body?:string;publishedAt?:string};
 type WorldEvent={id:string;type:string;title?:string;description?:string;createdAt?:string};
 type Achievement={id:string;code?:string;name?:string;title?:string;description?:string;unlocked?:boolean;completed?:boolean};
-type Mission={id:string;name:string;description:string;level?:number;reward?:number;status?:string;progress?:number;target?:number};
-type Asset={id:string;name:string;symbol?:string;price?:number};
 type Order={id:string;assetId:string;side:string;quantity:number;unitPrice:number;status?:string};
-type NewsItem={id:string;title:string;summary?:string;body?:string;createdAt:string};
-type WorldEvent={id:string;type:string;description?:string;createdAt:string};
-type Achievement={id:string;name:string;description?:string;unlocked?:boolean;completed?:boolean};
 type Location={id:string;name?:string;description?:string};
 const worldFallback:World={tick:0,onlineCount:0,day:1,time:"00:00",status:"CONNECTING"};
 
@@ -35,7 +30,7 @@ const eventLabel=(e:EventItem)=>e.type.replaceAll("_"," ").toLowerCase().replace
 const formatTime=(value:string)=>{const d=new Date(value);return Number.isNaN(d.getTime())?"recent":d.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})};
 
 function App(){
- const[view,setView]=useState("Overview"),[missions,setMissions]=useState<Mission[]>([]),[assets,setAssets]=useState<Asset[]>([]),[orders,setOrders]=useState<Order[]>([]),[news,setNews]=useState<NewsItem[]>([]),[worldEvents,setWorldEvents]=useState<WorldEvent[]>([]),[achievements,setAchievements]=useState<Achievement[]>([]),[locations,setLocations]=useState<Location[]>([]),[account,setAccount]=useState<Account|null>(null),[checking,setChecking]=useState(true),[world,setWorld]=useState(worldFallback),[state,setState]=useState<State|null>(null),[jobs,setJobs]=useState<Job[]>([]),[employment,setEmployment]=useState<Job|null>(null),[courses,setCourses]=useState<Course[]>([]),[training,setTraining]=useState<any>(null),[education,setEducation]=useState(0),[courseBusy,setCourseBusy]=useState(false),[jobBusy,setJobBusy]=useState(false),[message,setMessage]=useState(""),[inbox,setInbox]=useState<any[]>([]),[reputation,setReputation]=useState<any>(null),[organizations,setOrganizations]=useState<any[]>([]),[events,setEvents]=useState<EventItem[]>([]),[missions,setMissions]=useState<Mission[]>([]),[assets,setAssets]=useState<Asset[]>([]),[news,setNews]=useState<NewsItem[]>([]),[worldEvents,setWorldEvents]=useState<WorldEvent[]>([]),[achievements,setAchievements]=useState<Achievement[]>([]),[locations,setLocations]=useState<any[]>([]),[connection,setConnection]=useState<ConnectionStatus>("LOADING"),[connectionError,setConnectionError]=useState(""),[mobileNav,setMobileNav]=useState(false);
+ const[view,setView]=useState("Overview"),[missions,setMissions]=useState<Mission[]>([]),[assets,setAssets]=useState<Asset[]>([]),[orders,setOrders]=useState<Order[]>([]),[news,setNews]=useState<NewsItem[]>([]),[worldEvents,setWorldEvents]=useState<WorldEvent[]>([]),[achievements,setAchievements]=useState<Achievement[]>([]),[locations,setLocations]=useState<Location[]>([]),[account,setAccount]=useState<Account|null>(null),[checking,setChecking]=useState(true),[world,setWorld]=useState(worldFallback),[state,setState]=useState<State|null>(null),[jobs,setJobs]=useState<Job[]>([]),[employment,setEmployment]=useState<Job|null>(null),[courses,setCourses]=useState<Course[]>([]),[training,setTraining]=useState<any>(null),[education,setEducation]=useState(0),[courseBusy,setCourseBusy]=useState(false),[jobBusy,setJobBusy]=useState(false),[message,setMessage]=useState(""),[inbox,setInbox]=useState<any[]>([]),[reputation,setReputation]=useState<any>(null),[organizations,setOrganizations]=useState<any[]>([]),[events,setEvents]=useState<EventItem[]>([]),[connection,setConnection]=useState<ConnectionStatus>("LOADING"),[connectionError,setConnectionError]=useState(""),[mobileNav,setMobileNav]=useState(false);
  const refreshSequence=useRef(0);
  const optional=async<T>(url:string,signal?:AbortSignal):Promise<T|null>=>{try{return await fetchJSON(url,{},signal) as T}catch(error){if((error as any)?.name==="AbortError")throw error;return null}};
  const refresh=async(signal?:AbortSignal)=>{
@@ -45,7 +40,7 @@ function App(){
     fetchJSON("/api/v1/world",{},signal),fetchJSON("/api/v1/player/state",{},signal),fetchJSON("/api/v1/jobs",{},signal),
     fetchJSON("/api/v1/jobs/status",{},signal),fetchJSON("/api/v1/education/courses",{},signal),fetchJSON("/api/v1/education/status",{},signal),
     fetchJSON("/api/v1/social/inbox",{},signal),fetchJSON("/api/v1/reputation",{},signal),fetchJSON("/api/v1/organizations",{},signal),
-    fetchJSON("/api/v1/events?limit=20",{},signal),fetchJSON("/api/v1/missions",{},signal),fetchJSON("/api/v1/market/assets",{},signal),fetchJSON("/api/v1/news?limit=12",{},signal),fetchJSON("/api/v1/world-events",{},signal),fetchJSON("/api/v1/achievements",{},signal),fetchJSON("/api/v1/world/locations",{},signal),
+    fetchJSON("/api/v1/events?limit=20",{},signal),
     optional<any>("/api/v1/missions",signal),optional<any>("/api/v1/market/assets",signal),optional<any>("/api/v1/market/orders?assetId=WBX",signal),
     optional<any>("/api/v1/news?limit=12",signal),optional<any>("/api/v1/world-events",signal),optional<any>("/api/v1/achievements",signal),optional<any>("/api/v1/world/locations",signal)
    ]);
@@ -53,7 +48,7 @@ function App(){
    const[w,s,j,e,coursesData,trainingData,si,rep,orgs,eventsData,missionData,assetData,orderData,newsData,worldEventData,achievementData,locationData]=results as any[];
    setWorld(w);setState(s);setJobs(j.jobs??j);setEmployment(e.job??null);setCourses(coursesData.courses??coursesData);
    setEducation(trainingData.education??0);setTraining(trainingData.training??null);setInbox(si.messages??[]);setReputation(rep);
-   setOrganizations(orgs.organizations??orgs);setEvents(Array.isArray(eventsData)?eventsData:(eventsData.events??[]));setMissions(missionData.missions??[]);setAssets(assetData.assets??[]);setNews(newsData.news??[]);setWorldEvents(worldEventData.events??[]);setAchievements(achievementData.achievements??[]);setLocations(locationData.locations??[]);setMissions(missionData?.missions??[]);setAssets(assetData?.assets??[]);setLocations(locationData?.locations??[]);setOrders(orderData?.orders??[]);setNews(newsData?.news??[]);setWorldEvents(worldEventData?.events??[]);setAchievements(achievementData?.achievements??[]);
+   setOrganizations(orgs.organizations??orgs);setEvents(Array.isArray(eventsData)?eventsData:(eventsData.events??[]));setMissions(missionData?.missions??[]);setAssets(assetData?.assets??[]);setOrders(orderData?.orders??[]);setNews(newsData?.news??[]);setWorldEvents(worldEventData?.events??[]);setAchievements(achievementData?.achievements??[]);setLocations(locationData?.locations??[]);
    setConnection("CONNECTED");setConnectionError("");
   }catch(error){
    if((error as any)?.name==="AbortError")return;
