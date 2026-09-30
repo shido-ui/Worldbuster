@@ -2,8 +2,6 @@ package api
 
 import (
  "net/http"
- "github.com/shido-ui/Worldbuster/backend/internal/economy"
- "github.com/shido-ui/Worldbuster/backend/internal/inventory"
  "github.com/shido-ui/Worldbuster/backend/internal/player"
 )
 
