@@ -36,7 +36,7 @@ func(r MissionRepository) Accept(ctx context.Context,missionID,playerID string,l
 func(r MissionRepository) Progress(ctx context.Context,missionID,playerID string,amount int64)(PlayerMissionRecord,error){
  if amount<=0{return PlayerMissionRecord{},errors.New("progress must be positive")}
  var x PlayerMissionRecord
- err:=r.DB.SQL.QueryRowContext(ctx,"UPDATE player_missions SET progress=progress+$3 WHERE mission_id=$1 AND player_id=$2 AND status='ACTIVE' RETURNING id::text,mission_id::text,player_id::text,status,progress,accepted_at,completed_at",missionID,playerID,amount).Scan(&x.ID,&x.MissionID,&x.PlayerID,&x.Status,&x.Progress,&x.AcceptedAt,&x.CompletedAt)
+ err:=r.DB.SQL.QueryRowContext(ctx,"UPDATE player_missions pm SET progress=LEAST(m.target_value,pm.progress+$3) FROM missions m WHERE pm.mission_id=$1 AND pm.player_id=$2 AND pm.status='ACTIVE' AND m.id=pm.mission_id RETURNING pm.id::text,pm.mission_id::text,pm.player_id::text,pm.status,pm.progress,pm.accepted_at,pm.completed_at",missionID,playerID,amount).Scan(&x.ID,&x.MissionID,&x.PlayerID,&x.Status,&x.Progress,&x.AcceptedAt,&x.CompletedAt)
  if err==sql.ErrNoRows{return PlayerMissionRecord{},ErrMissionState};return x,err
 }
 
