@@ -17,6 +17,7 @@ type WorldEvent={id:string;type:string;title?:string;description?:string;created
 type Achievement={id:string;code?:string;name?:string;title?:string;description?:string;unlocked?:boolean;completed?:boolean};
 type Order={id:string;assetId:string;side:string;quantity:number;unitPrice:number;status?:string};
 type Location={id:string;name?:string;description?:string};
+type NotificationItem={id:string;type:string;title:string;body:string;createdAt:string;read?:boolean};
 const worldFallback:World={tick:0,onlineCount:0,day:1,time:"00:00",status:"CONNECTING"};
 
 async function fetchJSON(url:string,init:RequestInit={},signal?:AbortSignal){
@@ -30,7 +31,7 @@ const eventLabel=(e:EventItem)=>e.type.replaceAll("_"," ").toLowerCase().replace
 const formatTime=(value:string)=>{const d=new Date(value);return Number.isNaN(d.getTime())?"recent":d.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})};
 
 function App(){
- const[view,setView]=useState("Overview"),[missions,setMissions]=useState<Mission[]>([]),[assets,setAssets]=useState<Asset[]>([]),[orders,setOrders]=useState<Order[]>([]),[news,setNews]=useState<NewsItem[]>([]),[worldEvents,setWorldEvents]=useState<WorldEvent[]>([]),[achievements,setAchievements]=useState<Achievement[]>([]),[locations,setLocations]=useState<Location[]>([]),[account,setAccount]=useState<Account|null>(null),[checking,setChecking]=useState(true),[world,setWorld]=useState(worldFallback),[state,setState]=useState<State|null>(null),[jobs,setJobs]=useState<Job[]>([]),[employment,setEmployment]=useState<Job|null>(null),[courses,setCourses]=useState<Course[]>([]),[training,setTraining]=useState<any>(null),[education,setEducation]=useState(0),[courseBusy,setCourseBusy]=useState(false),[jobBusy,setJobBusy]=useState(false),[message,setMessage]=useState(""),[inbox,setInbox]=useState<any[]>([]),[reputation,setReputation]=useState<any>(null),[organizations,setOrganizations]=useState<any[]>([]),[events,setEvents]=useState<EventItem[]>([]),[connection,setConnection]=useState<ConnectionStatus>("LOADING"),[connectionError,setConnectionError]=useState(""),[mobileNav,setMobileNav]=useState(false);
+ const[view,setView]=useState("Overview"),[missions,setMissions]=useState<Mission[]>([]),[assets,setAssets]=useState<Asset[]>([]),[orders,setOrders]=useState<Order[]>([]),[news,setNews]=useState<NewsItem[]>([]),[worldEvents,setWorldEvents]=useState<WorldEvent[]>([]),[achievements,setAchievements]=useState<Achievement[]>([]),[locations,setLocations]=useState<Location[]>([]),[account,setAccount]=useState<Account|null>(null),[checking,setChecking]=useState(true),[world,setWorld]=useState(worldFallback),[state,setState]=useState<State|null>(null),[jobs,setJobs]=useState<Job[]>([]),[employment,setEmployment]=useState<Job|null>(null),[courses,setCourses]=useState<Course[]>([]),[training,setTraining]=useState<any>(null),[education,setEducation]=useState(0),[courseBusy,setCourseBusy]=useState(false),[jobBusy,setJobBusy]=useState(false),[message,setMessage]=useState(""),[inbox,setInbox]=useState<any[]>([]),[reputation,setReputation]=useState<any>(null),[organizations,setOrganizations]=useState<any[]>([]),[notifications,setNotifications]=useState<NotificationItem[]>([]),[events,setEvents]=useState<EventItem[]>([]),[connection,setConnection]=useState<ConnectionStatus>("LOADING"),[connectionError,setConnectionError]=useState(""),[mobileNav,setMobileNav]=useState(false);
  const refreshSequence=useRef(0);
  async function optional<T>(url:string,signal?:AbortSignal):Promise<T|null>{try{return await fetchJSON(url,{},signal) as T}catch(error){if((error as any)?.name==="AbortError")throw error;return null}}
  const refresh=async(signal?:AbortSignal)=>{
@@ -42,13 +43,13 @@ function App(){
     fetchJSON("/api/v1/social/inbox",{},signal),fetchJSON("/api/v1/reputation",{},signal),fetchJSON("/api/v1/organizations",{},signal),
     fetchJSON("/api/v1/events?limit=20",{},signal),
     optional<any>("/api/v1/missions",signal),optional<any>("/api/v1/market/assets",signal),optional<any>("/api/v1/market/orders?assetId=WBX",signal),
-    optional<any>("/api/v1/news?limit=12",signal),optional<any>("/api/v1/world-events",signal),optional<any>("/api/v1/achievements",signal),optional<any>("/api/v1/world/locations",signal)
+    optional<any>("/api/v1/news?limit=12",signal),optional<any>("/api/v1/world-events",signal),optional<any>("/api/v1/achievements",signal),optional<any>("/api/v1/world/locations",signal),optional<any>("/api/v1/notifications",signal)
    ]);
    if(sequence!==refreshSequence.current)return;
-   const[w,s,j,e,coursesData,trainingData,si,rep,orgs,eventsData,missionData,assetData,orderData,newsData,worldEventData,achievementData,locationData]=results as any[];
+   const[w,s,j,e,coursesData,trainingData,si,rep,orgs,eventsData,missionData,assetData,orderData,newsData,worldEventData,achievementData,locationData,notificationData]=results as any[];
    setWorld(w);setState(s);setJobs(j.jobs??j);setEmployment(e.job??null);setCourses(coursesData.courses??coursesData);
    setEducation(trainingData.education??0);setTraining(trainingData.training??null);setInbox(si.messages??[]);setReputation(rep);
-   setOrganizations(orgs.organizations??orgs);setEvents(Array.isArray(eventsData)?eventsData:(eventsData.events??[]));setMissions(missionData?.missions??[]);setAssets(assetData?.assets??[]);setOrders(orderData?.orders??[]);setNews(newsData?.news??[]);setWorldEvents(worldEventData?.events??[]);setAchievements(achievementData?.achievements??[]);setLocations(locationData?.locations??[]);
+   setOrganizations(orgs.organizations??orgs);setNotifications(notificationData?.notifications??(Array.isArray(notificationData)?notificationData:[]));setEvents(Array.isArray(eventsData)?eventsData:(eventsData.events??[]));setMissions(missionData?.missions??[]);setAssets(assetData?.assets??[]);setOrders(orderData?.orders??[]);setNews(newsData?.news??[]);setWorldEvents(worldEventData?.events??[]);setAchievements(achievementData?.achievements??[]);setLocations(locationData?.locations??[]);
    setConnection("CONNECTED");setConnectionError("");
   }catch(error){
    if((error as any)?.name==="AbortError")return;
