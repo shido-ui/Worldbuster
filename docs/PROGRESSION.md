@@ -11,3 +11,4 @@ The progression foundation now provides a shared character progression model:
 - Enrollment records
 
 XP and course rules are server-authoritative. The content layer can later populate detailed schools, courses, prerequisites, certifications, stat growth, job unlocks and position requirements without changing the core progression engine.
+\n\n## Skill Catalog\nSkills are data-defined through `SkillDefinition` and registered centrally. The catalog can grow without changing progression logic.\n
