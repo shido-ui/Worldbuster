@@ -15,3 +15,8 @@ The simulated population is persistent and uses the same authoritative game serv
 Population generation is deterministic from a supplied seed and data profile. Generated characters receive stable simulated identity, personality defaults and initial goals. Generation is a provisioning operation, not an uncontrolled per-request bot spawn.
 
 Future balancing will use configurable population distributions, regional density, profession weights, activity tiers and lifecycle rules.
+
+
+## Lifecycle and regional distribution
+
+Population is divided into active, recent, background and dormant tiers so simulation compute can be budgeted instead of ticking every simulated character equally. Regional weights provide deterministic population density across locations. These controls are configuration-driven and remain separate from authoritative action validation.
