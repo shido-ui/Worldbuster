@@ -46,4 +46,7 @@ func TestLiveAdapterContextExposesTravelOpportunity(t *testing.T) {
  a:=newLiveAdapterForTest()
  ctx:=a.Context("c1")
  if !ctx.HasTravelDestination { t.Fatal("context failed to expose a reachable travel destination") }
+ a.Locations["c1"]="highlands"
+ ctx=a.Context("c1")
+ if !ctx.HasTravelDestination { t.Fatal("highlands should expose its oldtown route") }
 }
