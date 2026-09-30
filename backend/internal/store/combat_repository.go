@@ -28,7 +28,7 @@ func(r CombatRepository) Resolve(ctx context.Context,attackerID,defenderID strin
  var available time.Time
  err=tx.QueryRowContext(ctx,"SELECT available_at FROM combat_cooldowns WHERE player_id=$1",attackerID).Scan(&available)
  if err==nil && time.Now().UTC().Before(available){return CombatRecord{},ErrCombatCooldown}
- result:=simulation.ResolveCombat(simulation.CombatInput{AttackerPower:a.strength+a.power,AttackerSpeed:a.speed+a.speedBonus,AttackerDefense:a.defense+a.defenseBonus,AttackerEndurance:a.endurance,DefenderPower:d.strength+d.power,DefenderSpeed:d.speed+d.speedBonus,DefenderDefense:d.defense+d.defenseBonus,DefenderEndurance:d.endurance,AttackerLevel:a.level,DefenderLevel:d.level})
+ result:=simulation.ResolveCombat(simulation.CombatInput{AttackerStrength:a.strength+a.power,AttackerSpeed:a.speed+a.speedBonus,AttackerDefense:a.defense+a.defenseBonus,AttackerEndurance:a.endurance,DefenderStrength:d.strength+d.power,DefenderSpeed:d.speed+d.speedBonus,DefenderDefense:d.defense+d.defenseBonus,DefenderEndurance:d.endurance,AttackerLevel:a.level,DefenderLevel:d.level})
  _,err=tx.ExecContext(ctx,"UPDATE player_profiles SET energy=energy-$2,updated_at=NOW() WHERE id=$1",attackerID,result.EnergyCost);if err!=nil{return CombatRecord{},err}
  availableAt:=time.Now().UTC().Add(30*time.Second)
  if _,err=tx.ExecContext(ctx,"INSERT INTO combat_cooldowns(player_id,available_at) VALUES($1,$2) ON CONFLICT(player_id) DO UPDATE SET available_at=EXCLUDED.available_at",attackerID,availableAt);err!=nil{return CombatRecord{},err}
