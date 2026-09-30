@@ -37,7 +37,8 @@ func(r ProgressionRepository) AddXPAndUnlocks(ctx context.Context, playerID stri
     VALUES($1,$2,$3,$4,$5) ON CONFLICT(player_id,reward_id) DO NOTHING RETURNING TRUE`,
     playerID,reward.ID,reward.Type,reward.Value,reward.Amount).Scan(&inserted)
    if err==nil&&inserted{out.Granted=append(out.Granted,reward)}
-   if err!=nil&&err.Error()=="sql: no rows in result set"{continue}
+   if err==sql.ErrNoRows{continue}
+   if err!=nil{return err}
   }
   out.Level=level;out.XP=xp
   return nil
