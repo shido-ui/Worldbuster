@@ -5,14 +5,14 @@ type Props={onAuthenticated:(account:{id:string;username:string})=>void};
 export function AuthPanel({onAuthenticated}:Props){
  const [mode,setMode]=useState<"login"|"register">("login");
  const [username,setUsername]=useState(""); const [password,setPassword]=useState(""); const [error,setError]=useState("");
- async function submit(e:FormEvent){e.preventDefault();setError("");
+ async function submit(e:FormEvent){e.preventDefault();setError("");try{
   const endpoint=mode==="login"?"/api/v1/auth/login":"/api/v1/auth/register";
   const response=await fetch(endpoint,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username,password}),credentials:"include"});
   const data=await response.json().catch(()=>({}));
   if(!response.ok){setError(data.error??"Request failed");return}
   if(mode==="register"){setMode("login");setPassword("");setError("Account created. Sign in to enter.");return}
   onAuthenticated(data);
- }
+ }catch(error){setError(error instanceof TypeError?"Network connection unavailable.":(error as Error).message)} }
  return <form className="auth-card" onSubmit={submit}>
   <div className="kicker">IDENTITY GATE</div><h2>{mode==="login"?"Return to the world.":"Create your identity."}</h2>
   <input value={username} onChange={e=>setUsername(e.target.value)} placeholder="Username" minLength={3} maxLength={24} autoComplete="username" required/>
