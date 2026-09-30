@@ -23,6 +23,9 @@ func(r EquipmentRepository) Equip(ctx context.Context,playerID,itemID string,lev
  if err=tx.QueryRowContext(ctx,"SELECT quantity FROM inventory_stacks WHERE player_id=$1 AND item_id=$2 FOR UPDATE",playerID,itemID).Scan(&qty);err!=nil||qty<1{return EquipmentRecord{},ErrItemNotFound}
  if _,err=tx.ExecContext(ctx,"UPDATE inventory_stacks SET quantity=quantity-1 WHERE player_id=$1 AND item_id=$2",playerID,itemID);err!=nil{return EquipmentRecord{},err}
  if _,err=tx.ExecContext(ctx,"DELETE FROM inventory_stacks WHERE player_id=$1 AND item_id=$2 AND quantity<=0",playerID,itemID);err!=nil{return EquipmentRecord{},err}
+ var previousItem sql.NullString
+ if err=tx.QueryRowContext(ctx,"SELECT item_id FROM player_equipment WHERE player_id=$1 AND slot=$2 FOR UPDATE",playerID,slot).Scan(&previousItem);err!=nil&&err!=sql.ErrNoRows{return EquipmentRecord{},err}
+ if previousItem.Valid && previousItem.String!=itemID { if _,err=tx.ExecContext(ctx,"INSERT INTO inventory_stacks(player_id,item_id,quantity) VALUES($1,$2,1) ON CONFLICT(player_id,item_id) DO UPDATE SET quantity=inventory_stacks.quantity+1",playerID,previousItem.String);err!=nil{return EquipmentRecord{},err} }
  var x EquipmentRecord
  err=tx.QueryRowContext(ctx,"INSERT INTO player_equipment(player_id,slot,item_id,durability) VALUES($1,$2,$3,$4) ON CONFLICT(player_id,slot) DO UPDATE SET item_id=EXCLUDED.item_id,durability=EXCLUDED.durability,equipped_at=NOW() RETURNING player_id::text,slot,item_id,durability,equipped_at",playerID,slot,itemID,maxDur).Scan(&x.PlayerID,&x.Slot,&x.ItemID,&x.Durability,&x.EquippedAt)
  if err!=nil{return EquipmentRecord{},err};if err=tx.Commit();err!=nil{return EquipmentRecord{},err};return x,nil
