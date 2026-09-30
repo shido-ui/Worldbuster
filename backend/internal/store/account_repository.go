@@ -1,7 +1,6 @@
 package store
 
 import("context";"database/sql";"errors";"time";"github.com/shido-ui/Worldbuster/backend/internal/auth")
-var ErrNotFound=errors.New("not found")
 type AccountRepository struct{DB *DB}
 func(r AccountRepository)Create(ctx context.Context,username,passwordHash string)(auth.Account,error){var a auth.Account;err:=r.DB.SQL.QueryRowContext(ctx,"INSERT INTO accounts(username,password_hash) VALUES($1,$2) RETURNING id::text,username,password_hash,created_at,updated_at",username,passwordHash).Scan(&a.ID,&a.Username,&a.PasswordHash,&a.CreatedAt,&a.UpdatedAt);return a,err}
 func(r AccountRepository)ByUsername(ctx context.Context,username string)(auth.Account,error){var a auth.Account;err:=r.DB.SQL.QueryRowContext(ctx,"SELECT id::text,username,password_hash,created_at,updated_at FROM accounts WHERE lower(username)=lower($1)",username).Scan(&a.ID,&a.Username,&a.PasswordHash,&a.CreatedAt,&a.UpdatedAt);if errors.Is(err,sql.ErrNoRows){return auth.Account{},ErrNotFound};return a,err}
