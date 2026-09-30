@@ -1,6 +1,6 @@
 package store
 
-import ("context";"database/sql";"errors";"time")
+import ("context";"errors";"time")
 
 var ErrInvalidSocialTarget = errors.New("invalid social target")
 type RelationshipRecord struct { CharacterID string `json:"characterId"`; TargetID string `json:"targetId"`; Kind string `json:"kind"`; Score int `json:"score"`; UpdatedAt time.Time `json:"updatedAt"` }
