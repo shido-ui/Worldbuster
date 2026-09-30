@@ -8,7 +8,7 @@ type ActionType string
 const(ActionWork ActionType="WORK";ActionTravel ActionType="TRAVEL";ActionStudy ActionType="STUDY";ActionSocialize ActionType="SOCIALIZE";ActionRest ActionType="REST")
 
 type Action struct{Type ActionType;TargetID string;Priority int}
-type Context struct{HasJob bool;CanStudy bool;SocialOpportunity bool;SocialTargetID string;RestNeeded bool}
+type Context struct{HasJob bool;CanStudy bool;SocialOpportunity bool;SocialTargetID string;RestNeeded bool;HasTravelDestination bool}
 
 func ChooseAction(c SimCharacter,ctx Context)(Action,error){return ChooseActionWithState(c,ctx,defaultState())}
 
@@ -31,7 +31,7 @@ func ChooseActionWithState(c SimCharacter,ctx Context,state BehavioralState)(Act
     actions=append(actions,Action{Type:ActionSocialize,TargetID:ctx.SocialTargetID,Priority:p+stateBias(state,ActionSocialize)+rp})
    }
   case "TRAVEL":
-   if g.TargetID!=""{actions=append(actions,Action{Type:ActionTravel,TargetID:g.TargetID,Priority:p+stateBias(state,ActionTravel)})}
+   if ctx.HasTravelDestination&&g.TargetID!=""{actions=append(actions,Action{Type:ActionTravel,TargetID:g.TargetID,Priority:p+stateBias(state,ActionTravel)})}
   }
  }
  if len(actions)==0{return Action{},ErrNoAction}
