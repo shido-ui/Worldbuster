@@ -25,3 +25,8 @@ Population is divided into active, recent, background and dormant tiers so simul
 ## Domain execution boundary
 
 Simulated actions now have an explicit domain-executor boundary. The executor is intentionally the single mutation point for simulated behavior and is designed to delegate each action to the same authoritative services used by human players. Unsupported actions are rejected rather than silently mutating state.
+
+
+## Authoritative service delegation
+
+The service executor delegates simulated work, travel, study, socialization and rest to injected domain services. Missing services and domain validation failures reject the action. This keeps NPC consequences on the same mutation boundary as human gameplay.
