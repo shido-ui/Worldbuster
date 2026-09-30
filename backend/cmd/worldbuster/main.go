@@ -32,11 +32,11 @@ func main(){
  if dbStore.SQL!=nil { migrationDir:=os.Getenv("WORLDBUSTER_MIGRATIONS_DIR"); if migrationDir=="" { migrationDir="database/migrations" }; if err:=store.ApplyMigrations(context.Background(),dbStore,migrationDir); err!=nil { log.Fatal(err) } }
  ws:=world.NewService();var as api.AuthBackend;if dbStore.SQL!=nil { as=store.NewDatabaseAuthService(dbStore) } else { as=api.MemoryAuthBackend{Service:auth.NewService()} }
  ts:=world.NewTravelService();is:=inventory.NewService();es:=economy.NewService();orgService:=organization.NewService();js:=job.NewService();ps:=progression.NewService();ss:=social.NewService();evs:=events.NewService()
- _=is.RegisterItem(inventory.Item{ID:"water",Name:"Water",Category:"supply",Stackable:true,MaxStack:10})
+ if err:=is.RegisterItem(inventory.Item{ID:"water",Name:"Water",Category:"supply",Stackable:true,MaxStack:10});err!=nil{log.Fatalf("mandatory item seed: %v",err)}
 
  // Minimal deterministic seed content keeps the simulation runnable while the full data catalog is built.
- _=js.Register(job.Job{ID:"general-work",Name:"General Workforce",Department:"Operations",Positions:[]job.Position{{ID:"worker",JobID:"general-work",Name:"Worker",Level:1,BaseSalary:100,RequiredEducation:0,RequiredStat:0}}})
- _=ps.RegisterCourse(progression.Course{ID:"orientation",Name:"World Orientation",DurationHours:1,EducationGain:1,RequiredLevel:1})
+ if err:=js.Register(job.Job{ID:"general-work",Name:"General Workforce",Department:"Operations",Positions:[]job.Position{{ID:"worker",JobID:"general-work",Name:"Worker",Level:1,BaseSalary:100,RequiredEducation:0,RequiredStat:0}}});err!=nil{log.Fatalf("mandatory job seed: %v",err)}
+ if err:=ps.RegisterCourse(progression.Course{ID:"orientation",Name:"World Orientation",DurationHours:1,EducationGain:1,RequiredLevel:1});err!=nil{log.Fatalf("mandatory course seed: %v",err)}
 
  population:=simulation.NewService()
  state:=simulation.NewStateService()
@@ -49,12 +49,12 @@ func main(){
  if raw:=os.Getenv("WORLDBUSTER_SIM_POPULATION");raw!="" { if n,err:=strconv.Atoi(raw);err==nil&&n>0&&n<=10000 {populationSize=n} else {log.Printf("invalid WORLDBUSTER_SIM_POPULATION; using %d",populationSize)} }
  generated:=generator.Generate(populationSize)
  for _,c:=range generated{
-  if err:=population.Register(c);err!=nil{log.Printf("simulation population: %v",err);continue}
+  if err:=population.Register(c);err!=nil{log.Fatalf("mandatory simulation population seed: %v",err)}
   locations[c.ID]="central"
-  _=js.Employ(c.ID,"general-work","worker",0,0)
+  if err:=js.Employ(c.ID,"general-work","worker",0,0);err!=nil{log.Fatalf("mandatory employment seed for %s: %v",c.ID,err)}
   if dbStore.SQL!=nil {
    simRepo:=store.SimulationRepository{DB:dbStore}
-   if err:=simRepo.EnsureCharacter(context.Background(),c);err!=nil {log.Printf("simulation persistence: %v",err)}
+   if err:=simRepo.EnsureCharacter(context.Background(),c);err!=nil {log.Fatalf("mandatory simulation persistence seed for %s: %v",c.ID,err)}
   }
  }
  runner:=&simulation.IntegratedRunner{Population:population,State:state,World:adapter,Emit:func(t,actor,target string,payload map[string]any){publishEvent(evs,t,actor,target,payload)},PersistenceError:func(operation,characterID string,err error){log.Printf("simulation persistence: operation=%s character=%s: %v",operation,characterID,err)}}
@@ -64,11 +64,11 @@ func main(){
    if i>=5 {break}
    bType:=simulation.BusinessProduction
    b:=simulation.BusinessState{ID:simulation.NewBusinessID(),OwnerID:c.ID,Name:c.Name+" Works",Type:bType,Cash:500,Level:1,Active:true}
-   if b.ID=="" {continue}
-   businessID,err:=prodRepoCreate(dbStore,b);if err!=nil {log.Printf("npc business seed: %v",err);continue}
+   if b.ID=="" {log.Fatalf("mandatory NPC business seed produced empty ID for %s",c.ID)}
+   businessID,err:=prodRepoCreate(dbStore,b);if err!=nil {log.Fatalf("mandatory NPC business seed: %v",err)}
    input:="raw-water";qty:=25
    if i%2==1 {input="fiber"}
-   if err:=prodRepo.SeedBusinessInventory(context.Background(),businessID,input,int64(qty));err!=nil {log.Printf("npc supply seed: %v",err)}
+   if err:=prodRepo.SeedBusinessInventory(context.Background(),businessID,input,int64(qty));err!=nil {log.Fatalf("mandatory NPC supply seed: %v",err)}
   }
  }
  if dbStore.SQL!=nil { runner.Persistence=store.SimulationRepository{DB:dbStore} }
