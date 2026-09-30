@@ -8,7 +8,7 @@ type ContextBuilder func(characterID string)WorldContext
 func DecideAndValidate(c SimCharacter,ctx WorldContext)ActionResult{return DecideAndValidateWithState(c,ctx,defaultState())}
 
 func DecideAndValidateWithState(c SimCharacter,ctx WorldContext,state BehavioralState)ActionResult{
- action,err:=ChooseActionWithState(c,Context{HasJob:ctx.HasJob,CanStudy:ctx.CanStudy,SocialOpportunity:ctx.SocialOpportunity,SocialTargetID:ctx.SocialTargetID,RestNeeded:ctx.RestNeeded},state)
+ action,err:=ChooseActionWithState(c,Context{HasJob:ctx.HasJob,CanStudy:ctx.CanStudy,SocialOpportunity:ctx.SocialOpportunity,SocialTargetID:ctx.SocialTargetID,RestNeeded:ctx.RestNeeded,HasTravelDestination:ctx.HasTravelDestination},state)
  if err!=nil{return ActionResult{Accepted:false,Reason:err.Error()}}
  switch action.Type{
  case ActionWork:
