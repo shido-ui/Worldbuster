@@ -57,7 +57,7 @@ func main(){
    if err:=simRepo.EnsureCharacter(context.Background(),c);err!=nil {log.Printf("simulation persistence: %v",err)}
   }
  }
- runner:=&simulation.IntegratedRunner{Population:population,State:state,World:adapter,Emit:func(t,actor,target string,payload map[string]any){evs.Publish(t,actor,target,payload)},PersistenceError:func(operation,characterID string,err error){log.Printf("simulation persistence: operation=%s character=%s: %v",operation,characterID,err)}}
+ runner:=&simulation.IntegratedRunner{Population:population,State:state,World:adapter,Emit:func(t,actor,target string,payload map[string]any){publishEvent(evs,t,actor,target,payload)},PersistenceError:func(operation,characterID string,err error){log.Printf("simulation persistence: operation=%s character=%s: %v",operation,characterID,err)}}
  if dbStore.SQL!=nil {
   prodRepo:=store.ProductionRepository{DB:dbStore}
   for i,c:=range generated {
@@ -78,7 +78,7 @@ func main(){
  if dbStore.SQL!=nil {
   go func(){ticker:=time.NewTicker(time.Minute);defer ticker.Stop();for range ticker.C{
    result,err:=store.ProductionRepository{DB:dbStore}.RunCycle(context.Background(),100)
-   if err!=nil {log.Printf("production cycle: %v",err)} else if result.Produced>0 {evs.Publish("world.production.cycle","world","world",map[string]any{"businessesProcessed":result.Processed,"produced":result.Produced,"inputsConsumed":result.InputsConsumed,"outputsCreated":result.OutputsCreated,"laborSpent":result.LaborSpent})}
+   if err!=nil {log.Printf("production cycle: %v",err)} else if result.Produced>0 {publishEvent(evs,"world.production.cycle","world","world",map[string]any{"businessesProcessed":result.Processed,"produced":result.Produced,"inputsConsumed":result.InputsConsumed,"outputsCreated":result.OutputsCreated,"laborSpent":result.LaborSpent})}
    territory,tberr:=store.TerritoryRepository{DB:dbStore}.ResolveConsequences(context.Background(),250)
    if tberr!=nil {log.Printf("territory consequences: %v",tberr)} else if territory.ControlChanges>0 || territory.StabilityChanges>0 {evs.Publish("world.territory.cycle","world","world",map[string]any{"territories":territory.TerritoriesProcessed,"controlChanges":territory.ControlChanges,"stabilityChanges":territory.StabilityChanges})}
    balance,berr:=store.EconomyBalanceRepository{DB:dbStore}.Rebalance(context.Background(),250)
@@ -123,3 +123,5 @@ if dbStore.SQL!=nil {
 func prodRepoCreate(dbStore *store.DB,b simulation.BusinessState) (string,error) {
  return (store.SimulationRepository{DB:dbStore}).CreateBusiness(context.Background(),b)
 }
+
+func publishEvent(s *events.Service,eventType,actorID,targetID string,payload map[string]any){if _,err:=s.Publish(eventType,actorID,targetID,payload);err!=nil{log.Printf("event publish: %v",err)}}
