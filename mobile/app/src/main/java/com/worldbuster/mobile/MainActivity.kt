@@ -44,7 +44,7 @@ import java.text.NumberFormat
 import java.util.Locale
 
 private enum class Tab(val title: String) { WORLD("World"), MARKET("Market"), MISSIONS("Missions"), PROFILE("Profile") }
-private enum class SyncState(val label: String) { CONNECTED("LIVE"), DEGRADED("SYNCED"), OFFLINE("OFFLINE"), AUTH("SIGN IN") }
+enum class SyncState(val label: String) { CONNECTED("LIVE"), DEGRADED("SYNCED"), OFFLINE("OFFLINE"), AUTH("SIGN IN") }
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(state: Bundle?) {
