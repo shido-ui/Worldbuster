@@ -16,5 +16,6 @@ type Profile struct {
  Intelligence int      `json:"intelligence"`
  Endurance   int       `json:"endurance"`
  Education   int       `json:"education"`
+ LocationID  string    `json:"locationId,omitempty"`
 	UpdatedAt   time.Time `json:"updatedAt"`
 }
