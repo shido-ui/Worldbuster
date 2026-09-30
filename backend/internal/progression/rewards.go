@@ -9,18 +9,18 @@ const (
 )
 
 type ProgressionReward struct {
- ID string `json:"id"`
- SkillID string `json:"skillId"`
- RequiredLevel int `json:"requiredLevel"`
- Type RewardType `json:"type"`
- Value string `json:"value"`
- Amount int `json:"amount"`
+ ID string
+ SkillID string
+ RequiredLevel int
+ Type RewardType
+ Value string
+ Amount int
 }
 
-func EligibleRewards(state SkillState,rewards []ProgressionReward)[]ProgressionReward{
+func EligibleRewards(state SkillState, rewards []ProgressionReward) []ProgressionReward {
  out:=make([]ProgressionReward,0)
- for _,r:=range rewards{
-  if r.SkillID==state.SkillID && r.RequiredLevel>0 && state.Level>=r.RequiredLevel && r.ID!="" {
+ for _,r:=range rewards {
+  if r.ID!="" && r.SkillID==state.SkillID && r.RequiredLevel>0 && state.Level>=r.RequiredLevel {
    out=append(out,r)
   }
  }
