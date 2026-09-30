@@ -8,21 +8,37 @@ on:
 jobs:
   backend:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: backend
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
           go-version: "1.24"
-          cache: true
+          cache: false
       - name: Go dependencies
         run: go mod tidy
       - name: Go test
         run: go test ./...
+      - name: Go race test
+        run: go test -race ./...
+      - name: Go vet
+        run: go vet ./...
       - name: Go build
-        run: go build ./cmd/worldbuster
+        run: go build ./...
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install dependencies
+        run: npm install
+      - name: Typecheck and production build
+        run: npm run build
 
   android:
     runs-on: ubuntu-latest
@@ -41,3 +57,62 @@ jobs:
           gradle-version: "8.10"
       - name: Android build
         run: gradle :app:assembleDebug --no-daemon
+
+  database:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: worldbuster
+          POSTGRES_USER: worldbuster
+          POSTGRES_PASSWORD: worldbuster
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U worldbuster -d worldbuster"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.24"
+          cache: false
+      - run: go mod tidy
+      - name: Build server
+        run: go build -o /tmp/worldbuster ./backend/cmd/worldbuster
+      - name: Fresh database migration and API smoke test
+        env:
+          WORLDBUSTER_DATABASE_URL: postgres://worldbuster:worldbuster@localhost:5432/worldbuster?sslmode=disable
+          WORLDBUSTER_MIGRATIONS_DIR: database/migrations
+        run: |
+          /tmp/worldbuster >/tmp/worldbuster.log 2>&1 &
+          PID=$!
+          trap 'kill $PID 2>/dev/null || true' EXIT
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:8080/health >/dev/null && break; sleep 1; done
+          curl -fsS http://127.0.0.1:8080/health
+          curl -fsS -X POST http://127.0.0.1:8080/api/v1/auth/register -H 'Content-Type: application/json' -d '{"username":"ci_player","password":"correct-horse-battery-staple"}'
+          curl -fsS -c /tmp/wb.cookies -X POST http://127.0.0.1:8080/api/v1/auth/login -H 'Content-Type: application/json' -d '{"username":"ci_player","password":"correct-horse-battery-staple"}'
+          curl -fsS -b /tmp/wb.cookies http://127.0.0.1:8080/api/v1/player/state
+          kill $PID
+          /tmp/worldbuster >/tmp/worldbuster-restart.log 2>&1 &
+          PID2=$!
+          trap 'kill $PID2 2>/dev/null || true' EXIT
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:8080/health >/dev/null && break; sleep 1; done
+          curl -fsS -b /tmp/wb.cookies http://127.0.0.1:8080/api/v1/player/state
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Docker Compose build and startup smoke test
+        run: |
+          docker compose -f infrastructure/docker-compose.yml up -d --build
+          trap 'docker compose -f infrastructure/docker-compose.yml down -v' EXIT
+          for i in $(seq 1 45); do curl -fsS http://127.0.0.1:8080/health >/dev/null && break; sleep 2; done
+          curl -fsS http://127.0.0.1:8080/health
+          curl -fsS -X POST http://127.0.0.1:8080/api/v1/auth/register -H 'Content-Type: application/json' -d '{"username":"docker_ci","password":"correct-horse-battery-staple"}'
+          curl -fsS -c /tmp/docker-wb.cookies -X POST http://127.0.0.1:8080/api/v1/auth/login -H 'Content-Type: application/json' -d '{"username":"docker_ci","password":"correct-horse-battery-staple"}'
+          curl -fsS -b /tmp/docker-wb.cookies http://127.0.0.1:8080/api/v1/player/state
