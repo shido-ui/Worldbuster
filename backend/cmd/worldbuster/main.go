@@ -31,7 +31,7 @@ func main(){
  dbStore:=store.New(db)
  if dbStore.SQL!=nil { migrationDir:=os.Getenv("WORLDBUSTER_MIGRATIONS_DIR"); if migrationDir=="" { migrationDir="database/migrations" }; if err:=store.ApplyMigrations(context.Background(),dbStore,migrationDir); err!=nil { log.Fatal(err) } }
  ws:=world.NewService();var as api.AuthBackend;if dbStore.SQL!=nil { as=store.NewDatabaseAuthService(dbStore) } else { as=api.MemoryAuthBackend{Service:auth.NewService()} }
- ts:=world.NewTravelService();is:=inventory.NewService();es:=economy.NewService();os:=organization.NewService();js:=job.NewService();ps:=progression.NewService();ss:=social.NewService();evs:=events.NewService()
+ ts:=world.NewTravelService();is:=inventory.NewService();es:=economy.NewService();orgService:=organization.NewService();js:=job.NewService();ps:=progression.NewService();ss:=social.NewService();evs:=events.NewService()
  _=is.RegisterItem(inventory.Item{ID:"water",Name:"Water",Category:"supply",Stackable:true,MaxStack:10})
 
  // Minimal deterministic seed content keeps the simulation runnable while the full data catalog is built.
@@ -90,7 +90,7 @@ func main(){
    for _,pay:=range payments {evs.Publish("job.salary.paid",pay.PlayerID,pay.PlayerID,map[string]any{"amount":pay.Amount,"jobId":pay.JobID,"xp":25,"level":pay.Level})}
   }}()
  }
- router:=api.NewRouter(ws,as,ts,is,es,os,js,ps,ss,evs)
+ router:=api.NewRouter(ws,as,ts,is,es,orgService,js,ps,ss,evs)
 if dbStore.SQL!=nil {
   router.WithEducation(&api.EducationAPI{Repo:store.EducationRepository{DB:dbStore},Context:api.NewPlayerContext(dbStore,as)})
 
