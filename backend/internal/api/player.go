@@ -17,3 +17,11 @@ func (r *Router) playerProfile(w http.ResponseWriter,req *http.Request){
 var _ player.Profile
 
 func(r *Router) playerDashboard(w http.ResponseWriter,req *http.Request){if r.playerContext==nil{writeJSON(w,http.StatusServiceUnavailable,map[string]string{"error":"player persistence unavailable"});return};session,p,err:=r.playerContext.Resolve(req.Context(),req);if err!=nil{writeJSON(w,http.StatusUnauthorized,map[string]string{"error":"authentication required"});return};e,err:=r.playerContext.Economy.GetByAccountID(req.Context(),session.AccountID);if err!=nil{writeJSON(w,http.StatusInternalServerError,map[string]string{"error":"economy unavailable"});return};inv,err:=r.playerContext.Inventory.Get(req.Context(),p.ID);if err!=nil{writeJSON(w,http.StatusInternalServerError,map[string]string{"error":"inventory unavailable"});return};writeJSON(w,http.StatusOK,PlayerDashboard{Profile:p,Economy:e,Inventory:inv})}
+
+func(r *Router) playerEconomy(w http.ResponseWriter,req *http.Request){
+ if r.playerContext==nil{writeJSON(w,http.StatusServiceUnavailable,map[string]string{"error":"player persistence unavailable"});return}
+ session,p,err:=r.playerContext.Resolve(req.Context(),req);if err!=nil{writeJSON(w,http.StatusUnauthorized,map[string]string{"error":"authentication required"});return}
+ account,err:=r.playerContext.Economy.GetByAccountID(req.Context(),p.AccountID);if err!=nil{writeJSON(w,http.StatusInternalServerError,map[string]string{"error":"economy unavailable"});return}
+ ledger,err:=r.playerContext.Economy.LedgerByAccountID(req.Context(),session.AccountID);if err!=nil{writeJSON(w,http.StatusInternalServerError,map[string]string{"error":"ledger unavailable"});return}
+ writeJSON(w,http.StatusOK,map[string]any{"account":account,"ledger":ledger})
+}
