@@ -36,6 +36,12 @@ func TestLiveAdapterTravelExecution(t *testing.T) {
  if state.From!="central" || state.To!="harbor" { t.Fatalf("unexpected travel state: %+v",state) }
 }
 
+func TestLiveAdapterRejectsUnknownTravelDestination(t *testing.T) {
+ a:=newLiveAdapterForTest()
+ result:=a.Execute(Action{Type:ActionTravel,TargetID:"unknown"},SimCharacter{ID:"c1"})
+ if result.Accepted { t.Fatal("unknown travel destination was accepted") }
+}
+
 func TestLiveAdapterContextExposesTravelOpportunity(t *testing.T) {
  a:=newLiveAdapterForTest()
  ctx:=a.Context("c1")
