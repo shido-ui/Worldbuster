@@ -21,8 +21,10 @@ type ActionValidator interface {
 
 type ContextBuilder func(characterID string) WorldContext
 
-func DecideAndValidate(c SimCharacter, ctx WorldContext) ActionResult {
- action, err := ChooseAction(c, Context{HasJob:ctx.HasJob,CanStudy:ctx.CanStudy,SocialOpportunity:ctx.SocialOpportunity,RestNeeded:ctx.RestNeeded})
+func DecideAndValidate(c SimCharacter, ctx WorldContext) ActionResult { return DecideAndValidateWithState(c,ctx,BehavioralState{}) }
+
+func DecideAndValidateWithState(c SimCharacter, ctx WorldContext, state BehavioralState) ActionResult {
+ action, err := ChooseActionWithState(c, Context{HasJob:ctx.HasJob,CanStudy:ctx.CanStudy,SocialOpportunity:ctx.SocialOpportunity,RestNeeded:ctx.RestNeeded}, state)
  if err != nil { return ActionResult{Accepted:false,Reason:err.Error()} }
  if !validateAction(action,ctx) { return ActionResult{Accepted:false,Action:action,Reason:"action is not valid in current world context"} }
  return ActionResult{Accepted:true,Action:action}
