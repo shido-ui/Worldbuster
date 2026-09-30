@@ -94,5 +94,12 @@
 - Connected market world events to generated economy news.
 - News is derived from authoritative simulation facts rather than invented by AI.
 
+## Phase 104 delivered
+- Added tier-specific NPC simulation cadences.
+- Runtime now executes only NPCs whose tier is due.
+- Added configurable simulated population size via WORLDBUSTER_SIM_POPULATION, bounded to 10,000.
+- Increased in-memory simulation batch ceiling to 10,000.
+- Added cadence tests for active/recent/background/dormant tiers.
+
 ## Next
-Phase 104 — Advanced NPC Population Scaling.
+Phase 105 — Achievements & Rankings.
