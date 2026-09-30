@@ -14,22 +14,21 @@ type Runner struct {
 }
 
 func (r *Runner) Tick(now time.Time) int {
- if r.Population==nil || r.State==nil || r.BuildContext==nil || r.Execute==nil { return 0 }
+ if r.Population==nil||r.State==nil||r.BuildContext==nil||r.Execute==nil{return 0}
  count:=0
- for _,c:=range r.Population.List(1000) {
-  if !c.Active { continue }
+ for _,c:=range r.Population.List(1000){
+  if !c.Active{continue}
   ctx:=r.BuildContext(c.ID)
-  result:=DecideAndValidate(c,ctx)
-  if !result.Accepted { continue }
+  state:=r.State.Get(c.ID)
+  result:=DecideAndValidateWithState(c,ctx,state)
+  if !result.Accepted{r.State.Tick(c.ID);continue}
   result=r.Execute(result.Action,c)
-  if result.Accepted {
+  if result.Accepted{
+   r.State.Apply(c.ID,result.Action.Type,now)
    r.State.Tick(c.ID)
-   if r.Emit!=nil {
-    r.Emit("SIMULATED_ACTION",c.ID,result.Action.TargetID,map[string]any{"action":string(result.Action.Type)})
-   }
+   if r.Emit!=nil{r.Emit("SIMULATED_ACTION",c.ID,result.Action.TargetID,map[string]any{"action":string(result.Action.Type),"mood":r.State.Get(c.ID).Mood})}
    count++
   }
-  _=now
  }
  return count
 }
