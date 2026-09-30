@@ -23,3 +23,14 @@ func(h *eventHandler)notifications(w http.ResponseWriter,r *http.Request){
  if profile.ID==""{writeJSON(w,http.StatusNotFound,map[string]string{"error":"player profile not found"});return}
  writeJSON(w,http.StatusOK,h.s.Notifications(profile.ID))
 }
+
+func(h *eventHandler)markNotificationRead(w http.ResponseWriter,r *http.Request){
+ if h.context==nil{writeJSON(w,http.StatusForbidden,map[string]string{"error":"notifications require player context"});return}
+ _,profile,err:=h.context.Resolve(r.Context(),r);if err!=nil{writeJSON(w,http.StatusUnauthorized,map[string]string{"error":"authentication required"});return}
+ id:=r.URL.Query().Get("id");if id==""{writeJSON(w,http.StatusBadRequest,map[string]string{"error":"notification id required"});return}
+ if !h.s.MarkRead(profile.ID,id){writeJSON(w,http.StatusNotFound,map[string]string{"error":"notification not found"});return};writeJSON(w,http.StatusOK,map[string]any{"read":true})
+}
+func(h *eventHandler)markNotificationsRead(w http.ResponseWriter,r *http.Request){
+ if h.context==nil{writeJSON(w,http.StatusForbidden,map[string]string{"error":"notifications require player context"});return}
+ _,profile,err:=h.context.Resolve(r.Context(),r);if err!=nil{writeJSON(w,http.StatusUnauthorized,map[string]string{"error":"authentication required"});return};writeJSON(w,http.StatusOK,map[string]any{"marked":h.s.MarkAllRead(profile.ID)})
+}
