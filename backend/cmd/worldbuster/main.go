@@ -2,6 +2,9 @@ package main
 
 import(
  "log"
+ "database/sql"
+ "os"
+ _ "github.com/lib/pq"
  "net/http"
  "time"
  "github.com/shido-ui/Worldbuster/backend/internal/api"
@@ -15,9 +18,14 @@ import(
  "github.com/shido-ui/Worldbuster/backend/internal/events"
  "github.com/shido-ui/Worldbuster/backend/internal/world"
  "github.com/shido-ui/Worldbuster/backend/internal/simulation"
+ "github.com/shido-ui/Worldbuster/backend/internal/store"
 )
 
 func main(){
+ dsn:=os.Getenv("WORLDBUSTER_DATABASE_URL")
+ var db *sql.DB
+ if dsn!="" { var err error; db,err=sql.Open("postgres",dsn); if err!=nil {log.Fatal(err)}; defer db.Close(); if err=db.Ping(); err!=nil {log.Fatal(err)} }
+ _=store.New(db)
  ws:=world.NewService();as:=auth.NewService();ts:=world.NewTravelService();is:=inventory.NewService();es:=economy.NewService();os:=organization.NewService();js:=job.NewService();ps:=progression.NewService();ss:=social.NewService();evs:=events.NewService()
  _=is.RegisterItem(inventory.Item{ID:"water",Name:"Water",Category:"supply",Stackable:true,MaxStack:10})
 
