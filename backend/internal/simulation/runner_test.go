@@ -28,16 +28,17 @@ func TestRunnerReportsPersistenceErrors(t *testing.T){
  p:=NewService()
  _=p.Register(SimCharacter{ID:"npc1",Name:"Worker",Controller:ControllerSimulated,Active:true,Goals:[]Goal{{Kind:"WORK",Priority:10}}})
  st:=NewStateService()
- var operation,characterID string
- var reported error
+ var operations []string
+ var characterIDs []string
+ var reported []error
  r:=Runner{
   Population:p,
   State:st,
   BuildContext:func(string)WorldContext{return WorldContext{HasJob:true}},
   Execute:func(a Action,c SimCharacter)ActionResult{return ActionResult{Accepted:true,Action:a}},
   Persistence:failingPersistence{},
-  PersistenceError:func(op,id string,err error){operation=op;characterID=id;reported=err},
+  PersistenceError:func(op,id string,err error){operations=append(operations,op);characterIDs=append(characterIDs,id);reported=append(reported,err)},
  }
  if n:=r.Tick(time.Unix(1,0));n!=1{t.Fatalf("expected one executed action, got %d",n)}
- if operation!="record_action"||characterID!="npc1"||reported==nil{t.Fatalf("persistence error was not reported: operation=%q character=%q err=%v",operation,characterID,reported)}
+ if len(reported)!=2||operations[0]!="record_action"||operations[1]!="record_memory"||characterIDs[0]!="npc1"||characterIDs[1]!="npc1"{t.Fatalf("persistence errors were not all reported: operations=%q characters=%q errors=%v",operations,characterIDs,reported)}
 }
