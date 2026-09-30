@@ -28,7 +28,7 @@ func(a *PersistentJobsAPI) Employ(w http.ResponseWriter,r *http.Request){
  _,p,err:=a.Context.Resolve(r.Context(),r);if err!=nil{writeJSON(w,http.StatusUnauthorized,map[string]string{"error":"authentication required"});return}
  var req map[string]string;if json.NewDecoder(r.Body).Decode(&req)!=nil||req["jobId"]==""{writeJSON(w,http.StatusBadRequest,map[string]string{"error":"jobId required"});return}
  stat:=p.Strength+p.Defense+p.Speed+p.Intelligence+p.Endurance
- j,err:=a.Repo.Employ(r.Context(),p.ID,req["jobId"],p.Level,stat)
+ j,err:=a.Repo.Employ(r.Context(),p.ID,req["jobId"],p.Level,stat,p.Education)
  if errors.Is(err,store.ErrAlreadyEmployed){writeJSON(w,http.StatusConflict,map[string]string{"error":"already employed"});return}
  if errors.Is(err,store.ErrJobNotFound){writeJSON(w,http.StatusNotFound,map[string]string{"error":"job not found"});return}
  if errors.Is(err,store.ErrJobRequirement){writeJSON(w,http.StatusForbidden,map[string]string{"error":"job requirements not met"});return}
