@@ -8,7 +8,7 @@ func(r PlayerRepository)GetByID(ctx context.Context,id string)(player.Profile,er
 
 func(r PlayerRepository) GetByAccountID(ctx context.Context,accountID string)(player.Profile,error){
  var p player.Profile
- err:=r.DB.SQL.QueryRowContext(ctx,"SELECT id::text,account_id::text,display_name,level,xp,cash,energy,strength,defense,speed,intelligence,endurance,updated_at FROM player_profiles WHERE account_id=$1",accountID).Scan(&p.ID,&p.AccountID,&p.DisplayName,&p.Level,&p.XP,&p.Cash,&p.Energy,&p.Strength,&p.Defense,&p.Speed,&p.Intelligence,&p.Endurance,&p.UpdatedAt)
+ err:=r.DB.SQL.QueryRowContext(ctx,"SELECT id::text,account_id::text,display_name,level,xp,cash,energy,strength,defense,speed,intelligence,endurance,education,updated_at FROM player_profiles WHERE account_id=$1",accountID).Scan(&p.ID,&p.AccountID,&p.DisplayName,&p.Level,&p.XP,&p.Cash,&p.Energy,&p.Strength,&p.Defense,&p.Speed,&p.Intelligence,&p.Endurance,&p.Education,&p.UpdatedAt)
  if errors.Is(err,sql.ErrNoRows){return player.Profile{},ErrNotFound}
  return p,err
 }
