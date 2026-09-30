@@ -1,18 +1,12 @@
 package simulation
-
-import("context";"encoding/json";"errors";"sort";"time")
-
-type Decision struct{ActionType string `json:"actionType"`;TargetID string `json:"targetId,omitempty"`;Score int `json:"score"`}
-type DecisionContext struct{Now time.Time;Energy int;Cash int64;Level int;Nearby []string}
-var ErrNoDecision=errors.New("no valid simulation decision")
-func ChooseDecision(c SimCharacter,ctx DecisionContext)(Decision,error){
- if !c.Active{return Decision{},ErrNoDecision}
- var choices []Decision
- for _,g:=range c.Goals{score:=g.Priority;switch g.Kind{case "WORK":score+=c.Personality.Discipline;case "SOCIAL":score+=c.Personality.Sociability;case "EXPLORE":score+=c.Personality.Curiosity;case "RISK":score+=c.Personality.RiskTolerance;case "PROGRESS":score+=c.Personality.Discipline+c.Personality.Curiosity/2};if ctx.Energy<=0&&g.Kind!="SOCIAL"{score-=100};if ctx.Cash<=0&&g.Kind=="RISK"{score-=25};choices=append(choices,Decision{ActionType:g.Kind,TargetID:g.TargetID,Score:score})}
- if len(choices)==0{return Decision{},ErrNoDecision};sort.SliceStable(choices,func(i,j int)bool{return choices[i].Score>choices[j].Score});return choices[0],nil
-}
-func Normalize(c SimCharacter)SimCharacter{if c.Personality.Curiosity<0{c.Personality.Curiosity=0};if c.Personality.Curiosity>100{c.Personality.Curiosity=100};if c.Personality.Sociability<0{c.Personality.Sociability=0};if c.Personality.Sociability>100{c.Personality.Sociability=100};if c.Personality.RiskTolerance<0{c.Personality.RiskTolerance=0};if c.Personality.RiskTolerance>100{c.Personality.RiskTolerance=100};if c.Personality.Discipline<0{c.Personality.Discipline=0};if c.Personality.Discipline>100{c.Personality.Discipline=100};return c}
-func Encode(c SimCharacter)([]byte,error){return json.Marshal(c)}
-func TickCharacter(c SimCharacter,ctx DecisionContext)(SimCharacter,Decision,error){c=Normalize(c);d,err:=ChooseDecision(c,ctx);if err!=nil{return c,Decision{},err};c.LastTick=ctx.Now.Unix();return c,d,nil}
-func LoadGoals(raw []byte)([]Goal,error){var g []Goal;if len(raw)==0{return g,nil};return g,json.Unmarshal(raw,&g)}
-var _=context.Background
+import("errors";"sort")
+var ErrNoAction=errors.New("no valid action")
+type ActionType string
+const(ActionWork ActionType="WORK";ActionTravel ActionType="TRAVEL";ActionStudy ActionType="STUDY";ActionSocialize ActionType="SOCIALIZE";ActionRest ActionType="REST")
+type Action struct{Type ActionType `json:"type"`;TargetID string `json:"targetId,omitempty"`;Priority int `json:"priority"`}
+type Context struct{HasJob bool `json:"hasJob"`;CanStudy bool `json:"canStudy"`;SocialOpportunity bool `json:"socialOpportunity"`;RestNeeded bool `json:"restNeeded"`}
+func ChooseAction(c SimCharacter,ctx Context)(Action,error){return ChooseActionWithState(c,ctx,BehavioralState{})}
+func ChooseActionWithState(c SimCharacter,ctx Context,state BehavioralState)(Action,error){actions:=[]Action{};for _,g:=range c.Goals{p:=g.Priority+personalityBias(c,g.Kind);switch g.Kind{case "WORK":if ctx.HasJob{actions=append(actions,Action{Type:ActionWork,TargetID:g.TargetID,Priority:p+stateBias(state,ActionWork)})};case "STUDY":if ctx.CanStudy{actions=append(actions,Action{Type:ActionStudy,TargetID:g.TargetID,Priority:p+stateBias(state,ActionStudy)})};case "SOCIAL":if ctx.SocialOpportunity{actions=append(actions,Action{Type:ActionSocialize,TargetID:g.TargetID,Priority:p+stateBias(state,ActionSocialize)})};case "TRAVEL":if g.TargetID!=""{actions=append(actions,Action{Type:ActionTravel,TargetID:g.TargetID,Priority:p+stateBias(state,ActionTravel)})}}};if ctx.RestNeeded||state.Needs.Energy<25||state.Needs.Rest<20{actions=append(actions,Action{Type:ActionRest,Priority:120})};if len(actions)==0{return Action{},ErrNoAction};sort.SliceStable(actions,func(i,j int)bool{return actions[i].Priority>actions[j].Priority});return actions[0],nil}
+func personalityBias(c SimCharacter,kind string)int{switch kind{case "SOCIAL":return c.Personality.Sociability/5;case "TRAVEL":return c.Personality.Curiosity/5;case "STUDY","WORK":return c.Personality.Discipline/5};return 0}
+func stateBias(s BehavioralState,a ActionType)int{switch a{case ActionRest:return maxInt(0,100-s.Needs.Energy)/2+maxInt(0,100-s.Needs.Rest)/3;case ActionSocialize:return maxInt(0,50-s.Needs.Social)/2+s.Mood/10;case ActionWork:return s.Needs.Satisfaction/10-s.Stress/10;case ActionStudy:return s.Needs.Satisfaction/12-s.Stress/12;case ActionTravel:return s.Mood/10};return 0}
+func maxInt(a,b int)int{if a>b{return a};return b}
