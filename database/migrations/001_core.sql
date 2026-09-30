@@ -1,0 +1,23 @@
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+CREATE TABLE IF NOT EXISTS accounts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  username TEXT NOT NULL UNIQUE,
+  password_hash TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS player_profiles (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  account_id UUID NOT NULL UNIQUE REFERENCES accounts(id) ON DELETE CASCADE,
+  display_name TEXT NOT NULL UNIQUE,
+  level INTEGER NOT NULL DEFAULT 1 CHECK (level >= 1),
+  xp BIGINT NOT NULL DEFAULT 0 CHECK (xp >= 0),
+  cash BIGINT NOT NULL DEFAULT 0 CHECK (cash >= 0),
+  energy INTEGER NOT NULL DEFAULT 100 CHECK (energy BETWEEN 0 AND 100),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_player_profiles_level ON player_profiles(level);
