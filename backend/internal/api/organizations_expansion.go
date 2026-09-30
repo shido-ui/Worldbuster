@@ -1,6 +1,6 @@
 package api
 
-import ("encoding/json";"net/http";"github.com/shido-ui/Worldbuster/backend/internal/store")
+import ("encoding/json";"net/http";)
 
 func(a *PersistentOrganizationsAPI) Alliance(w http.ResponseWriter,r *http.Request){
  _,p,err:=a.Context.Resolve(r.Context(),r);if err!=nil{writeJSON(w,401,map[string]string{"error":"authentication required"});return}
