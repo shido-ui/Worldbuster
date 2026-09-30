@@ -41,14 +41,24 @@ func(r MarketRepository) Buy(ctx context.Context,buyer,orderID string,quantity i
  if err=tx.QueryRowContext(ctx,"SELECT item_id FROM market_assets WHERE id=$1 AND item_id IS NOT NULL AND item_id<>''",x.AssetID).Scan(&itemID);err!=nil{return MarketOrder{},ErrMarketInvalid}
  if x.UnitPrice<=0||quantity>9223372036854775807/x.UnitPrice{return MarketOrder{},ErrMarketInvalid}
  total:=quantity*x.UnitPrice
- var balance int64;var buyerAccount string
- if err=tx.QueryRowContext(ctx,"SELECT id::text,balance FROM economy_accounts WHERE owner_account_id=$1 FOR UPDATE",buyer).Scan(&buyerAccount,&balance);err!=nil||balance<total{return MarketOrder{},errors.New("insufficient funds")}
- var sellerAccount string
- if err=tx.QueryRowContext(ctx,"SELECT id::text FROM economy_accounts WHERE owner_account_id=$1 FOR UPDATE",x.SellerAccountID).Scan(&sellerAccount);err!=nil{return MarketOrder{},err}
- if _,err=tx.ExecContext(ctx,"UPDATE economy_accounts SET balance=balance-$1,updated_at=NOW() WHERE id=$2",total,buyerAccount);err!=nil{return MarketOrder{},err}
- var buyerBalance int64; if err=tx.QueryRowContext(ctx,"SELECT balance FROM economy_accounts WHERE id=$1",buyerAccount).Scan(&buyerBalance);err!=nil{return MarketOrder{},err}
- if _,err=tx.ExecContext(ctx,"UPDATE economy_accounts SET balance=balance+$1,updated_at=NOW() WHERE id=$2",total,sellerAccount);err!=nil{return MarketOrder{},err}
- var sellerBalance int64; if err=tx.QueryRowContext(ctx,"SELECT balance FROM economy_accounts WHERE id=$1",sellerAccount).Scan(&sellerBalance);err!=nil{return MarketOrder{},err}
+ var buyerAccount,sellerAccount string
+ var buyerBalance,sellerBalance int64
+ rows,err:=tx.QueryContext(ctx,"SELECT id::text,owner_account_id::text,balance FROM economy_accounts WHERE owner_account_id IN ($1,$2) ORDER BY id FOR UPDATE",buyer,x.SellerAccountID)
+ if err!=nil{return MarketOrder{},err}
+ for rows.Next(){
+  var id,owner string
+  var balance int64
+  if err:=rows.Scan(&id,&owner,&balance);err!=nil{rows.Close();return MarketOrder{},err}
+  if owner==buyer{buyerAccount=id;buyerBalance=balance}else if owner==x.SellerAccountID{sellerAccount=id;sellerBalance=balance}
+ }
+ if err:=rows.Err();err!=nil{rows.Close();return MarketOrder{},err}
+ if err:=rows.Close();err!=nil{return MarketOrder{},err}
+ if buyerAccount==""||sellerAccount==""{return MarketOrder{},errors.New("economy account unavailable")}
+ if buyerBalance<total{return MarketOrder{},errors.New("insufficient funds")}
+ buyerBalance-=total
+ sellerBalance+=total
+ if _,err=tx.ExecContext(ctx,"UPDATE economy_accounts SET balance=$1,updated_at=NOW() WHERE id=$2",buyerBalance,buyerAccount);err!=nil{return MarketOrder{},err}
+ if _,err=tx.ExecContext(ctx,"UPDATE economy_accounts SET balance=$1,updated_at=NOW() WHERE id=$2",sellerBalance,sellerAccount);err!=nil{return MarketOrder{},err}
  if _,err=tx.ExecContext(ctx,"INSERT INTO economy_ledger(id,account_id,amount,balance_after,reason,reference_id) VALUES(gen_random_uuid(),$1,$2,$3,'market_purchase',$4)",buyerAccount,-total,buyerBalance,x.ID);err!=nil{return MarketOrder{},err}
  if _,err=tx.ExecContext(ctx,"INSERT INTO economy_ledger(id,account_id,amount,balance_after,reason,reference_id) VALUES(gen_random_uuid(),$1,$2,$3,'market_sale',$4)",sellerAccount,total,sellerBalance,x.ID);err!=nil{return MarketOrder{},err}
  var buyerPlayer string
