@@ -35,12 +35,16 @@ const formatTime=(value:string)=>{const d=new Date(value);return Number.isNaN(d.
 
 function App(){
  const[view,setView]=useState("Overview"),[combatHistory,setCombatHistory]=useState<CombatRecord[]>([]),[rankings,setRankings]=useState<RankingEntry[]>([]),[ledger,setLedger]=useState<LedgerEntry[]>([]),[rankingKind,setRankingKind]=useState("level"),[combatTarget,setCombatTarget]=useState(""),[combatBusy,setCombatBusy]=useState(false),[territories,setTerritories]=useState<Territory[]>([]),[territoryBusy,setTerritoryBusy]=useState(false),[selectedOrg,setSelectedOrg]=useState(""),[orgBusy,setOrgBusy]=useState(false),[orgReputations,setOrgReputations]=useState<Record<string,number>>({}),[equipmentItems,setEquipmentItems]=useState<EquipmentItem[]>([]),[equipped,setEquipped]=useState<EquippedItem[]>([]),[equipmentBusy,setEquipmentBusy]=useState(false),[relationshipTarget,setRelationshipTarget]=useState(""),[relationship,setRelationship]=useState<Relationship|null>(null),[messageTarget,setMessageTarget]=useState(""),[messageBody,setMessageBody]=useState(""),[socialBusy,setSocialBusy]=useState(false),[missions,setMissions]=useState<Mission[]>([]),[playerMissions,setPlayerMissions]=useState<PlayerMission[]>([]),[assets,setAssets]=useState<Asset[]>([]),[orders,setOrders]=useState<Order[]>([]),[selectedAsset,setSelectedAsset]=useState(""),[marketQuantity,setMarketQuantity]=useState(1),[marketPrice,setMarketPrice]=useState(1),[marketBusy,setMarketBusy]=useState(false),[news,setNews]=useState<NewsItem[]>([]),[worldEvents,setWorldEvents]=useState<WorldEvent[]>([]),[achievements,setAchievements]=useState<Achievement[]>([]),[locations,setLocations]=useState<Location[]>([]),[routes,setRoutes]=useState<Route[]>([]),[travel,setTravel]=useState<Travel|null>(null),[account,setAccount]=useState<Account|null>(null),[checking,setChecking]=useState(true),[world,setWorld]=useState(worldFallback),[state,setState]=useState<State|null>(null),[jobs,setJobs]=useState<Job[]>([]),[employment,setEmployment]=useState<Job|null>(null),[courses,setCourses]=useState<Course[]>([]),[training,setTraining]=useState<any>(null),[education,setEducation]=useState(0),[courseBusy,setCourseBusy]=useState(false),[jobBusy,setJobBusy]=useState(false),[message,setMessage]=useState(""),[inbox,setInbox]=useState<any[]>([]),[reputation,setReputation]=useState<any>(null),[organizations,setOrganizations]=useState<any[]>([]),[notifications,setNotifications]=useState<NotificationItem[]>([]),[events,setEvents]=useState<EventItem[]>([]),[connection,setConnection]=useState<ConnectionStatus>("LOADING"),[connectionError,setConnectionError]=useState(""),[mobileNav,setMobileNav]=useState(false);
- const refreshSequence=useRef(0);
+ const refreshSequence=useRef(0); const refreshAbort=useRef<AbortController|null>(null); const selectedAssetRef=useRef("");
  async function optional<T>(url:string,signal?:AbortSignal):Promise<T|null>{try{return await fetchJSON(url,{},signal) as T}catch(error){if((error as any)?.name==="AbortError")throw error;return null}}
  useEffect(()=>{if(!account||!selectedAsset)return;const controller=new AbortController();void optional<any>("/api/v1/market/orders?assetId="+encodeURIComponent(selectedAsset),controller.signal).then(data=>{if(!controller.signal.aborted)setOrders(data?.orders??[])}).catch(error=>{if((error as any)?.name!=="AbortError")setMessage((error as Error).message)});return()=>controller.abort()},[account,selectedAsset]);
  useEffect(()=>{if(!account)return;const source=new EventSource("/api/v1/events/stream");source.addEventListener("world",(event)=>{try{const item=JSON.parse((event as MessageEvent).data) as EventItem;setEvents(prev=>[...prev,item].slice(-20));setMessage("Live world event received.")}catch{}});source.onerror=()=>{setMessage("Live connection interrupted; retrying automatically.");};return()=>source.close()},[account]);
- const refresh=async(signal?:AbortSignal)=>{
+ const refresh=async()=>{
   const sequence=++refreshSequence.current;
+  refreshAbort.current?.abort();
+  const controller=new AbortController();
+  refreshAbort.current=controller;
+  const signal=controller.signal;
   try{
    const results=await Promise.all([
     fetchJSON("/api/v1/world",{},signal),fetchJSON("/api/v1/player/state",{},signal),fetchJSON("/api/v1/economy/history",{},signal),fetchJSON("/api/v1/jobs",{},signal),
@@ -52,7 +56,11 @@ function App(){
    ]);
    if(sequence!==refreshSequence.current)return;
    const[w,s,economyData,j,e,coursesData,trainingData,si,rep,orgs,eventsData,missionData,assetData,newsData,worldEventData,achievementData,locationData,travelData,notificationData,equipmentData,equippedData,territoryData,combatData,rankingData]=results as any[];
-   const firstAsset=(assetData?.assets??[])[0]; const orderData=firstAsset?await optional<any>("/api/v1/market/orders?assetId="+encodeURIComponent(firstAsset.id),signal):null;
+   const availableAssets=(assetData?.assets??[]) as Asset[];
+   const firstAsset=availableAssets[0];
+   const preferredAsset=selectedAssetRef.current && availableAssets.some(a=>a.id===selectedAssetRef.current)?selectedAssetRef.current:firstAsset?.id||"";
+   const orderData=preferredAsset?await optional<any>("/api/v1/market/orders?assetId="+encodeURIComponent(preferredAsset),signal):null;
+   if(sequence!==refreshSequence.current||signal.aborted)return;
    setWorld(w);setState(s);setLedger(economyData?.ledger??[]);setJobs(j.jobs??j);setEmployment(e.job??null);setCourses(coursesData.courses??coursesData);
    setEducation(trainingData.education??0);setTraining(trainingData.training??null);setInbox(si.messages??[]);setReputation(rep);
    setOrganizations(orgs.organizations??orgs);setNotifications(notificationData?.notifications??(Array.isArray(notificationData)?notificationData:[]));setEvents(Array.isArray(eventsData)?eventsData:(eventsData.events??[]));setMissions(missionData?.missions??[]);setAssets(assetData?.assets??[]);setSelectedAsset(prev=>{const available=assetData?.assets??[];return available.some((a:any)=>a.id===prev)?prev:(available[0]?.id??"")});setNews(newsData?.news??[]);setWorldEvents(worldEventData?.events??[]);setAchievements(achievementData?.achievements??[]);setLocations(locationData?.locations??[]);setRoutes(locationData?.routes??[]);setTravel(travelData?.traveling?travelData.travel:null);
@@ -65,10 +73,10 @@ function App(){
    else if(status>=500){setConnection("SERVER_ERROR");setConnectionError("World server is unavailable.")}
    else if(error instanceof TypeError){setConnection("OFFLINE");setConnectionError("Network connection unavailable.")}
    else{setConnection("SERVER_ERROR");setConnectionError((error as Error).message)}
-  }
+  }finally{if(refreshAbort.current===controller)refreshAbort.current=null}
  };
  useEffect(()=>{let cancelled=false;fetchJSON("/api/v1/auth/me").then(data=>{if(!cancelled)setAccount({id:data.accountId,username:"PLAYER"})}).catch(error=>{if(!cancelled&&(error as any)?.status===401)setConnection("AUTHENTICATION_REQUIRED")}).finally(()=>{if(!cancelled)setChecking(false)});return()=>{cancelled=true}},[]);
- useEffect(()=>{if(!account)return;const controller=new AbortController();void refresh(controller.signal);const id=setInterval(()=>void refresh(controller.signal),10000);return()=>{controller.abort();clearInterval(id)}},[account]);
+ useEffect(()=>{if(!account)return;void refresh();const id=setInterval(()=>void refresh(),10000);return()=>{refreshAbort.current?.abort();refreshAbort.current=null;clearInterval(id)}},[account]);
  useEffect(()=>{const onKey=(e:KeyboardEvent)=>{if(e.key==="/"&&document.activeElement?.tagName!=="INPUT"){e.preventDefault();setView("Overview");document.getElementById("command-search")?.focus()}};window.addEventListener("keydown",onKey);return()=>window.removeEventListener("keydown",onKey)},[]);
  const enroll=async(courseId:string)=>{setCourseBusy(true);try{const d=await fetchJSON("/api/v1/education/enroll",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({courseId})});setTraining(d.training);setMessage("Training started.");await refresh()}catch(error){setMessage((error as Error).message)}finally{setCourseBusy(false)}};
  const hire=async(jobId:string)=>{setJobBusy(true);setMessage("");try{const d=await fetchJSON("/api/v1/jobs/employ",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({jobId})});setEmployment(d.job);setMessage("Employment confirmed.");await refresh()}catch(error){setMessage((error as Error).message)}finally{setJobBusy(false)}};
