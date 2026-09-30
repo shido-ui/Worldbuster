@@ -2,6 +2,7 @@ package store
 
 import (
  "context"
+ "database/sql"
  "github.com/shido-ui/Worldbuster/backend/internal/simulation"
 )
 
@@ -23,9 +24,9 @@ func(r TerritoryRepository) ResolveConsequences(ctx context.Context,limit int)(T
   var topOrg string
   var topVal,secondVal int
   err=tx.QueryRowContext(ctx,`SELECT organization_id::text,influence FROM territory_influence WHERE territory_id=$1 ORDER BY influence DESC,organization_id LIMIT 1`,id).Scan(&topOrg,&topVal)
-  if err!=nil { topOrg="" }
+  if err!=nil && err!=sql.ErrNoRows {return out,err}
   if topOrg!="" {
-    _=tx.QueryRowContext(ctx,`SELECT COALESCE(MAX(influence),0) FROM territory_influence WHERE territory_id=$1 AND organization_id<>$2`,id,topOrg).Scan(&secondVal)
+    if err:=tx.QueryRowContext(ctx,`SELECT COALESCE(MAX(influence),0) FROM territory_influence WHERE territory_id=$1 AND organization_id<>$2`,id,topOrg).Scan(&secondVal);err!=nil{return out,err}
   }
   outcome:=simulation.ResolveTerritory(simulation.TerritoryPressure{TopInfluence:topVal,SecondInfluence:secondVal,Stability:stability})
   changed:=false
