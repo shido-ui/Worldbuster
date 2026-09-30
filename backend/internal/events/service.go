@@ -5,7 +5,6 @@ type Service struct{mu sync.RWMutex;events []Event;notifications map[string][]No
 var randomRead=rand.Read
 
 func NewService()*Service{return &Service{notifications:map[string][]Notification{},subscribers:map[chan Event]struct{}{}}}
-var randomRead=rand.Read
 
 func id()(string,error){b:=make([]byte,12);if _,err:=randomRead(b);err!=nil{return "",err};return hex.EncodeToString(b),nil}
 func(s *Service)Publish(t,actor,target string,payload map[string]any)(Event,error){s.mu.Lock();defer s.mu.Unlock();eventID,err:=id();if err!=nil{return Event{},errors.New("generate event id: "+err.Error())};e:=Event{ID:eventID,Type:t,ActorID:actor,TargetID:target,Payload:payload,CreatedAt:time.Now().UTC()};for ch:=range s.subscribers{select{case ch<-e:default:}};s.events=append(s.events,e);if len(s.events)>1000{s.events=s.events[len(s.events)-1000:]};return e,nil}
