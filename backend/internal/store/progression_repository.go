@@ -30,6 +30,7 @@ func(r ProgressionRepository) AddXPAndUnlocks(ctx context.Context, playerID stri
    level++
   }
   if _,err:=tx.ExecContext(ctx,`UPDATE player_profiles SET level=$2,xp=$3,updated_at=NOW() WHERE id=$1`,playerID,level,xp);err!=nil{return err}
+  if level>=2 { if _,err:=tx.ExecContext(ctx,`INSERT INTO player_achievements(player_id,achievement_id,progress) VALUES($1,'first-level',1) ON CONFLICT(player_id,achievement_id) DO UPDATE SET progress=GREATEST(player_achievements.progress,1),completed_at=COALESCE(player_achievements.completed_at,NOW())`,playerID);err!=nil{return err} }
   for _,reward:=range rewards{
    if reward.ID==""{continue}
    var inserted bool
