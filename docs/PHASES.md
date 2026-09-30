@@ -88,5 +88,11 @@
 - Connected market price-change cycles to persistent world events.
 - Published event creation through the existing event bus.
 
+## Phase 103 delivered
+- Added persistent world news records linked to world events.
+- Added factual recent-news API.
+- Connected market world events to generated economy news.
+- News is derived from authoritative simulation facts rather than invented by AI.
+
 ## Next
-Phase 103 — Dynamic News/Media.
+Phase 104 — Advanced NPC Population Scaling.
