@@ -8,7 +8,7 @@ import (
 
 type PlayerResolver func(ctx context.Context,accountID string) (string,error)
 
-type ProgressionAPI struct{ Repo store.ProgressionRepository; ResolvePlayer PlayerResolver }
+type ProgressionAPI struct{ Repo store.ProgressionRepository; ResolvePlayer PlayerResolver; Auth AuthBackend }
 
 func(a ProgressionAPI) AddXP(w http.ResponseWriter,r *http.Request){
  if r.Method!="POST"{http.Error(w,"method not allowed",http.StatusMethodNotAllowed);return}
