@@ -12,26 +12,13 @@ The simulated population is persistent and uses the same authoritative game serv
 7. A structured event is emitted.
 
 ## Population generation
-Population generation is deterministic from a supplied seed and data profile. Generated characters receive stable simulated identity, personality defaults and initial goals. Generation is a provisioning operation, not an uncontrolled per-request bot spawn.
-
-Future balancing will use configurable population distributions, regional density, profession weights, activity tiers and lifecycle rules.
-
+Population generation is deterministic from a supplied seed and data profile. Generated characters receive stable simulated identity, personality defaults and initial goals.
 
 ## Lifecycle and regional distribution
+Population uses active, recent, background and dormant tiers. Regional weights control deterministic population density.
 
-Population is divided into active, recent, background and dormant tiers so simulation compute can be budgeted instead of ticking every simulated character equally. Regional weights provide deterministic population density across locations. These controls are configuration-driven and remain separate from authoritative action validation.
+## Behavioral simulation
+NPC needs, stress, mood, satisfaction and bounded memories evolve after actions and over time. Decision priorities consume the current behavioral state.
 
-
-## Domain execution boundary
-
-Simulated actions now have an explicit domain-executor boundary. The executor is intentionally the single mutation point for simulated behavior and is designed to delegate each action to the same authoritative services used by human players. Unsupported actions are rejected rather than silently mutating state.
-
-
-## Authoritative service delegation
-
-The service executor delegates simulated work, travel, study, socialization and rest to injected domain services. Missing services and domain validation failures reject the action. This keeps NPC consequences on the same mutation boundary as human gameplay.
-
-
-## Live domain integration
-
-The server now constructs the simulation alongside the authoritative world services. Each world-clock tick can invoke the integrated runner, whose adapter delegates accepted NPC actions into job, progression, social and travel services and emits structured simulation events. No separate NPC-only economy or progression authority is introduced.
+## Social simulation
+Relationships are persistent state with familiarity and trust. The relationship layer supports acquaintances, friendships and rivalries with bounded scores, providing a foundation for social consequences and network formation.
