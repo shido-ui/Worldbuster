@@ -5,19 +5,17 @@
 - World clock/tick API
 - PostgreSQL schema + migrations
 - Redis/local Docker infrastructure
-- React web shell and responsive visual system
+- React web shell
 - Authentication/session foundation
-- bcrypt password hashing
-- HttpOnly SameSite session cookies
-- Baseline security headers
-- Persistent repository interfaces for accounts, sessions and player profiles
-- Transaction boundary helper
-- Database integrity indexes/constraints
-- Backend unit-test foundation
+- Persistent repository/transaction foundation
+- Mobile-oriented data-driven world map
+- Server-authoritative timed travel
+- Route validation and travel lifecycle tests
+- Responsive UI foundation
 
 ## Remaining
-- Runtime wiring to PostgreSQL repositories
-- Locations/map/travel
+- Runtime PostgreSQL service wiring
+- Android application/client
 - Inventory/items/equipment
 - Economy/markets/ledger
 - Jobs/companies/organizations
@@ -30,8 +28,7 @@
 - AI contextual services
 - Admin/moderation
 - Production observability/security/scaling
-- Android client and multi-GB synchronization
 - Final content/art/audio/balancing
-- Load testing, deployment and beta iteration
+- Load testing/deployment/beta iteration
 
-Status: foundational architecture with an expanding playable backend; not feature-complete.
+Status: foundational backend with the first world-navigation system; not feature-complete.
