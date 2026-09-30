@@ -32,6 +32,16 @@ func(s *PopulationScheduler)Run(now time.Time)(map[Tier]int,error){
  s.LastRun=now;return counts,nil
 }
 
+func(s TierScheduler)ShouldTick(position,total int,now time.Time)bool{
+ if total<=0||position<1||position>total{return false}
+ tier:=TierDormant
+ active:=total*s.Policy.ActivePercent/100
+ recent:=total*(s.Policy.ActivePercent+s.Policy.RecentPercent)/100
+ background:=total*(s.Policy.ActivePercent+s.Policy.RecentPercent+s.Policy.BackgroundPercent)/100
+ if position<=active{tier=TierActive}else if position<=recent{tier=TierRecent}else if position<=background{tier=TierBackground}
+ return now.Unix()%int64(s.Cadence(tier)/time.Second)==0 || tier==TierActive
+}
+
 func(s TierScheduler)Cadence(t Tier)time.Duration{
  switch t{case TierActive:return time.Second;case TierRecent:return 5*time.Second;case TierBackground:return 30*time.Second;default:return 5*time.Minute}
 }
