@@ -72,5 +72,14 @@
 - Added authenticated combat resolve/history endpoints.
 - Added deterministic combat tests.
 
+## Phase 101 delivered
+- Added persistent item definitions and equipment slots.
+- Added level-gated equipment requirements.
+- Added transactional inventory-to-equipment transfer.
+- Added equipment durability state.
+- Added player equipment API and item catalog API.
+- Added starter safe equipment definitions.
+- Added item progression storage for future upgrade mechanics.
+
 ## Next
-Phase 101 — Equipment & Item Progression.
+Phase 102 — World Events.
