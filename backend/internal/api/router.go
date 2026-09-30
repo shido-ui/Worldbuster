@@ -1,12 +1,12 @@
 package api
 
-import("encoding/json";"net/http";"time";"github.com/shido-ui/Worldbuster/backend/internal/auth";"github.com/shido-ui/Worldbuster/backend/internal/world")
+import("encoding/json";"net/http";"time";"github.com/shido-ui/Worldbuster/backend/internal/auth";"github.com/shido-ui/Worldbuster/backend/internal/inventory";"github.com/shido-ui/Worldbuster/backend/internal/world")
 
-type Router struct{world *world.Service;auth *auth.Service;travel *world.TravelService}
-func NewRouter(w *world.Service,a *auth.Service,t *world.TravelService)*Router{return &Router{world:w,auth:a,travel:t}}
+type Router struct{world *world.Service;auth *auth.Service;travel *world.TravelService;inventory *inventory.Service}
+func NewRouter(w *world.Service,a *auth.Service,t *world.TravelService,i *inventory.Service)*Router{return &Router{world:w,auth:a,travel:t,inventory:i}}
 func(r *Router)Handler()http.Handler{
  mux:=http.NewServeMux();mux.HandleFunc("/health",r.health);mux.HandleFunc("/api/v1/world",r.worldState)
- wh:=newWorldHandler(r.travel);mux.HandleFunc("/api/v1/world/locations",wh.locations);mux.HandleFunc("/api/v1/world/travel",wh.travel)
+ wh:=newWorldHandler(r.travel);ih:=newInventoryHandler(r.inventory);mux.HandleFunc("/api/v1/world/locations",wh.locations);mux.HandleFunc("/api/v1/world/travel",wh.travel);mux.HandleFunc("/api/v1/inventory",ih.get);mux.HandleFunc("/api/v1/inventory/add",ih.add)
  ah:=newAuthHandler(r.auth);mux.HandleFunc("/api/v1/auth/register",ah.register);mux.HandleFunc("/api/v1/auth/login",ah.login);mux.HandleFunc("/api/v1/auth/me",ah.me);mux.HandleFunc("/api/v1/auth/logout",ah.logout)
  return securityHeaders(mux)
 }
