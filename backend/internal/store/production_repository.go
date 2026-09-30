@@ -50,6 +50,7 @@ func(r ProductionRepository) RunCycle(ctx context.Context,limit int)(ProductionC
    VALUES($1,$2,$3,$4,$5,$6,$7)`,b.ID,r.ID,r.InputItem,r.InputQuantity,r.OutputItem,r.OutputQuantity,r.LaborCost);if err!=nil{return out,err}
   _,err=tx.ExecContext(ctx,`INSERT INTO world_supply_signals(item_id,supply,demand,updated_at) VALUES($1,$2,0,NOW())
    ON CONFLICT(item_id) DO UPDATE SET supply=world_supply_signals.supply+$2,updated_at=NOW()`,r.OutputItem,r.OutputQuantity);if err!=nil{return out,err}
+  _,err=tx.ExecContext(ctx,`UPDATE market_assets SET supply=supply+$2,updated_at=NOW() WHERE symbol=$1`,r.OutputItem,r.OutputQuantity);if err!=nil{return out,err}
   out.Produced++;out.InputsConsumed+=int64(r.InputQuantity);out.OutputsCreated+=int64(r.OutputQuantity);out.LaborSpent+=r.LaborCost
  }
  if err:=rows.Err();err!=nil{return out,err}
