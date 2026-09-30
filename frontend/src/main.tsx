@@ -1,4 +1,4 @@
-import React,{useEffect,useState} from "react";
+import React,{useEffect,useRef,useState} from "react";
 import {createRoot} from "react-dom/client";
 import {AuthPanel} from "./auth";
 import "./styles.css";
@@ -8,30 +8,68 @@ type State={profile:{displayName:string;level:number;xp:number;cash:number;energ
 type World={tick:number;onlineCount:number;day:number;time:string;status:string};
 type Job={id:string;name:string;department:string;baseSalary:number;requiredLevel:number;requiredStat:number;requiredEducation:number};
 type Course={id:string;name:string;durationMinutes:number;educationGain:number;requiredLevel:number};
+type ConnectionStatus="LOADING"|"CONNECTED"|"AUTHENTICATION_REQUIRED"|"SERVER_ERROR"|"OFFLINE";
 const worldFallback:World={tick:0,onlineCount:0,day:1,time:"00:00",status:"CONNECTING"};
 
+async function fetchJSON(url:string,init:RequestInit={},signal?:AbortSignal){
+ const response=await fetch(url,{...init,credentials:"include",signal});
+ const data=await response.json().catch(()=>null);
+ if(!response.ok){const error=new Error(data?.error??`HTTP ${response.status}`);(error as any).status=response.status;throw error}
+ return data;
+}
+
 function App(){
- const [view,setView]=useState("Overview"),[account,setAccount]=useState<Account|null>(null),[checking,setChecking]=useState(true),[world,setWorld]=useState(worldFallback),[state,setState]=useState<State|null>(null),[jobs,setJobs]=useState<Job[]>([]),[employment,setEmployment]=useState<Job|null>(null),[courses,setCourses]=useState<Course[]>([]),[training,setTraining]=useState<any>(null),[education,setEducation]=useState(0),[courseBusy,setCourseBusy]=useState(false),[jobBusy,setJobBusy]=useState(false),[jobMessage,setJobMessage]=useState(""),[inbox,setInbox]=useState<any[]>([]),[reputation,setReputation]=useState<any>(null),[organizations,setOrganizations]=useState<any[]>([]);
- const refresh=()=>Promise.all([
-  fetch("/api/v1/world",{credentials:"include"}).then(r=>r.ok?r.json():null),
-  fetch("/api/v1/player/state",{credentials:"include"}).then(r=>r.ok?r.json():null),
-  fetch("/api/v1/jobs",{credentials:"include"}).then(r=>r.ok?r.json():null),
-  fetch("/api/v1/jobs/status",{credentials:"include"}).then(r=>r.ok?r.json():null),
-  fetch("/api/v1/education/courses",{credentials:"include"}).then(r=>r.ok?r.json():null),
-  fetch("/api/v1/education/status",{credentials:"include"}).then(r=>r.ok?r.json():null),
-  fetch("/api/v1/social/inbox",{credentials:"include"}).then(r=>r.ok?r.json():null),
-  fetch("/api/v1/reputation",{credentials:"include"}).then(r=>r.ok?r.json():null),
-  fetch("/api/v1/organizations",{credentials:"include"}).then(r=>r.ok?r.json():null)
- ]).then(([w,s,j,e,coursesData,trainingData,si,rep])=>{
-  if(w)setWorld(w);if(s)setState(s);if(j)setJobs(j.jobs??j);if(e)setEmployment(e.job??null);
-  if(coursesData)setCourses(coursesData.courses??coursesData);
-  if(trainingData){setEducation(trainingData.education??0);setTraining(trainingData.training??null)}
-  if(si)setInbox(si.messages??[]);if(rep)setReputation(rep);if(orgs)setOrganizations(orgs.organizations??orgs)
- }).catch(()=>{});
- useEffect(()=>{fetch("/api/v1/auth/me",{credentials:"include"}).then(async r=>r.ok?setAccount({id:(await r.json()).accountId,username:"PLAYER"}):null).finally(()=>setChecking(false))},[]);
- useEffect(()=>{if(!account)return;refresh();const id=setInterval(refresh,5000);return()=>clearInterval(id)},[account]);
- const enroll=async(courseId:string)=>{setCourseBusy(true);try{const r=await fetch("/api/v1/education/enroll",{method:"POST",credentials:"include",headers:{"Content-Type":"application/json"},body:JSON.stringify({courseId})});const d=await r.json();if(!r.ok){setJobMessage(d.error??"Unable to enroll");return}setTraining(d.training);setJobMessage("Training started.")}catch{setJobMessage("Connection error.")}finally{setCourseBusy(false)}};
- const hire=async(jobId:string)=>{setJobBusy(true);setJobMessage("");try{const r=await fetch("/api/v1/jobs/employ",{method:"POST",credentials:"include",headers:{"Content-Type":"application/json"},body:JSON.stringify({jobId})});const d=await r.json();if(!r.ok){setJobMessage(d.error??"Unable to hire");return}setEmployment(d.job);setJobMessage("Employment confirmed.");await refresh()}catch{setJobMessage("Connection error.")}finally{setJobBusy(false)}};
+ const [view,setView]=useState("Overview"),[account,setAccount]=useState<Account|null>(null),[checking,setChecking]=useState(true),[world,setWorld]=useState(worldFallback),[state,setState]=useState<State|null>(null),[jobs,setJobs]=useState<Job[]>([]),[employment,setEmployment]=useState<Job|null>(null),[courses,setCourses]=useState<Course[]>([]),[training,setTraining]=useState<any>(null),[education,setEducation]=useState(0),[courseBusy,setCourseBusy]=useState(false),[jobBusy,setJobBusy]=useState(false),[jobMessage,setJobMessage]=useState(""),[inbox,setInbox]=useState<any[]>([]),[reputation,setReputation]=useState<any>(null),[organizations,setOrganizations]=useState<any[]>([]),[connection,setConnection]=useState<ConnectionStatus>("LOADING"),[connectionError,setConnectionError]=useState("");
+ const refreshSequence=useRef(0);
+
+ const refresh=async(signal?:AbortSignal)=>{
+  const sequence=++refreshSequence.current;
+  try{
+   const results=await Promise.all([
+    fetchJSON("/api/v1/world",{},signal),
+    fetchJSON("/api/v1/player/state",{},signal),
+    fetchJSON("/api/v1/jobs",{},signal),
+    fetchJSON("/api/v1/jobs/status",{},signal),
+    fetchJSON("/api/v1/education/courses",{},signal),
+    fetchJSON("/api/v1/education/status",{},signal),
+    fetchJSON("/api/v1/social/inbox",{},signal),
+    fetchJSON("/api/v1/reputation",{},signal),
+    fetchJSON("/api/v1/organizations",{},signal)
+   ]);
+   if(sequence!==refreshSequence.current)return;
+   const [w,s,j,e,coursesData,trainingData,si,rep,orgs]=results as any[];
+   setWorld(w);setState(s);setJobs(j.jobs??j);setEmployment(e.job??null);
+   setCourses(coursesData.courses??coursesData);
+   setEducation(trainingData.education??0);setTraining(trainingData.training??null);
+   setInbox(si.messages??[]);setReputation(rep);setOrganizations(orgs.organizations??orgs);
+   setConnection("CONNECTED");setConnectionError("");
+  }catch(error){
+   if((error as any)?.name==="AbortError")return;
+   if(sequence!==refreshSequence.current)return;
+   const status=(error as any)?.status;
+   if(status===401){setAccount(null);setState(null);setConnection("AUTHENTICATION_REQUIRED");setConnectionError("Session expired. Please sign in again.");}
+   else if(status>=500){setConnection("SERVER_ERROR");setConnectionError("World server is unavailable.");}
+   else if(error instanceof TypeError){setConnection("OFFLINE");setConnectionError("Network connection unavailable.");}
+   else {setConnection("SERVER_ERROR");setConnectionError((error as Error).message);}
+  }
+ };
+
+ useEffect(()=>{
+  let cancelled=false;
+  fetchJSON("/api/v1/auth/me").then(data=>{if(!cancelled)setAccount({id:data.accountId,username:"PLAYER"})}).catch(error=>{if(!cancelled&&((error as any)?.status===401)){setConnection("AUTHENTICATION_REQUIRED")}}).finally(()=>{if(!cancelled)setChecking(false)});
+  return()=>{cancelled=true};
+ },[]);
+
+ useEffect(()=>{
+  if(!account)return;
+  const controller=new AbortController();
+  void refresh(controller.signal);
+  const id=setInterval(()=>{void refresh(controller.signal)},5000);
+  return()=>{controller.abort();clearInterval(id)};
+ },[account]);
+
+ const enroll=async(courseId:string)=>{setCourseBusy(true);try{const d=await fetchJSON("/api/v1/education/enroll",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({courseId})});setTraining(d.training);setJobMessage("Training started.")}catch(error){setJobMessage((error as Error).message)}finally{setCourseBusy(false)}};
+ const hire=async(jobId:string)=>{setJobBusy(true);setJobMessage("");try{const d=await fetchJSON("/api/v1/jobs/employ",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({jobId})});setEmployment(d.job);setJobMessage("Employment confirmed.");await refresh()}catch(error){setJobMessage((error as Error).message)}finally{setJobBusy(false)}};
  if(checking)return <div className="auth-stage"><div className="kicker">WORLDBUSTER</div><h1>SYNCING IDENTITY.</h1></div>;
  if(!account)return <div className="auth-stage"><AuthPanel onAuthenticated={setAccount}/></div>;
  return <div className="app">
