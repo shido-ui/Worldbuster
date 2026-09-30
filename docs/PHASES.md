@@ -63,5 +63,14 @@
 - Added persistent contract definitions and contract acceptance storage.
 - Mission/contract state is server-authoritative and database-backed.
 
+## Phase 100 delivered
+- Added server-authoritative combat profiles and match history.
+- Added deterministic stat-based combat resolution.
+- Added energy cost and per-player combat cooldown.
+- Added bounded combat XP rewards with level progression.
+- Added wins/losses and rating persistence.
+- Added authenticated combat resolve/history endpoints.
+- Added deterministic combat tests.
+
 ## Next
-Phase 100 — Combat Framework.
+Phase 101 — Equipment & Item Progression.
