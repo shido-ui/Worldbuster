@@ -133,5 +133,10 @@
 - Added server-authoritative state messaging so the client does not pretend to own game state.
 - Added Compose icon support.
 
+## Phase 111 started
+- Added PostgreSQL + Redis + API production-like compose baseline.
+- Added deployment/security guidance and environment example.
+- Added production readiness checklist covering TLS, backups, observability, rate limits, migrations and Android release signing.
+
 ## Next
-Phase 110 — Testing & Load Testing.
+Phase 112 — Final Integration & Release Build.
