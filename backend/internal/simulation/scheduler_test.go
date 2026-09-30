@@ -24,8 +24,8 @@ func TestTierSchedulerCadence(t *testing.T){
 func TestPopulationSchedulerLifecycle(t *testing.T) {
  population:=NewService()
  now:=time.Unix(500,0)
- if err:=population.Register(SimCharacter{ID:"active",LastTick:now.Add(-time.Second).Unix(),Active:true});err!=nil{t.Fatal(err)}
- if err:=population.Register(SimCharacter{ID:"recent",LastTick:now.Add(-10*time.Second).Unix(),Active:true});err!=nil{t.Fatal(err)}
+ if err:=population.Register(SimCharacter{ID:"active",Name:"Active",Controller:ControllerSimulated,LastTick:now.Add(-time.Second).Unix(),Active:true});err!=nil{t.Fatal(err)}
+ if err:=population.Register(SimCharacter{ID:"recent",Name:"Recent",Controller:ControllerSimulated,LastTick:now.Add(-10*time.Second).Unix(),Active:true});err!=nil{t.Fatal(err)}
  scheduler:=&PopulationScheduler{
   Population:population,
   Policy:TierScheduler{Policy:LifecyclePolicy{ActivePercent:50,RecentPercent:50,BackgroundPercent:0}},
@@ -38,7 +38,7 @@ func TestPopulationSchedulerLifecycle(t *testing.T) {
 
 func TestPopulationSchedulerSerializesRuns(t *testing.T) {
  population:=NewService()
- if err:=population.Register(SimCharacter{ID:"c1",LastTick:1,Active:true});err!=nil{t.Fatal(err)}
+ if err:=population.Register(SimCharacter{ID:"c1",Name:"C1",Controller:ControllerSimulated,LastTick:1,Active:true});err!=nil{t.Fatal(err)}
  scheduler:=&PopulationScheduler{Population:population,Policy:TierScheduler{Policy:LifecyclePolicy{ActivePercent:100}}}
  done:=make(chan struct{},2)
  go func(){_,_=scheduler.Run(time.Unix(10,0));done<-struct{}{}}()
