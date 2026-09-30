@@ -19,3 +19,23 @@
 .notification-item.unread{border-left:2px solid var(--accent)}.notification-item.read{opacity:.65}.text-action{background:none;border:0;color:var(--accent);font:inherit;font-size:10px;letter-spacing:.08em;cursor:pointer}.text-action:disabled{opacity:.35;cursor:not-allowed}
 .achievement-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.achievement-card{padding:16px;border:1px solid var(--line);background:var(--panel);border-radius:var(--radius)}.achievement-card p{color:var(--muted);min-height:34px}.progress-track{height:6px;background:var(--line);border-radius:99px;overflow:hidden;margin:12px 0 7px}.progress-track span{display:block;height:100%;background:var(--accent);transition:width .35s ease}.ranking-head{margin-top:24px}@media(max-width:760px){.achievement-grid{grid-template-columns:1fr}}
 .economy-ledger-head{margin-top:24px}.ledger-credit{color:var(--good)}.ledger-debit{color:var(--danger)}
+
+/* Phase 3 interaction layer */
+.metric strong span{display:inline-block;min-width:1ch}
+.event-enter{animation:eventEnter .42s cubic-bezier(.2,.8,.2,1)}
+.event-pulse{margin-left:auto;font-size:9px;letter-spacing:.12em;color:var(--accent);animation:livePulse 1.8s ease-in-out infinite}
+.mission-progress{height:5px;margin-top:10px;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden}
+.mission-progress i{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--accent),#7df6d0);transition:width .55s cubic-bezier(.2,.8,.2,1)}
+.market-selected{display:grid;grid-template-columns:1fr auto;gap:4px 16px;padding:16px 18px;margin:14px 0;border:1px solid var(--line);border-radius:var(--radius);background:linear-gradient(135deg,rgba(255,255,255,.045),rgba(255,255,255,.015))}
+.market-selected span{grid-column:1/-1;font-size:10px;letter-spacing:.14em;color:var(--muted)}
+.market-selected b{font-size:17px}
+.market-selected strong{font-size:17px;color:var(--accent);align-self:center}
+.notification-item{position:relative;padding-left:28px;transition:background .2s,transform .2s}
+.notification-item:hover{transform:translateX(2px)}
+.notification-dot{position:absolute;left:12px;top:22px;width:7px;height:7px;border-radius:50%;background:var(--muted)}
+.notification-item.unread{background:rgba(125,246,208,.055);border-color:rgba(125,246,208,.2)}
+.notification-item.unread .notification-dot{background:var(--accent);box-shadow:0 0 12px rgba(125,246,208,.7)}
+.notification-item.unread b{color:var(--text)}
+@keyframes eventEnter{from{opacity:0;transform:translateY(8px) scale(.99)}to{opacity:1;transform:none}}
+@keyframes livePulse{0%,100%{opacity:.45}50%{opacity:1}}
+@media(prefers-reduced-motion:reduce){.event-enter,.event-pulse{animation:none}.mission-progress i,.notification-item{transition:none}}
