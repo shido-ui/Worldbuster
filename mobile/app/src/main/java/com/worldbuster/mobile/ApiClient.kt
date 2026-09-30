@@ -102,7 +102,10 @@ class ApiClient(context: Context) {
 
     fun health(): Result<ApiResponse> = request("/health")
     fun hasSession(): Boolean = !secureStore.get("session_cookie").isNullOrBlank()
-    fun clearSession() { secureStore.remove("session_cookie") }
+    fun clearSession() {
+        clearCache()
+        secureStore.remove("session_cookie")
+    }
 
     fun login(username: String, password: String) =
         request("/api/v1/auth/login", "POST", credentials(username, password))
@@ -119,11 +122,29 @@ class ApiClient(context: Context) {
     fun get(path: String) = request(path)
 
     fun cache(key: String, response: ApiResponse) {
-        if (response.code in 200..299) prefs.edit().putString("cache:" + key, response.body).apply()
+        if (response.code in 200..299) {
+            secureStore.put(cacheKey(key), response.body)
+        }
     }
 
     fun cached(key: String): ApiResponse? =
-        prefs.getString("cache:" + key, null)?.let { ApiResponse(200, it) }
+        secureStore.get(cacheKey(key))?.let { ApiResponse(200, it) }
+
+    fun clearCache() {
+        listOf("world", "dashboard", "market", "missions", "achievements", "organizations", "news", "events")
+            .forEach { secureStore.remove(cacheKey(it)) }
+        prefs.edit().apply {
+            prefs.all.keys.filter { it.startsWith("cache:") }.forEach(::remove)
+        }.apply()
+    }
+
+    private fun cacheKey(key: String): String {
+        val session = secureStore.get("session_cookie") ?: "signed_out"
+        val digest = java.security.MessageDigest.getInstance("SHA-256")
+            .digest(session.toByteArray(Charsets.UTF_8))
+            .joinToString("") { byte -> "%02x".format(byte) }
+        return "cache_" + digest + "_" + key
+    }
 
     fun describeFailure(result: Result<ApiResponse>): String {
         val error = result.exceptionOrNull() ?: return "The server did not respond."
