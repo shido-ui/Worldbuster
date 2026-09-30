@@ -38,7 +38,7 @@ func UpdateBehavior(state *BehavioralState, action ActionType, now time.Time) {
 		Type: "ACTION",
 		Event: string(action),
 		Importance: 1,
-		CreatedAt: now.Unix(),
+		CreatedAt: now,
 	})
 	if len(state.Memories) > 50 {
 		state.Memories = state.Memories[len(state.Memories)-50:]
