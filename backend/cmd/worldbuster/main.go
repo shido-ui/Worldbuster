@@ -3,6 +3,7 @@ package main
 import(
  "log"
  "fmt"
+ "strconv"
  "database/sql"
  "context"
  "os"
@@ -44,7 +45,9 @@ func main(){
  generator:=simulation.NewPopulationGenerator(42,simulation.PopulationProfile{
   Names:[]string{"Aster","Vale","Rin","Kade","Mira","Nox","Sora","Iris"},
  })
- generated:=generator.Generate(50)
+ populationSize:=50
+ if raw:=os.Getenv("WORLDBUSTER_SIM_POPULATION");raw!="" { if n,err:=strconv.Atoi(raw);err==nil&&n>0&&n<=10000 {populationSize=n} else {log.Printf("invalid WORLDBUSTER_SIM_POPULATION; using %d",populationSize)} }
+ generated:=generator.Generate(populationSize)
  for _,c:=range generated{
   if err:=population.Register(c);err!=nil{log.Printf("simulation population: %v",err);continue}
   locations[c.ID]="central"
