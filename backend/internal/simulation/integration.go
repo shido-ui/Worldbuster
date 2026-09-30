@@ -1,6 +1,6 @@
 package simulation
 
-import "time"
+import ("time";"context")
 
 // WorldAdapter exposes authoritative domain state to the simulation.
 // Implementations must delegate mutations to the corresponding domain service.
@@ -14,6 +14,7 @@ type IntegratedRunner struct {
 	State *StateService
 	World WorldAdapter
 	Emit EventSink
+	Persistence PersistenceSink
 }
 
 func (r *IntegratedRunner) Tick(now time.Time) int {
@@ -24,6 +25,7 @@ func (r *IntegratedRunner) Tick(now time.Time) int {
 		BuildContext:r.World.Context,
 		Execute:r.World.Execute,
 		Emit:r.Emit,
+		Persistence:r.Persistence,
 	}
 	return runner.Tick(now)
 }
