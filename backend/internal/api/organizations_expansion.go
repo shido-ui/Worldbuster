@@ -18,4 +18,3 @@ func(a *PersistentOrganizationsAPI) Activity(w http.ResponseWriter,r *http.Reque
  writeJSON(w,200,map[string]any{"organizationId":id,"activityScore":score})
 }
 
-var _ = store.ErrOrganizationNotFound
