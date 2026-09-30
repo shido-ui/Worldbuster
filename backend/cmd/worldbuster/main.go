@@ -63,8 +63,8 @@ func main(){
   for i,c:=range generated {
    if i>=5 {break}
    bType:=simulation.BusinessProduction
-   b:=simulation.BusinessState{ID:simulation.NewBusinessID(),OwnerID:c.ID,Name:c.Name+" Works",Type:bType,Cash:500,Level:1,Active:true}
-   if b.ID=="" {log.Fatalf("mandatory NPC business seed produced empty ID for %s",c.ID)}
+   businessIDSeed,err:=simulation.NewBusinessID();if err!=nil{log.Fatalf("mandatory NPC business ID seed: %v",err)}
+   b:=simulation.BusinessState{ID:businessIDSeed,OwnerID:c.ID,Name:c.Name+" Works",Type:bType,Cash:500,Level:1,Active:true}
    businessID,err:=prodRepoCreate(dbStore,b);if err!=nil {log.Fatalf("mandatory NPC business seed: %v",err)}
    input:="raw-water";qty:=25
    if i%2==1 {input="fiber"}
