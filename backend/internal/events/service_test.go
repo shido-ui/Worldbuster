@@ -1,6 +1,6 @@
 package events
 
-import ("testing";"time")
+import ("fmt";"testing";"time")
 
 func TestEventsAndNotifications(t *testing.T){s:=NewService();e,err:=s.Publish("TRAVEL_COMPLETED","p1","",map[string]any{"source":"test"});if err!=nil{t.Fatal(err)};if e.ID==""{t.Fatal("event id missing")};n,nerr:=s.Notify("p1","world","Arrival","You arrived.",e.ID);if nerr!=nil{t.Fatal(nerr)};if n.EventID!=e.ID{t.Fatal("event link missing")};if len(s.Recent(10))!=1||len(s.Notifications("p1"))!=1{t.Fatal("event data missing")}}
 
@@ -25,4 +25,12 @@ func TestSlowSubscriberDoesNotBlockPublish(t *testing.T){
   go func(){s.Publish("LIVE","","",nil);close(done)}()
   select{case <-done:case <-time.After(time.Second):t.Fatal("publish blocked on slow subscriber")}
  }
+}
+
+func TestEventIDEntropyFailureIsReturned(t *testing.T){
+ old:=randomRead;defer func(){randomRead=old}()
+ randomRead=func([]byte)(int,error){return 0,fmt.Errorf("entropy unavailable")}
+ s:=NewService()
+ if _,err:=s.Publish("FAIL","actor","target",nil);err==nil{t.Fatal("expected publish entropy error")}
+ if _,err:=s.Notify("p1","world","Failure","Body","event");err==nil{t.Fatal("expected notification entropy error")}
 }
