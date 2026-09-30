@@ -60,7 +60,7 @@ function App(){
     fetchJSON("/api/v1/social/inbox",{},signal),fetchJSON("/api/v1/reputation",{},signal),fetchJSON("/api/v1/organizations",{},signal),
     eventsLoaded.current?Promise.resolve(null):fetchJSON("/api/v1/events?limit=20",{},signal),
     optional<any>("/api/v1/missions",signal),optional<any>("/api/v1/market/assets",signal),
-    optional<any>("/api/v1/news?limit=12",signal),optional<any>("/api/v1/world-events",signal),optional<any>("/api/v1/achievements",signal),optional<any>("/api/v1/world/locations",signal),optional<any>("/api/v1/world/travel/current",signal),optional<any>("/api/v1/notifications",signal),optional<any>("/api/v1/equipment/items",signal),optional<any>("/api/v1/equipment",signal),optional<any>("/api/v1/territories",signal),optional<any>("/api/v1/combat/history",signal),optional<any>("/api/v1/rankings?id=level",signal)
+    optional<any>("/api/v1/news?limit=12",signal),optional<any>("/api/v1/world-events",signal),optional<any>("/api/v1/achievements",signal),cachedJSON<any>("/api/v1/world/locations",signal),optional<any>("/api/v1/world/travel/current",signal),optional<any>("/api/v1/notifications",signal),optional<any>("/api/v1/equipment/items",signal),optional<any>("/api/v1/equipment",signal),optional<any>("/api/v1/territories",signal),optional<any>("/api/v1/combat/history",signal),optional<any>("/api/v1/rankings?id=level",signal)
    ]);
    if(sequence!==refreshSequence.current)return;
    const[w,s,economyData,j,e,coursesData,trainingData,si,rep,orgs,eventsData,missionData,assetData,newsData,worldEventData,achievementData,locationData,travelData,notificationData,equipmentData,equippedData,territoryData,combatData,rankingData]=results as any[];
