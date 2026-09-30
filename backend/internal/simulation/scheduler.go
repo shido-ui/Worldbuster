@@ -39,7 +39,7 @@ func(s TierScheduler)ShouldTick(position,total int,now time.Time)bool{
  recent:=total*(s.Policy.ActivePercent+s.Policy.RecentPercent)/100
  background:=total*(s.Policy.ActivePercent+s.Policy.RecentPercent+s.Policy.BackgroundPercent)/100
  if position<=active{tier=TierActive}else if position<=recent{tier=TierRecent}else if position<=background{tier=TierBackground}
- return now.Unix()%int64(s.Cadence(tier)/time.Second)==0 || tier==TierActive
+ return tier!=TierDormant && (tier==TierActive || now.Unix()%int64(s.Cadence(tier)/time.Second)==0)
 }
 
 func(s TierScheduler)Cadence(t Tier)time.Duration{
