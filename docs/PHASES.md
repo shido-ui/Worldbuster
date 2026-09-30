@@ -7,16 +7,16 @@
 - 90 — NPC action execution and world reactions
 - 91 — Persistent NPC identity, memory, and action history
 - 92 — NPC relationships, social memory, and simulated reputation propagation
+- 93 — NPC autonomous economy foundation
 
-## Phase 92 delivered
-- Relationship state now includes familiarity, trust, affinity, interaction count, and last interaction.
-- Social choices use relationship state as a deterministic decision signal.
-- Successful NPC social actions create relationship memories.
-- Relationship changes are persisted in PostgreSQL.
-- Social interaction history is persisted for auditing/replay.
-- Simulated NPC public/trust reputation is persisted separately from player reputation.
-- Reputation propagation is deterministic and emitted from validated social actions.
-- Existing relationship/group runtime APIs remain compatible.
+## Phase 93 delivered
+- NPCs have deterministic wallets and economic state.
+- Work produces simulated income.
+- Study, social activity, and travel consume deterministic costs.
+- NPC spending is rejected when funds are insufficient.
+- Lifetime income/spending are tracked.
+- NPC economic state is persisted and auditable.
+- Economic state is included in simulation events for downstream systems.
 
 ## Next
-Phase 93 — NPC economy participation and autonomous economic behavior.
+Phase 94 — NPC businesses and employment.
