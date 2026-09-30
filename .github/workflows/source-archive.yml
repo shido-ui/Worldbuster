@@ -1,0 +1,20 @@
+name: Worldbuster Source Archive
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  archive:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Create source archive
+        run: zip -r Worldbuster-source.zip . -x ".git/*"
+      - name: Upload source archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: Worldbuster-source
+          path: Worldbuster-source.zip
+          retention-days: 7
