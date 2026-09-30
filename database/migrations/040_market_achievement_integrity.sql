@@ -1,3 +1,8 @@
+ALTER TABLE market_assets ADD COLUMN IF NOT EXISTS item_id TEXT;
+UPDATE market_assets SET item_id='bottled-water' WHERE symbol='bottled-water';
+UPDATE market_assets SET item_id='fabric' WHERE symbol='fabric';
+UPDATE market_assets SET item_id='basic-tools' WHERE symbol='basic-tools';
+
 ALTER TABLE achievement_definitions ADD COLUMN IF NOT EXISTS target_progress BIGINT NOT NULL DEFAULT 1 CHECK(target_progress>0);
 
 UPDATE achievement_definitions SET target_progress=1 WHERE id IN ('first-level','market-participant');
