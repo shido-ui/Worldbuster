@@ -10,6 +10,12 @@ type Job={id:string;name:string;department:string;baseSalary:number;requiredLeve
 type Course={id:string;name:string;durationMinutes:number;educationGain:number;requiredLevel:number};
 type EventItem={id:string;type:string;actorId:string;targetId?:string;createdAt:string;payload?:Record<string,unknown>};
 type ConnectionStatus="LOADING"|"CONNECTED"|"AUTHENTICATION_REQUIRED"|"SERVER_ERROR"|"OFFLINE";
+type Mission={id:string;name:string;description:string;level?:number;reward?:number;status?:string;progress?:number;target?:number};
+type Asset={id:string;name:string;symbol?:string;price?:number};
+type Order={id:string;assetId:string;side:string;quantity:number;unitPrice:number;status?:string};
+type NewsItem={id:string;title:string;summary?:string;body?:string;createdAt:string};
+type WorldEvent={id:string;type:string;description?:string;createdAt:string};
+type Achievement={id:string;name:string;description?:string;unlocked?:boolean;completed?:boolean};
 const worldFallback:World={tick:0,onlineCount:0,day:1,time:"00:00",status:"CONNECTING"};
 
 async function fetchJSON(url:string,init:RequestInit={},signal?:AbortSignal){
@@ -18,13 +24,14 @@ async function fetchJSON(url:string,init:RequestInit={},signal?:AbortSignal){
  if(!response.ok){const error=new Error(data?.error??"HTTP "+response.status);(error as any).status=response.status;throw error}
  return data;
 }
-const nav=["Overview","Character","Inventory","Economy","World","Jobs","Education","Social","Reputation","Organizations"];
+const nav=["Overview","Character","Inventory","Economy","World","Missions","Market","Jobs","Education","Social","Reputation","Organizations","Achievements","News"];
 const eventLabel=(e:EventItem)=>e.type.replaceAll("_"," ").toLowerCase().replace(/^./,c=>c.toUpperCase());
 const formatTime=(value:string)=>{const d=new Date(value);return Number.isNaN(d.getTime())?"recent":d.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})};
 
 function App(){
- const[view,setView]=useState("Overview"),[account,setAccount]=useState<Account|null>(null),[checking,setChecking]=useState(true),[world,setWorld]=useState(worldFallback),[state,setState]=useState<State|null>(null),[jobs,setJobs]=useState<Job[]>([]),[employment,setEmployment]=useState<Job|null>(null),[courses,setCourses]=useState<Course[]>([]),[training,setTraining]=useState<any>(null),[education,setEducation]=useState(0),[courseBusy,setCourseBusy]=useState(false),[jobBusy,setJobBusy]=useState(false),[message,setMessage]=useState(""),[inbox,setInbox]=useState<any[]>([]),[reputation,setReputation]=useState<any>(null),[organizations,setOrganizations]=useState<any[]>([]),[events,setEvents]=useState<EventItem[]>([]),[connection,setConnection]=useState<ConnectionStatus>("LOADING"),[connectionError,setConnectionError]=useState(""),[mobileNav,setMobileNav]=useState(false);
+ const[view,setView]=useState("Overview"),[missions,setMissions]=useState<Mission[]>([]),[assets,setAssets]=useState<Asset[]>([]),[orders,setOrders]=useState<Order[]>([]),[news,setNews]=useState<NewsItem[]>([]),[worldEvents,setWorldEvents]=useState<WorldEvent[]>([]),[achievements,setAchievements]=useState<Achievement[]>([]),[account,setAccount]=useState<Account|null>(null),[checking,setChecking]=useState(true),[world,setWorld]=useState(worldFallback),[state,setState]=useState<State|null>(null),[jobs,setJobs]=useState<Job[]>([]),[employment,setEmployment]=useState<Job|null>(null),[courses,setCourses]=useState<Course[]>([]),[training,setTraining]=useState<any>(null),[education,setEducation]=useState(0),[courseBusy,setCourseBusy]=useState(false),[jobBusy,setJobBusy]=useState(false),[message,setMessage]=useState(""),[inbox,setInbox]=useState<any[]>([]),[reputation,setReputation]=useState<any>(null),[organizations,setOrganizations]=useState<any[]>([]),[events,setEvents]=useState<EventItem[]>([]),[connection,setConnection]=useState<ConnectionStatus>("LOADING"),[connectionError,setConnectionError]=useState(""),[mobileNav,setMobileNav]=useState(false);
  const refreshSequence=useRef(0);
+ const optional=async<T>(url:string,signal?:AbortSignal):Promise<T|null>=>{try{return await fetchJSON(url,{},signal) as T}catch(error){if((error as any)?.name==="AbortError")throw error;return null}};
  const refresh=async(signal?:AbortSignal)=>{
   const sequence=++refreshSequence.current;
   try{
@@ -32,13 +39,15 @@ function App(){
     fetchJSON("/api/v1/world",{},signal),fetchJSON("/api/v1/player/state",{},signal),fetchJSON("/api/v1/jobs",{},signal),
     fetchJSON("/api/v1/jobs/status",{},signal),fetchJSON("/api/v1/education/courses",{},signal),fetchJSON("/api/v1/education/status",{},signal),
     fetchJSON("/api/v1/social/inbox",{},signal),fetchJSON("/api/v1/reputation",{},signal),fetchJSON("/api/v1/organizations",{},signal),
-    fetchJSON("/api/v1/events?limit=20",{},signal)
+    fetchJSON("/api/v1/events?limit=20",{},signal),
+    optional<any>("/api/v1/missions",signal),optional<any>("/api/v1/market/assets",signal),optional<any>("/api/v1/market/orders?assetId=WBX",signal),
+    optional<any>("/api/v1/news?limit=12",signal),optional<any>("/api/v1/world-events",signal),optional<any>("/api/v1/achievements",signal)
    ]);
    if(sequence!==refreshSequence.current)return;
-   const[w,s,j,e,coursesData,trainingData,si,rep,orgs,eventsData]=results as any[];
+   const[w,s,j,e,coursesData,trainingData,si,rep,orgs,eventsData,missionData,assetData,orderData,newsData,worldEventData,achievementData]=results as any[];
    setWorld(w);setState(s);setJobs(j.jobs??j);setEmployment(e.job??null);setCourses(coursesData.courses??coursesData);
    setEducation(trainingData.education??0);setTraining(trainingData.training??null);setInbox(si.messages??[]);setReputation(rep);
-   setOrganizations(orgs.organizations??orgs);setEvents(Array.isArray(eventsData)?eventsData:(eventsData.events??[]));
+   setOrganizations(orgs.organizations??orgs);setEvents(Array.isArray(eventsData)?eventsData:(eventsData.events??[]));setMissions(missionData?.missions??[]);setAssets(assetData?.assets??[]);setOrders(orderData?.orders??[]);setNews(newsData?.news??[]);setWorldEvents(worldEventData?.events??[]);setAchievements(achievementData?.achievements??[]);
    setConnection("CONNECTED");setConnectionError("");
   }catch(error){
    if((error as any)?.name==="AbortError")return;
@@ -88,6 +97,10 @@ function App(){
     {view==="Education"&&<Module title="ACADEMY" eyebrow={"EDUCATION "+education}>{training&&<div className="employment-banner"><span>IN TRAINING</span><b>{training.courseName}</b><small>Completes {new Date(training.completesAt).toLocaleString()}</small></div>}<div className="job-list">{courses.map(c=><div className="job" key={c.id}><div><b>{c.name}</b><small>{c.durationMinutes} min · +{c.educationGain} education · Level {c.requiredLevel}+</small></div><button disabled={!!training||courseBusy||((state?.profile.level??0)<c.requiredLevel)} onClick={()=>enroll(c.id)}>{training?"TRAINING":((state?.profile.level??0)<c.requiredLevel?"LOCKED":"ENROLL")}</button></div>)}</div></Module>}
     {view==="Social"&&<Module title="SOCIAL NETWORK" eyebrow="PERSISTENT"><div className="item-list">{inbox.length?inbox.map(m=><div className="item" key={m.id}><div><b>Message from {m.fromId}</b><small>{new Date(m.createdAt).toLocaleString()}</small></div><span>OPEN</span></div>):<Empty title="No messages" text="Social events and messages will appear here."/>}</div></Module>}
     {view==="Reputation"&&<Module title="REPUTATION" eyebrow="CONSEQUENCES">{reputation?<div className="large-stats compact">{[["Public",reputation.publicScore],["Trust",reputation.trustScore],["Notoriety",reputation.notorietyScore]].map(([k,v])=><div className="large-stat" key={String(k)}><span>{k}</span><strong>{v}</strong></div>)}</div>:<Empty title="Reputation unavailable" text="No reputation data was returned by the server."/>}</Module>}
+    {view==="Missions"&&<Module title="MISSIONS" eyebrow="SERVER ISSUED">{missions.length?<div className="job-list">{missions.map(m=><div className="job" key={m.id}><div><b>{m.name}</b><small>{m.description||"World objective"}{m.progress!==undefined&&m.target!==undefined? ` · ${m.progress}/${m.target}`:""}</small></div><strong>{m.reward!==undefined?m.reward+" WBX":m.status||"AVAILABLE"}</strong></div>)}</div>:<Empty title="No missions available" text="The mission service returned no active objectives."/>}</Module>}
+    {view==="Market"&&<Module title="MARKET" eyebrow="LIVE ORDERS">{assets.length?<div className="job-list">{assets.map(a=><div className="job" key={a.id}><div><b>{a.name}</b><small>{a.symbol||a.id}</small></div><strong>{a.price!==undefined?a.price.toLocaleString():"—"}</strong></div>)}</div>:<Empty title="Market unavailable" text="No market assets are currently exposed."/>}{orders.length>0&&<div className="item-list">{orders.slice(0,12).map(o=><div className="item" key={o.id}><div><b>{o.side} · {o.assetId}</b><small>{o.quantity} units · {o.unitPrice} / unit</small></div><span>{o.status||"OPEN"}</span></div>)}</div>}</Module>}
+    {view==="Achievements"&&<Module title="ACHIEVEMENTS" eyebrow="PERSISTENT PROGRESS">{achievements.length?<div className="job-list">{achievements.map(a=><div className="job" key={a.id}><div><b>{a.name}</b><small>{a.description||"Achievement"}</small></div><strong>{a.unlocked||a.completed?"UNLOCKED":"LOCKED"}</strong></div>)}</div>:<Empty title="No achievements returned" text="Achievement definitions are not currently available."/>}</Module>}
+    {view==="News"&&<Module title="WORLD NEWS" eyebrow="PERSISTENT WORLD">{news.length?<div className="timeline">{news.map(n=><div className="timeline-item" key={n.id}><i/><div><b>{n.title}</b><small>{n.summary||n.body||"World report"} · {formatTime(n.createdAt)}</small></div></div>)}</div>:worldEvents.length?<div className="timeline">{worldEvents.map(e=><div className="timeline-item" key={e.id}><i/><div><b>{eventLabel({type:e.type} as EventItem)}</b><small>{e.description||"World event"} · {formatTime(e.createdAt)}</small></div></div>)}</div>:<Empty title="No world reports" text="News and world events will appear as the simulation produces them."/>}</Module>}
     {view==="Organizations"&&<Module title="ORGANIZATIONS" eyebrow="FACTIONS">{organizations.length?<div className="job-list">{organizations.map(o=><div className="job" key={o.id}><div><b>{o.name}</b><small>{o.type} · Level {o.level} · Reputation {o.reputation} · {o.maxMembers} member capacity</small></div><strong>{o.treasury.toLocaleString()} WBX</strong></div>)}</div>:<Empty title="No organizations" text="There are no organizations available in the current world state."/>}</Module>}
    </section>
   </main>
