@@ -52,3 +52,9 @@ func(r *GroupRuntime) SetGoal(groupID,goal string)bool{
 }
 
 func(r *GroupRuntime) Goal(groupID string)(string,bool){r.mu.RLock();defer r.mu.RUnlock();v,ok:=r.goals[groupID];return v,ok}
+
+func(r *GroupRuntime) ApplyDecision(groupID string, action GroupAction) bool {
+ if groupID=="" || action.Type=="" { return false }
+ ApplyGroupAction(r, groupID, action)
+ return true
+}
