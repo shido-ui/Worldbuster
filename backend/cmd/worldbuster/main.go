@@ -78,6 +78,7 @@ func main(){
    territory,tberr:=store.TerritoryRepository{DB:dbStore}.ResolveConsequences(context.Background(),250)
    if tberr!=nil {log.Printf("territory consequences: %v",tberr)} else if territory.ControlChanges>0 || territory.StabilityChanges>0 {evs.Publish("world.territory.cycle","world","world",map[string]any{"territories":territory.TerritoriesProcessed,"controlChanges":territory.ControlChanges,"stabilityChanges":territory.StabilityChanges})}
    balance,berr:=store.EconomyBalanceRepository{DB:dbStore}.Rebalance(context.Background(),250)
+   if berr==nil && balance.PriceChanges>0 { if we,err:=store.WorldEventRepository{DB:dbStore}.Create(context.Background(),"market-fluctuation",1,"central",map[string]any{"priceChanges":balance.PriceChanges}); err==nil { evs.Publish("world.event.created","world",we.ID,map[string]any{"code":we.Code,"severity":we.Severity}) } }
    if berr!=nil {log.Printf("economy rebalance: %v",berr)} else if balance.PriceChanges>0 {evs.Publish("world.economy.rebalanced","world","world",map[string]any{"assets":balance.ProcessedAssets,"priceChanges":balance.PriceChanges,"supply":balance.TotalSupply,"demand":balance.TotalDemand})}
 
    payments,err:=store.JobRepository{DB:dbStore}.SettleDueSalaries(context.Background(),60)
