@@ -15,6 +15,7 @@ type IntegratedRunner struct {
  World WorldAdapter
  Emit EventSink
  Persistence PersistenceSink
+ PersistenceError PersistenceErrorSink
 }
 
 func (r *IntegratedRunner) Tick(now time.Time) int {
@@ -30,6 +31,7 @@ func (r *IntegratedRunner) TickCharacters(chars []SimCharacter, now time.Time) i
   Execute: r.World.Execute,
   Emit: r.Emit,
   Persistence: r.Persistence,
+  PersistenceError: r.PersistenceError,
  }
  return runner.TickCharacters(chars, now)
 }
