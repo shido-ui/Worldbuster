@@ -145,7 +145,7 @@ fun WorldbusterApp() {
                 Column(Modifier.fillMaxSize().padding(pad).padding(horizontal = 16.dp)) {
                     Spacer(Modifier.height(12.dp))
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Button(Modifier.weight(1f), enabled = !loading, onClick = { scope.launch { load() } }) {
+                        Button(modifier = Modifier.weight(1f), enabled = !loading, onClick = { scope.launch { load() } }) {
                             Text(if (loading) "SYNCING…" else "SYNC WORLD")
                         }
                         OutlinedButton(onClick = {
@@ -313,8 +313,9 @@ private fun LoginScreen(api: ApiClient, onSuccess: () -> Unit, onError: (String)
 
             Column {
                 Button(
-                    Modifier.fillMaxWidth().height(56.dp), enabled = !busy && username.length >= 3 &&
-                        password.length >= 8 && serverUrl.isNotBlank(), shape = RoundedCornerShape(17.dp),
+                    modifier = Modifier.fillMaxWidth().height(56.dp),
+                    enabled = !busy && username.length >= 3 && password.length >= 8 && serverUrl.isNotBlank(),
+                    shape = RoundedCornerShape(17.dp),
                     onClick = {
                         api.setBaseUrl(serverUrl)
                         busy = true
@@ -350,7 +351,7 @@ private fun LoginScreen(api: ApiClient, onSuccess: () -> Unit, onError: (String)
                     if (!busy) { Spacer(Modifier.width(8.dp)); Icon(Icons.Default.ArrowForward, null) }
                 }
                 Spacer(Modifier.height(8.dp))
-                TextButton(Modifier.fillMaxWidth(), onClick = {
+                TextButton(modifier = Modifier.fillMaxWidth(), onClick = {
                     registering = !registering
                     onError("")
                 }) {
@@ -370,7 +371,9 @@ private fun AuthField(
     visualTransformation: VisualTransformation = VisualTransformation.None
 ) {
     OutlinedTextField(
-        Modifier.fillMaxWidth(), value, onValueChange,
+        value = value,
+        onValueChange = onValueChange,
+        modifier = Modifier.fillMaxWidth(),
         label = { Text(label, letterSpacing = 1.1.sp, fontSize = 10.sp) },
         placeholder = { Text(placeholder, color = SecondaryText) },
         leadingIcon = leadingIcon, trailingIcon = trailingIcon, singleLine = true,
