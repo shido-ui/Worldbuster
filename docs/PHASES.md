@@ -55,5 +55,13 @@
 - Organization activity can feed future progression and territory systems.
 - New persistent organization expansion tables support alliances and organization goals.
 
+## Phase 99 delivered
+- Added persistent mission definitions and player mission state.
+- Added level-gated mission acceptance.
+- Added atomic mission completion and cash reward ledger entries.
+- Added mission progress and completion API endpoints.
+- Added persistent contract definitions and contract acceptance storage.
+- Mission/contract state is server-authoritative and database-backed.
+
 ## Next
-Phase 99 — Missions & Contracts.
+Phase 100 — Combat Framework.
