@@ -50,3 +50,8 @@ func(s TierScheduler)Due(chars []SimCharacter,now time.Time)[]SimCharacter{
  for _,c:=range chars{last:=time.Unix(c.LastTick,0);if c.LastTick==0||now.Sub(last)>=s.Cadence(tiers[c.ID]){out=append(out,c)}}
  return out
 }
+
+
+type PopulationRegion struct { Name string; Weight int }
+func ClassifyPopulation(position,total int,p LifecyclePolicy) Tier { if total<=0||position<1||position>total{return TierDormant}; a:=total*p.ActivePercent/100; r:=total*(p.ActivePercent+p.RecentPercent)/100; b:=total*(p.ActivePercent+p.RecentPercent+p.BackgroundPercent)/100; if position<=a{return TierActive}; if position<=r{return TierRecent}; if position<=b{return TierBackground}; return TierDormant }
+func SelectRegion(value int,regions []PopulationRegion) string { if len(regions)==0{return ""}; total:=0;for _,r:=range regions{if r.Weight>0{total+=r.Weight}};if total<=0{return regions[0].Name};n:=value%total;if n<0{n+=total};for _,r:=range regions{if r.Weight<=0{continue};if n<r.Weight{return r.Name};n-=r.Weight};return regions[len(regions)-1].Name }
