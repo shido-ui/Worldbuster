@@ -81,5 +81,12 @@
 - Added starter safe equipment definitions.
 - Added item progression storage for future upgrade mechanics.
 
+## Phase 102 delivered
+- Added persistent world event definitions and instances.
+- Added severity, location, payload, lifecycle state, and timestamps.
+- Added event catalog and recent-event APIs.
+- Connected market price-change cycles to persistent world events.
+- Published event creation through the existing event bus.
+
 ## Next
-Phase 102 — World Events.
+Phase 103 — Dynamic News/Media.
