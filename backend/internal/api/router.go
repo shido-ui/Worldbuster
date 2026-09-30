@@ -1,12 +1,12 @@
 package api
 
-import("encoding/json";"net/http";"time";"github.com/shido-ui/Worldbuster/backend/internal/auth";"github.com/shido-ui/Worldbuster/backend/internal/inventory";"github.com/shido-ui/Worldbuster/backend/internal/economy";"github.com/shido-ui/Worldbuster/backend/internal/organization";"github.com/shido-ui/Worldbuster/backend/internal/world")
+import("encoding/json";"net/http";"time";"github.com/shido-ui/Worldbuster/backend/internal/auth";"github.com/shido-ui/Worldbuster/backend/internal/inventory";"github.com/shido-ui/Worldbuster/backend/internal/economy";"github.com/shido-ui/Worldbuster/backend/internal/organization";"github.com/shido-ui/Worldbuster/backend/internal/job";"github.com/shido-ui/Worldbuster/backend/internal/world")
 
-type Router struct{world *world.Service;auth *auth.Service;travel *world.TravelService;inventory *inventory.Service;economy *economy.Service;organizations *organization.Service}
-func NewRouter(w *world.Service,a *auth.Service,t *world.TravelService,i *inventory.Service,e *economy.Service,o *organization.Service)*Router{return &Router{world:w,auth:a,travel:t,inventory:i,economy:e,organizations:o}}
+type Router struct{world *world.Service;auth *auth.Service;travel *world.TravelService;inventory *inventory.Service;economy *economy.Service;organizations *organization.Service;jobs *job.Service}
+func NewRouter(w *world.Service,a *auth.Service,t *world.TravelService,i *inventory.Service,e *economy.Service,o *organization.Service,j *job.Service)*Router{return &Router{world:w,auth:a,travel:t,inventory:i,economy:e,organizations:o,jobs:j}}
 func(r *Router)Handler()http.Handler{
  mux:=http.NewServeMux();mux.HandleFunc("/health",r.health);mux.HandleFunc("/api/v1/world",r.worldState)
- wh:=newWorldHandler(r.travel);ih:=newInventoryHandler(r.inventory);eh:=newEconomyHandler(r.economy);mux.HandleFunc("/api/v1/world/locations",wh.locations);mux.HandleFunc("/api/v1/world/travel",wh.travel);mux.HandleFunc("/api/v1/inventory",ih.get);mux.HandleFunc("/api/v1/inventory/add",ih.add);mux.HandleFunc("/api/v1/economy/balance",eh.balance);mux.HandleFunc("/api/v1/economy/credit",eh.credit);mux.HandleFunc("/api/v1/economy/history",eh.history)
+ wh:=newWorldHandler(r.travel);ih:=newInventoryHandler(r.inventory);eh:=newEconomyHandler(r.economy);jh:=newJobHandler(r.jobs);mux.HandleFunc("/api/v1/world/locations",wh.locations);mux.HandleFunc("/api/v1/world/travel",wh.travel);mux.HandleFunc("/api/v1/inventory",ih.get);mux.HandleFunc("/api/v1/inventory/add",ih.add);mux.HandleFunc("/api/v1/economy/balance",eh.balance);mux.HandleFunc("/api/v1/economy/credit",eh.credit);mux.HandleFunc("/api/v1/economy/history",eh.history);mux.HandleFunc("/api/v1/jobs",jh.list);mux.HandleFunc("/api/v1/jobs/employ",jh.employ)
  ah:=newAuthHandler(r.auth);mux.HandleFunc("/api/v1/auth/register",ah.register);mux.HandleFunc("/api/v1/auth/login",ah.login);mux.HandleFunc("/api/v1/auth/me",ah.me);mux.HandleFunc("/api/v1/auth/logout",ah.logout)
  return securityHeaders(mux)
 }
