@@ -13,6 +13,8 @@ import (
 func ApplyMigrations(ctx context.Context,db *DB,dir string) error {
  if db==nil||db.SQL==nil{return fmt.Errorf("database is not configured")}
  if dir==""{dir="database/migrations"}
+ if _,err:=db.SQL.ExecContext(ctx,`SELECT pg_advisory_lock(hashtext('worldbuster:migrations'))`);err!=nil{return err}
+ defer db.SQL.ExecContext(context.Background(),`SELECT pg_advisory_unlock(hashtext('worldbuster:migrations'))`)
  if _,err:=db.SQL.ExecContext(ctx,`CREATE TABLE IF NOT EXISTS schema_migrations (
   version TEXT PRIMARY KEY,
   applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
