@@ -69,7 +69,7 @@ if dbStore.SQL!=nil {
  }
   if dbStore.SQL!=nil {
   go func(){ticker:=time.NewTicker(time.Minute);defer ticker.Stop();for range ticker.C{
-   if _,err:=store.EducationRepository{DB:dbStore}.CompleteDue(context.Background());err!=nil{log.Printf("education completion: %v",err)}
+   if _,err:=(store.EducationRepository{DB:dbStore}).CompleteDue(context.Background());err!=nil{log.Printf("education completion: %v",err)}
   }}()
  }
  server:=&http.Server{Addr:":8080",Handler:router.Handler(),ReadHeaderTimeout:5*time.Second}
