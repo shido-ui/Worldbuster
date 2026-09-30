@@ -1,6 +1,6 @@
 package simulation
 
-import ("time";"context")
+import "time"
 
 // WorldAdapter exposes authoritative domain state to the simulation.
 // Implementations must delegate mutations to the corresponding domain service.
