@@ -59,11 +59,10 @@ function App(){
    const availableAssets=(assetData?.assets??[]) as Asset[];
    const firstAsset=availableAssets[0];
    const preferredAsset=selectedAssetRef.current && availableAssets.some(a=>a.id===selectedAssetRef.current)?selectedAssetRef.current:firstAsset?.id||"";
-   const orderData=preferredAsset?await optional<any>("/api/v1/market/orders?assetId="+encodeURIComponent(preferredAsset),signal):null;
    if(sequence!==refreshSequence.current||signal.aborted)return;
    setWorld(w);setState(s);setLedger(economyData?.ledger??[]);setJobs(j.jobs??j);setEmployment(e.job??null);setCourses(coursesData.courses??coursesData);
    setEducation(trainingData.education??0);setTraining(trainingData.training??null);setInbox(si.messages??[]);setReputation(rep);
-   setOrganizations(orgs.organizations??orgs);setNotifications(notificationData?.notifications??(Array.isArray(notificationData)?notificationData:[]));setEvents(Array.isArray(eventsData)?eventsData:(eventsData.events??[]));setMissions(missionData?.missions??[]);setAssets(assetData?.assets??[]);setSelectedAsset(prev=>{const available=assetData?.assets??[];return available.some((a:any)=>a.id===prev)?prev:(available[0]?.id??"")});setNews(newsData?.news??[]);setWorldEvents(worldEventData?.events??[]);setAchievements(achievementData?.achievements??[]);setLocations(locationData?.locations??[]);setRoutes(locationData?.routes??[]);setTravel(travelData?.traveling?travelData.travel:null);
+   setOrganizations(orgs.organizations??orgs);setNotifications(notificationData?.notifications??(Array.isArray(notificationData)?notificationData:[]));setEvents(Array.isArray(eventsData)?eventsData:(eventsData.events??[]));setMissions(missionData?.missions??[]);setAssets(availableAssets);selectedAssetRef.current=preferredAsset;setSelectedAsset(preferredAsset);setNews(newsData?.news??[]);setWorldEvents(worldEventData?.events??[]);setAchievements(achievementData?.achievements??[]);setLocations(locationData?.locations??[]);setRoutes(locationData?.routes??[]);setTravel(travelData?.traveling?travelData.travel:null);
    setPlayerMissions(missionData?.playerMissions??[]);setEquipmentItems(equipmentData?.items??[]);setEquipped(equippedData?.equipment??[]);setTerritories(territoryData?.territories??[]);setCombatHistory(combatData?.history??combatData?.records??[]);setRankings(rankingData?.entries??[]);setConnection("CONNECTED");setConnectionError("");
   }catch(error){
    if((error as any)?.name==="AbortError")return;
