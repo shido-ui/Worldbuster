@@ -1,6 +1,6 @@
 package simulation
 
-import ("math/rand";"sync")
+import ("math/rand";"sync";"crypto/rand";"fmt")
 
 type PopulationProfile struct {
  Names []string
@@ -24,9 +24,11 @@ func(g *PopulationGenerator) Generate(count int)[]SimCharacter{
   g.next++
   name:="Citizen"
   if len(g.profile.Names)>0{name=g.profile.Names[g.rng.Intn(len(g.profile.Names))]}
-  out=append(out,SimCharacter{ID:formatID(g.next),Name:name+" "+formatID(g.next),Controller:ControllerSimulated,Personality:g.profile.PersonalityBias,Goals:[]Goal{{ID:"work",Kind:"WORK",Priority:50}} ,Active:false})
+  id:=newUUID();out=append(out,SimCharacter{ID:id,Name:name+" "+formatID(g.next),Controller:ControllerSimulated,Personality:g.profile.PersonalityBias,Goals:[]Goal{{ID:"work",Kind:"WORK",Priority:50}} ,Active:false})
  }
  return out
 }
+
+func newUUID()string{b:=make([]byte,16);if _,err:=rand.Read(b);err!=nil{return fmt.Sprintf("00000000-0000-4000-8000-%012d",0)};b[6]=(b[6]&15)|64;b[8]=(b[8]&63)|128;return fmt.Sprintf("%08x-%04x-%04x-%04x-%012x",b[0:4],b[4:6],b[6:8],b[8:10],b[10:16])}
 
 func formatID(n int)string{digits:="0123456789";s:="";if n==0{return "0"};for n>0{s=string(digits[n%10])+s;n/=10};return s}
