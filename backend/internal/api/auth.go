@@ -10,19 +10,19 @@ import (
 	"github.com/shido-ui/Worldbuster/backend/internal/auth"
 )
 
-type authHandler struct{ service *auth.Service }
+type authHandler struct{ service AuthBackend }
 
 type credentialsRequest struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
 }
 
-func newAuthHandler(service *auth.Service) *authHandler { return &authHandler{service:service} }
+func newAuthHandler(service AuthBackend) *authHandler { return &authHandler{service:service} }
 
 func (h *authHandler) register(w http.ResponseWriter,r *http.Request) {
 	var req credentialsRequest
 	if err:=json.NewDecoder(r.Body).Decode(&req); err!=nil { writeJSON(w,400,map[string]string{"error":"invalid json"}); return }
-	account,err:=h.service.Register(req.Username,req.Password)
+	account,err:=h.service.Register(r.Context(),req.Username,req.Password)
 	if err!=nil {
 		status:=400
 		if errors.Is(err,auth.ErrUsernameTaken){status=409}
@@ -34,9 +34,9 @@ func (h *authHandler) register(w http.ResponseWriter,r *http.Request) {
 func (h *authHandler) login(w http.ResponseWriter,r *http.Request) {
 	var req credentialsRequest
 	if err:=json.NewDecoder(r.Body).Decode(&req); err!=nil { writeJSON(w,400,map[string]string{"error":"invalid json"}); return }
-	account,err:=h.service.Authenticate(req.Username,req.Password)
+	account,err:=h.service.Authenticate(r.Context(),req.Username,req.Password)
 	if err!=nil { writeJSON(w,401,map[string]string{"error":"invalid credentials"}); return }
-	session,err:=h.service.CreateSession(account.ID,24*time.Hour)
+	session,err:=h.service.CreateSession(r.Context(),account.ID,24*time.Hour)
 	if err!=nil { writeJSON(w,500,map[string]string{"error":"session creation failed"}); return }
 	http.SetCookie(w,&http.Cookie{Name:"worldbuster_session",Value:session.ID,Path:"/",HttpOnly:true,SameSite:http.SameSiteLaxMode,Secure:isSecureRequest(r),MaxAge:int(time.Until(session.ExpiresAt).Seconds())})
 	writeJSON(w,200,account)
@@ -49,15 +49,15 @@ func (h *authHandler) me(w http.ResponseWriter,r *http.Request) {
 }
 
 func (h *authHandler) logout(w http.ResponseWriter,r *http.Request) {
-	if c,err:=r.Cookie("worldbuster_session"); err==nil { h.service.RevokeSession(c.Value) }
+	if c,err:=r.Cookie("worldbuster_session"); err==nil { _ = h.service.RevokeSession(r.Context(),c.Value) }
 	http.SetCookie(w,&http.Cookie{Name:"worldbuster_session",Value:"",Path:"/",HttpOnly:true,MaxAge:-1,SameSite:http.SameSiteLaxMode,Secure:isSecureRequest(r)})
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func sessionFromRequest(service *auth.Service,r *http.Request)(auth.Session,bool) {
+func sessionFromRequest(service AuthBackend,r *http.Request)(auth.Session,bool) {
 	c,err:=r.Cookie("worldbuster_session")
 	if err!=nil || strings.TrimSpace(c.Value)=="" { return auth.Session{},false }
-	session,err:=service.ResolveSession(c.Value)
+	session,err:=service.ResolveSession(r.Context(),c.Value)
 	return session,err==nil
 }
 
