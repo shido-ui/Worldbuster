@@ -18,7 +18,10 @@ Population generation is deterministic from a supplied seed and data profile. Ge
 Population uses active, recent, background and dormant tiers. Regional weights control deterministic population density.
 
 ## Behavioral simulation
-NPC needs, stress, mood, satisfaction and bounded memories evolve after actions and over time. Decision priorities consume the current behavioral state.
+NPC needs, stress, mood, satisfaction and bounded memories evolve after actions and over time. Decision priorities consume current behavioral state.
 
 ## Social simulation
-Relationships are persistent state with familiarity and trust. The relationship layer supports acquaintances, friendships and rivalries with bounded scores, providing a foundation for social consequences and network formation.
+Relationships persist with familiarity and trust. Social actions can deepen acquaintances into friendships or preserve rivalries.
+
+## Group formation
+A lightweight persistent group layer now supports NPC community formation: a leader can create a group, characters can join one group, and membership is queryable. This is the foundation for later organizations, factions, companies, gangs, clubs and other larger social structures.
