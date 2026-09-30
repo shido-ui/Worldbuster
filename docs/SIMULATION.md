@@ -15,3 +15,8 @@ The simulated population is persistent and uses the same authoritative game serv
 The simulation layer does not bypass inventory, economy, jobs, travel, organizations or other authoritative systems.
 
 This architecture lets simulated characters participate in the same world rather than living in a separate fake database.
+
+
+## Authoritative integration
+
+The simulation now exposes a WorldAdapter boundary. It reads context from authoritative domain services and routes accepted actions back through those services. This keeps simulated behavior compatible with human-player rules and prevents a parallel simulation-only economy or inventory from becoming authoritative.
