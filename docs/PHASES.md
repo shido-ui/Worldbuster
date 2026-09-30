@@ -138,5 +138,11 @@
 - Added deployment/security guidance and environment example.
 - Added production readiness checklist covering TLS, backups, observability, rate limits, migrations and Android release signing.
 
-## Next
-Phase 112 — Final Integration & Release Build.
+## Phase 112 started
+- Added final release-gate documentation.
+- Documented the authoritative Android → API → game-service → database → event chain.
+- Hardened the Android HTTP client error handling.
+- Added explicit release requirements for staging verification, load testing, backups, signing and physical-device testing.
+
+## Release state
+The repository is feature-integrated, but a release is **not claimed as verified** until the documented staging/build/load/signing checks are actually executed.
