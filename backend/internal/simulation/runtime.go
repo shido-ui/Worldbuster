@@ -23,6 +23,6 @@ func (r *Runtime) Tick(now time.Time) int {
 		return 0
 	}
 	r.LastTick = now
-	chars := r.Runner.Population.List(1000)
+	chars := r.Runner.Population.List(10000)
 	return r.Runner.TickCharacters(r.Scheduler.Due(chars, now), now)
 }
