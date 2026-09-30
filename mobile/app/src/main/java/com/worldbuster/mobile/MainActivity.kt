@@ -17,6 +17,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.launch
 
 private enum class Tab(val title:String){ WORLD("World"), MARKET("Market"), MISSIONS("Missions"), PROFILE("Profile") }
 
@@ -40,6 +41,7 @@ private data class LiveData(
 @Composable
 fun WorldbusterApp(){
  val context=LocalContext.current
+ val scope=rememberCoroutineScope()
  val api=remember{ApiClient(context,BuildConfig.WORLDBUSTER_BASE_URL)}
  var authenticated by remember{mutableStateOf(api.hasSession())}
  var tab by remember{mutableStateOf(Tab.WORLD)}
@@ -88,7 +90,7 @@ fun WorldbusterApp(){
     }
    ){pad->
     LazyColumn(Modifier.fillMaxSize().padding(pad).padding(16.dp),verticalArrangement=Arrangement.spacedBy(12.dp)){
-     item{Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(8.dp)){Button(onClick={LaunchedEffectKey.launch{load()}}){Text(if(loading)"SYNCING" else "SYNC")};OutlinedButton(onClick={LaunchedEffectKey.logout{api.logout();authenticated=false;live=LiveData(status="DISCONNECTED")}}){Text("LOG OUT")}}}
+     item{Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(8.dp)){Button(onClick={scope.launch{load()}}){Text(if(loading)"SYNCING" else "SYNC")};OutlinedButton(onClick={scope.launch{withContext(Dispatchers.IO){api.logout()};authenticated=false;live=LiveData(status="DISCONNECTED")}}){Text("LOG OUT")}}}
      if(error.isNotEmpty())item{StatCard("CONNECTION",live.status,error)}
      when(tab){
       Tab.WORLD->{item{StatCard("WORLD","AUTHORITATIVE",live.world)};item{StatCard("NEWS","SERVER FEED",live.news)};item{StatCard("EVENTS","WORLD EVENTS",live.events)}}
@@ -109,6 +111,7 @@ private object LaunchedEffectKey {
 
 @Composable
 private fun LoginScreen(api:ApiClient,onSuccess:()->Unit,onError:(String)->Unit){
+ val scope=rememberCoroutineScope()
  var username by remember{mutableStateOf("")}
  var password by remember{mutableStateOf("")}
  var registering by remember{mutableStateOf(false)}
@@ -123,15 +126,13 @@ private fun LoginScreen(api:ApiClient,onSuccess:()->Unit,onError:(String)->Unit)
    busy=true
    message=""
    // Network work is moved off the UI thread; no credentials are persisted by the client.
-   kotlinx.coroutines.GlobalScope.launch(Dispatchers.IO){
-    val result=if(registering)api.register(username,password) else api.login(username,password)
-    withContext(Dispatchers.Main){
-     busy=false
-     val r=result.getOrNull()
-     if(result.isFailure){message="Network connection unavailable.";return@withContext}
-     if(r!!.code !in 200..299){message="Server rejected request: "+r.body.take(300);return@withContext}
-     if(registering){registering=false;password="";message="Account created. Sign in to continue."}else{onSuccess()}
-    }
+   scope.launch{
+    val result=withContext(Dispatchers.IO){if(registering)api.register(username,password) else api.login(username,password)}
+    busy=false
+    val r=result.getOrNull()
+    if(result.isFailure){message="Network connection unavailable.";return@launch}
+    if(r!!.code !in 200..299){message="Server rejected request: "+r.body.take(300);return@launch}
+    if(registering){registering=false;password="";message="Account created. Sign in to continue."}else{onSuccess()}
    }
   }){Text(if(busy)"CONNECTING..." else if(registering)"CREATE ACCOUNT" else "SIGN IN")}
   TextButton(onClick={registering=!registering;message=""}){Text(if(registering)"BACK TO SIGN IN" else "CREATE ACCOUNT")}
