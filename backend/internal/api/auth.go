@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"log"
 	"strings"
 	"time"
 
@@ -49,7 +50,7 @@ func (h *authHandler) me(w http.ResponseWriter,r *http.Request) {
 }
 
 func (h *authHandler) logout(w http.ResponseWriter,r *http.Request) {
-	if c,err:=r.Cookie("worldbuster_session"); err==nil { _ = h.service.RevokeSession(r.Context(),c.Value) }
+	if c,err:=r.Cookie("worldbuster_session"); err==nil { if err:=h.service.RevokeSession(r.Context(),c.Value);err!=nil{log.Printf("session revoke: %v",err)} }
 	http.SetCookie(w,&http.Cookie{Name:"worldbuster_session",Value:"",Path:"/",HttpOnly:true,MaxAge:-1,SameSite:http.SameSiteLaxMode,Secure:isSecureRequest(r)})
 	w.WriteHeader(http.StatusNoContent)
 }
