@@ -36,8 +36,8 @@ func TestLiveAdapterTravelExecution(t *testing.T) {
  if state.From!="central" || state.To!="harbor" { t.Fatalf("unexpected travel state: %+v",state) }
 }
 
-func TestLiveAdapterContextDoesNotInventTravelDestination(t *testing.T) {
+func TestLiveAdapterContextExposesTravelOpportunity(t *testing.T) {
  a:=newLiveAdapterForTest()
  ctx:=a.Context("c1")
- if ctx.HasTravelDestination { t.Fatal("context advertised a travel destination without a destination-selection policy") }
+ if !ctx.HasTravelDestination { t.Fatal("context failed to expose a reachable travel destination") }
 }
