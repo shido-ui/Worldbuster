@@ -43,7 +43,8 @@ func main(){
  generator:=simulation.NewPopulationGenerator(42,simulation.PopulationProfile{
   Names:[]string{"Aster","Vale","Rin","Kade","Mira","Nox","Sora","Iris"},
  })
- for _,c:=range generator.Generate(50){
+ generated:=generator.Generate(50)
+ for _,c:=range generated{
   if err:=population.Register(c);err!=nil{log.Printf("simulation population: %v",err);continue}
   locations[c.ID]="central"
   _=js.Employ(c.ID,"general-work","worker",0,0)
@@ -55,7 +56,7 @@ func main(){
  runner:=&simulation.IntegratedRunner{Population:population,State:state,World:adapter,Emit:func(t,actor,target string,payload map[string]any){evs.Publish(t,actor,target,payload)}}
  if dbStore.SQL!=nil {
   prodRepo:=store.ProductionRepository{DB:dbStore}
-  for i,c:=range generator.Generate(5) {
+  for i,c:=range generated {
    if i>=5 {break}
    bType:=simulation.BusinessProduction
    b:=simulation.BusinessState{ID:simulation.NewBusinessID(),OwnerID:c.ID,Name:c.Name+" Works",Type:bType,Cash:500,Level:1,Active:true}
