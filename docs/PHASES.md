@@ -1,24 +1,22 @@
-# Development Phases
+# Worldbuster Phases
 
 ## Completed
-- Phase 0: repository and architecture foundation
-- Phase 1: backend/world server foundation
-- Phase 2: player/account domain and client-storage architecture
-- Phase 3: identity, authentication and session-security foundation
-- Phase 4: persistent repository and transaction-layer foundation
-- Phase 5: world map and authoritative travel foundation
+- 87 — Advanced economy and market foundation
+- 88 — NPC/bot deterministic decision engine
+- 89 — NPC population lifecycle scheduler
+- 90 — NPC action execution and world reactions
+- 91 — Persistent NPC identity, memory, and action history
+- 92 — NPC relationships, social memory, and simulated reputation propagation
+
+## Phase 92 delivered
+- Relationship state now includes familiarity, trust, affinity, interaction count, and last interaction.
+- Social choices use relationship state as a deterministic decision signal.
+- Successful NPC social actions create relationship memories.
+- Relationship changes are persisted in PostgreSQL.
+- Social interaction history is persisted for auditing/replay.
+- Simulated NPC public/trust reputation is persisted separately from player reputation.
+- Reputation propagation is deterministic and emitted from validated social actions.
+- Existing relationship/group runtime APIs remain compatible.
 
 ## Next
-- Inventory/items
-- Economy/ledger
-- Activities/jobs/organizations
-- Social systems
-- Core gameplay
-- Events/notifications
-- Simulated population
-- Missions/dynamic content
-- AI contextual services
-- Admin/moderation
-- Production hardening/scaling
-- Android client/content synchronization
-- Final content/art/audio/balancing/beta
+Phase 93 — NPC economy participation and autonomous economic behavior.
