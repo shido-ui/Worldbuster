@@ -3,7 +3,6 @@
 The simulated population is persistent and uses the same authoritative game services as players.
 
 ## Runtime flow
-
 1. Population scheduler selects active simulated characters.
 2. World context is built from authoritative services.
 3. Goals/schedules produce a candidate action.
@@ -12,11 +11,7 @@ The simulated population is persistent and uses the same authoritative game serv
 6. Behavioral state updates.
 7. A structured event is emitted.
 
-The simulation layer does not bypass inventory, economy, jobs, travel, organizations or other authoritative systems.
+## Population generation
+Population generation is deterministic from a supplied seed and data profile. Generated characters receive stable simulated identity, personality defaults and initial goals. Generation is a provisioning operation, not an uncontrolled per-request bot spawn.
 
-This architecture lets simulated characters participate in the same world rather than living in a separate fake database.
-
-
-## Authoritative integration
-
-The simulation now exposes a WorldAdapter boundary. It reads context from authoritative domain services and routes accepted actions back through those services. This keeps simulated behavior compatible with human-player rules and prevents a parallel simulation-only economy or inventory from becoming authoritative.
+Future balancing will use configurable population distributions, regional density, profession weights, activity tiers and lifecycle rules.
