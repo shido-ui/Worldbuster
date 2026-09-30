@@ -107,5 +107,12 @@
 - Added live level and wealth ranking endpoints.
 - Added achievement and ranking player APIs.
 
+## Phase 106 delivered
+- Added database-backed world operator roles.
+- Added authenticated world-control flag writes.
+- Added immutable-style audit records for control changes.
+- Added world-control flag read/write APIs.
+- Control writes require an explicitly provisioned WORLD_ADMIN or WORLD_OPERATOR account.
+
 ## Next
-Phase 106 — Admin/World Control.
+Phase 107 — Security & Anti-Abuse.
