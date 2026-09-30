@@ -93,8 +93,8 @@ jobs:
           trap 'kill $PID 2>/dev/null || true' EXIT
           for i in $(seq 1 30); do curl -fsS http://127.0.0.1:8080/health >/dev/null && break; sleep 1; done
           curl -fsS http://127.0.0.1:8080/health
-          curl -fsS -X POST http://127.0.0.1:8080/api/v1/auth/register -H 'Content-Type: application/json' -d '{"username":"ci_player_${GITHUB_RUN_ID}","password":"correct-horse-battery-staple"}'
-          curl -fsS -c /tmp/wb.cookies -X POST http://127.0.0.1:8080/api/v1/auth/login -H 'Content-Type: application/json' -d '{"username":"ci_player_${GITHUB_RUN_ID}","password":"correct-horse-battery-staple"}'
+          curl -fsS -X POST http://127.0.0.1:8080/api/v1/auth/register -H 'Content-Type: application/json' -d "{\"username\":\"ci_player_${GITHUB_RUN_ID}\",\"password\":\"correct-horse-battery-staple\"}"
+          curl -fsS -c /tmp/wb.cookies -X POST http://127.0.0.1:8080/api/v1/auth/login -H 'Content-Type: application/json' -d "{\"username\":\"ci_player_${GITHUB_RUN_ID}\",\"password\":\"correct-horse-battery-staple\"}"
           curl -fsS -b /tmp/wb.cookies http://127.0.0.1:8080/api/v1/player/state
           kill $PID
           /tmp/worldbuster >/tmp/worldbuster-restart.log 2>&1 &
@@ -113,6 +113,6 @@ jobs:
           trap 'docker compose -f infrastructure/docker-compose.yml down -v' EXIT
           for i in $(seq 1 45); do curl -fsS http://127.0.0.1:8080/health >/dev/null && break; sleep 2; done
           curl -fsS http://127.0.0.1:8080/health
-          curl -fsS -X POST http://127.0.0.1:8080/api/v1/auth/register -H 'Content-Type: application/json' -d '{"username":"docker_ci_${GITHUB_RUN_ID}","password":"correct-horse-battery-staple"}'
-          curl -fsS -c /tmp/docker-wb.cookies -X POST http://127.0.0.1:8080/api/v1/auth/login -H 'Content-Type: application/json' -d '{"username":"docker_ci_${GITHUB_RUN_ID}","password":"correct-horse-battery-staple"}'
+          curl -fsS -X POST http://127.0.0.1:8080/api/v1/auth/register -H 'Content-Type: application/json' -d "{\"username\":\"docker_ci_${GITHUB_RUN_ID}\",\"password\":\"correct-horse-battery-staple\"}"
+          curl -fsS -c /tmp/docker-wb.cookies -X POST http://127.0.0.1:8080/api/v1/auth/login -H 'Content-Type: application/json' -d "{\"username\":\"docker_ci_${GITHUB_RUN_ID}\",\"password\":\"correct-horse-battery-staple\"}"
           curl -fsS -b /tmp/docker-wb.cookies http://127.0.0.1:8080/api/v1/player/state
