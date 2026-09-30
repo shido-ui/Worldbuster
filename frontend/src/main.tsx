@@ -4,7 +4,7 @@ import{AuthPanel}from"./auth";
 import"./styles.css";
 
 type Account={id:string;username:string};
-type State={profile:{displayName:string;level:number;xp:number;cash:number;energy:number;strength:number;defense:number;speed:number;intelligence:number;endurance:number};economy:{balance:number;currency:string};inventory:{stacks:{itemId:string;quantity:number}[]}};
+type State={profile:{id?:string;locationId?:string;displayName:string;level:number;xp:number;cash:number;energy:number;strength:number;defense:number;speed:number;intelligence:number;endurance:number};economy:{balance:number;currency:string};inventory:{stacks:{itemId:string;quantity:number}[]}};
 type World={tick:number;onlineCount:number;day:number;time:string;status:string};
 type Job={id:string;name:string;department:string;baseSalary:number;requiredLevel:number;requiredStat:number;requiredEducation:number};
 type Course={id:string;name:string;durationMinutes:number;educationGain:number;requiredLevel:number};
