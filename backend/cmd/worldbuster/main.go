@@ -65,10 +65,10 @@ func main(){
    bType:=simulation.BusinessProduction
    b:=simulation.BusinessState{ID:simulation.NewBusinessID(),OwnerID:c.ID,Name:c.Name+" Works",Type:bType,Cash:500,Level:1,Active:true}
    if b.ID=="" {continue}
-   if err:=prodRepoCreate(dbStore, b);err!=nil {log.Printf("npc business seed: %v",err);continue}
+   businessID,err:=prodRepoCreate(dbStore,b);if err!=nil {log.Printf("npc business seed: %v",err);continue}
    input:="raw-water";qty:=25
    if i%2==1 {input="fiber"}
-   if err:=prodRepo.SeedBusinessInventory(context.Background(),b.ID,input,int64(qty));err!=nil {log.Printf("npc supply seed: %v",err)}
+   if err:=prodRepo.SeedBusinessInventory(context.Background(),businessID,input,int64(qty));err!=nil {log.Printf("npc supply seed: %v",err)}
   }
  }
  if dbStore.SQL!=nil { runner.Persistence=store.SimulationRepository{DB:dbStore} }
@@ -121,5 +121,5 @@ if dbStore.SQL!=nil {
 }
 
 func prodRepoCreate(dbStore *store.DB,b simulation.BusinessState) error {
- return (store.SimulationRepository{DB:dbStore}).CreateBusiness(context.Background(),b)
+ _,err:= (store.SimulationRepository{DB:dbStore}).CreateBusiness(context.Background(),b); return err
 }
