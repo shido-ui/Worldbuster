@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.Inventory
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.TrendingDown
@@ -41,6 +42,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import java.text.NumberFormat
+import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Locale
 
 private enum class Tab(val title: String) { WORLD("World"), MARKET("Market"), MISSIONS("Missions"), PROFILE("Profile") }
@@ -366,7 +369,7 @@ private fun MarketCard(asset: MarketAssetView) {
 }
 
 @Composable
-private fun MarketStat(label: String, value: Long) {
+private fun RowScope.MarketStat(label: String, value: Long) {
     Column(Modifier.weight(1f)) {
         Text(label, fontSize = 8.sp, color = SecondaryText, letterSpacing = 1.sp)
         Text(value.toString(), fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
@@ -671,7 +674,7 @@ private fun LoginScreen(
             }
             Column {
                 Button(
-                    Modifier.fillMaxWidth().height(56.dp),
+                    modifier = Modifier.fillMaxWidth().height(56.dp),
                     enabled = !state.authBusy && username.length >= 3 && password.length >= 8 && serverUrl.isNotBlank(),
                     shape = RoundedCornerShape(17.dp),
                     onClick = {
@@ -700,7 +703,7 @@ private fun LoginScreen(
                 }
                 Spacer(Modifier.height(8.dp))
                 TextButton(
-                    Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth(),
                     onClick = {
                         registering = !registering
                         password = ""
