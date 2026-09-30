@@ -51,7 +51,7 @@ func(r *Runner)TickCharacters(chars []SimCharacter,now time.Time)int{
   }
   _,economicOK:=r.State.ApplyEconomy(c.ID,result.Action.Type)
   if !economicOK{
-   if r.Persistence!=nil{_=r.Persistence.RecordAction(context.Background(),c.ID,result.Action,false)}
+   if r.Persistence!=nil{r.reportPersistenceError("record_action",c.ID,r.Persistence.RecordAction(context.Background(),c.ID,result.Action,false))}
    r.State.Tick(c.ID)
    continue
   }
