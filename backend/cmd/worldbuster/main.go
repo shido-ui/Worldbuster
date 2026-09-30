@@ -98,6 +98,7 @@ if dbStore.SQL!=nil {
   router.WithPersistentOrganizations(&api.PersistentOrganizationsAPI{Repo:store.OrganizationRepository{DB:dbStore},Context:api.NewPlayerContext(dbStore,as)})
   router.WithTerritory(&api.TerritoryAPI{Repo:store.TerritoryRepository{DB:dbStore},Context:api.NewPlayerContext(dbStore,as)})
   router.WithMarket(&api.MarketAPI{Repo:store.MarketRepository{DB:dbStore},Context:api.NewPlayerContext(dbStore,as)})
+  router.WithMissions(&api.MissionsAPI{Repo:store.MissionRepository{DB:dbStore},Context:api.NewPlayerContext(dbStore,as)})
  }
   if dbStore.SQL!=nil {
   go func(){ticker:=time.NewTicker(time.Minute);defer ticker.Stop();for range ticker.C{
