@@ -120,8 +120,6 @@ if dbStore.SQL!=nil {
  log.Println("Worldbuster server listening on :8080");log.Fatal(server.ListenAndServe())
 }
 
-func publishEvent(s *events.Service,t,actor,target string,payload map[string]any){if _,err:=s.Publish(t,actor,target,payload);err!=nil{log.Printf("event publish: %v",err)}}
-
 func prodRepoCreate(dbStore *store.DB,b simulation.BusinessState) (string,error) {
  return (store.SimulationRepository{DB:dbStore}).CreateBusiness(context.Background(),b)
 }
