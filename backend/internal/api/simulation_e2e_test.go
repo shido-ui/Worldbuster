@@ -50,7 +50,7 @@ func TestSimulationProductionPathThroughREST(t *testing.T) {
   State:state,
   World:adapter,
   Emit:func(eventType,actorID,targetID string,payload map[string]any){
-   if _,err:=eventsService.Publish(eventType,actorID,targetID,payload);err!=nil{t.Fatalf("publish event: %v",err)}
+   if _,err:=if _,err:=eventsService.Publish(eventType,actorID,targetID,payload);err!=nil{t.Fatalf("event publish: %v",err)};err!=nil{t.Fatalf("publish event: %v",err)}
   },
  }
  runtime := simulation.NewRuntime(runner,simulation.TierScheduler{Policy:simulation.LifecyclePolicy{ActivePercent:100,RecentPercent:0,BackgroundPercent:0}})
