@@ -23,3 +23,9 @@ At startup, ApplyMigrations creates schema_migrations, executes pending SQL migr
 Identity flow: session -> account -> player profile. Authoritative operations resolve the player from the authenticated account rather than trusting a client-supplied player ID.
 
 Without WORLDBUSTER_DATABASE_URL, local development uses in-memory authentication.
+
+
+### Phase 79 migration
+- `016_salary_settlement.sql` adds `player_employment.last_paid_at` for idempotent scheduled salary settlement.
+- Salaries are settled transactionally with the economy ledger and player XP.
+- Salary processing is capped per batch and uses row locks so concurrent workers do not double-pay the same employment.
