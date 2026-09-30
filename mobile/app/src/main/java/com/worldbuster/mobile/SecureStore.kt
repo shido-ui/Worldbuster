@@ -61,4 +61,10 @@ class SecureStore(context: Context) {
     fun remove(name: String) {
         prefs.edit().remove(name).apply()
     }
+
+    fun removeByPrefix(prefix: String) {
+        val editor = prefs.edit()
+        prefs.all.keys.filter { it.startsWith(prefix) }.forEach(editor::remove)
+        editor.apply()
+    }
 }
