@@ -21,9 +21,9 @@ CREATE TABLE IF NOT EXISTS economy_balance_cycles (
 
 ALTER TABLE market_assets ADD COLUMN IF NOT EXISTS volatility_bps INTEGER NOT NULL DEFAULT 500 CHECK(volatility_bps BETWEEN 0 AND 5000);
 
-INSERT INTO market_assets(symbol,name,category,base_price,supply,demand)
+INSERT INTO market_assets(symbol,name,category,base_price,current_price,supply,demand)
 VALUES
- ('bottled-water','Bottled Water','goods',12,20,80),
- ('fabric','Fabric','materials',30,15,55),
- ('basic-tools','Basic Tools','goods',60,5,35)
+ ('bottled-water','Bottled Water','goods',12,12,20,80),
+ ('fabric','Fabric','materials',30,30,15,55),
+ ('basic-tools','Basic Tools','goods',60,60,5,35)
 ON CONFLICT(symbol) DO NOTHING;
