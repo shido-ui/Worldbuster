@@ -101,5 +101,11 @@
 - Increased in-memory simulation batch ceiling to 10,000.
 - Added cadence tests for active/recent/background/dormant tiers.
 
+## Phase 105 delivered
+- Added persistent achievement definitions and player progress.
+- Added completion timestamps and starter progression/economy achievements.
+- Added live level and wealth ranking endpoints.
+- Added achievement and ranking player APIs.
+
 ## Next
-Phase 105 — Achievements & Rankings.
+Phase 106 — Admin/World Control.
