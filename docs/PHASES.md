@@ -114,5 +114,11 @@
 - Added world-control flag read/write APIs.
 - Control writes require an explicitly provisioned WORLD_ADMIN or WORLD_OPERATOR account.
 
+## Phase 107 delivered
+- Added request rate limiting middleware.
+- Added persistent abuse/rate-limit audit storage foundations.
+- Added rate limiter tests.
+- Applied a bounded global request limit to the HTTP API.
+
 ## Next
-Phase 107 — Security & Anti-Abuse.
+Phase 108 — Android Client.
