@@ -1,8 +1,10 @@
 package api
 
-import("encoding/json";"net/http";"time";"github.com/shido-ui/Worldbuster/backend/internal/auth";"github.com/shido-ui/Worldbuster/backend/internal/inventory";"github.com/shido-ui/Worldbuster/backend/internal/economy";"github.com/shido-ui/Worldbuster/backend/internal/organization";"github.com/shido-ui/Worldbuster/backend/internal/job";"github.com/shido-ui/Worldbuster/backend/internal/progression";"github.com/shido-ui/Worldbuster/backend/internal/social";"github.com/shido-ui/Worldbuster/backend/internal/events";"github.com/shido-ui/Worldbuster/backend/internal/world")
+import("context";"encoding/json";"net/http";"time";"github.com/shido-ui/Worldbuster/backend/internal/auth";"github.com/shido-ui/Worldbuster/backend/internal/inventory";"github.com/shido-ui/Worldbuster/backend/internal/economy";"github.com/shido-ui/Worldbuster/backend/internal/organization";"github.com/shido-ui/Worldbuster/backend/internal/job";"github.com/shido-ui/Worldbuster/backend/internal/progression";"github.com/shido-ui/Worldbuster/backend/internal/social";"github.com/shido-ui/Worldbuster/backend/internal/events";"github.com/shido-ui/Worldbuster/backend/internal/world")
 
-type Router struct{progressionDB *ProgressionAPI;world *world.Service;auth AuthBackend;travel *world.TravelService;inventory *inventory.Service;economy *economy.Service;organizations *organization.Service;jobs *job.Service;progression *progression.Service;social *social.Service;events *events.Service}
+type PlayerContextResolver interface { PlayerID(context.Context,string)(string,error) }
+
+type Router struct{progressionDB *ProgressionAPI; playerResolver PlayerContextResolver;world *world.Service;auth AuthBackend;travel *world.TravelService;inventory *inventory.Service;economy *economy.Service;organizations *organization.Service;jobs *job.Service;progression *progression.Service;social *social.Service;events *events.Service}
 func NewRouter(w *world.Service,a AuthBackend,t *world.TravelService,i *inventory.Service,e *economy.Service,o *organization.Service,j *job.Service,p *progression.Service,s *social.Service,ev *events.Service)*Router{return &Router{world:w,auth:a,travel:t,inventory:i,economy:e,organizations:o,jobs:j,progression:p,social:s,events:ev}}
 func(r *Router)Handler()http.Handler{
  mux:=http.NewServeMux();mux.HandleFunc("/health",r.health);mux.HandleFunc("/api/v1/world",r.worldState)
@@ -21,3 +23,5 @@ func(r *Router) WithProgressionRepository(api *ProgressionAPI)*Router {
  r.progressionDB=api
  return r
 }
+
+func(r *Router) WithPlayerResolver(resolver PlayerContextResolver)*Router { r.playerResolver=resolver; if r.progressionDB!=nil { r.progressionDB.ResolvePlayer=resolver.PlayerID }; return r }
