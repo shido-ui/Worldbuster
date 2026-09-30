@@ -1,0 +1,3 @@
+CREATE TABLE IF NOT EXISTS character_progression (character_id UUID PRIMARY KEY,level INT NOT NULL DEFAULT 1 CHECK(level>0),xp BIGINT NOT NULL DEFAULT 0 CHECK(xp>=0),strength INT NOT NULL DEFAULT 1,defense INT NOT NULL DEFAULT 1,speed INT NOT NULL DEFAULT 1,intelligence INT NOT NULL DEFAULT 1,education INT NOT NULL DEFAULT 0);
+CREATE TABLE IF NOT EXISTS courses (id TEXT PRIMARY KEY,name TEXT NOT NULL,duration_hours INT NOT NULL CHECK(duration_hours>0),education_gain INT NOT NULL CHECK(education_gain>0),required_level INT NOT NULL DEFAULT 1);
+CREATE TABLE IF NOT EXISTS course_enrollments (character_id UUID PRIMARY KEY,course_id TEXT NOT NULL REFERENCES courses(id),started_at TIMESTAMPTZ NOT NULL DEFAULT NOW());
