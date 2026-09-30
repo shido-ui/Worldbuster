@@ -9,15 +9,17 @@ import (
  "github.com/lib/pq"
  "golang.org/x/crypto/bcrypt"
  "github.com/shido-ui/Worldbuster/backend/internal/auth"
+ "github.com/shido-ui/Worldbuster/backend/internal/player"
 )
 
 type DatabaseAuthService struct {
  Accounts AccountRepository
  Sessions SessionRepository
+ Players PlayerRepository
 }
 
 func NewDatabaseAuthService(db *DB)*DatabaseAuthService{
- return &DatabaseAuthService{Accounts:AccountRepository{DB:db},Sessions:SessionRepository{DB:db}}
+ return &DatabaseAuthService{Accounts:AccountRepository{DB:db},Sessions:SessionRepository{DB:db},Players:PlayerRepository{DB:db}}
 }
 
 func(s *DatabaseAuthService) Register(ctx context.Context,username,password string)(auth.PublicAccount,error){
@@ -31,6 +33,8 @@ func(s *DatabaseAuthService) Register(ctx context.Context,username,password stri
   if errors.As(err,&pe)&&pe.Code=="23505"{return auth.PublicAccount{},auth.ErrUsernameTaken}
   return auth.PublicAccount{},err
  }
+ profile:=player.Profile{ID:a.ID,AccountID:a.ID,DisplayName:a.Username,Level:1,XP:0,Cash:0,Energy:100,Strength:1,Defense:1,Speed:1,Intelligence:1,Endurance:1}
+ if _,err=s.Players.Create(ctx,profile); err!=nil { _=s.Accounts.DeleteByID(ctx,a.ID); return auth.PublicAccount{},err }
  return a.Public(),nil
 }
 
