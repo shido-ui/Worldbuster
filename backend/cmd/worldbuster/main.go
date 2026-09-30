@@ -49,6 +49,7 @@ func main(){
   _=js.Employ(c.ID,"general-work","worker",0,0)
  }
  runner:=&simulation.IntegratedRunner{Population:population,State:state,World:adapter,Emit:func(t,actor,target string,payload map[string]any){evs.Publish(t,actor,target,payload)}}
+ if dbStore.SQL!=nil { runner.Persistence=store.SimulationRepository{DB:dbStore} }
  runtime:=simulation.NewRuntime(runner,simulation.TierScheduler{Policy:simulation.LifecyclePolicy{ActivePercent:20,RecentPercent:30,BackgroundPercent:30}})
 
  go func(){ticker:=time.NewTicker(time.Second);defer ticker.Stop();for now:=range ticker.C{ws.Tick();runtime.Tick(now)}}()
