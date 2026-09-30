@@ -131,8 +131,7 @@ class ApiClient(context: Context) {
         secureStore.get(cacheKey(key))?.let { ApiResponse(200, it) }
 
     fun clearCache() {
-        listOf("world", "dashboard", "market", "missions", "achievements", "organizations", "news", "events")
-            .forEach { secureStore.remove(cacheKey(it)) }
+        secureStore.removeByPrefix("cache_")
         prefs.edit().apply {
             prefs.all.keys.filter { it.startsWith("cache:") }.forEach(::remove)
         }.apply()
@@ -142,7 +141,7 @@ class ApiClient(context: Context) {
         val session = secureStore.get("session_cookie") ?: "signed_out"
         val digest = java.security.MessageDigest.getInstance("SHA-256")
             .digest(session.toByteArray(Charsets.UTF_8))
-            .joinToString("") { byte -> "%02x".format(byte) }
+            .joinToString("") { byte -> "%02x".format(byte.toInt() and 0xff) }
         return "cache_" + digest + "_" + key
     }
 
