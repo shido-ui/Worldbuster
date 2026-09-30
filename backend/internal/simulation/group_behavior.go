@@ -45,9 +45,11 @@ func ChooseGroupAction(ctx GroupContext) GroupAction {
  return actions[0]
 }
 
-func ApplyGroupAction(runtime *GroupRuntime,groupID string,action GroupAction){
+func ApplyGroupAction(runtime *GroupRuntime,groupID string,action any){
  if runtime==nil||groupID==""{return}
- switch action.Type{
+ var typ GroupActionType
+ switch a:=action.(type){case GroupAction: typ=a.Type; case GroupActionType: typ=a; default: return}
+ switch typ{
  case GroupInvest:
   runtime.AddResource(groupID,-50,10)
  case GroupRecruit:
