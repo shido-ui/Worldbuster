@@ -21,6 +21,11 @@ android {
         buildConfigField("String", "WORLDBUSTER_BASE_URL", "\"http://10.0.2.2:8080\"")
     }
 
+    buildTypes {
+        debug { manifestPlaceholders["allowCleartext"] = "true" }
+        release { manifestPlaceholders["allowCleartext"] = "false" }
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
