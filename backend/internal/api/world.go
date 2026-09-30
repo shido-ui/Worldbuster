@@ -8,7 +8,7 @@ func(h *worldHandler)locations(w http.ResponseWriter,_ *http.Request){writeJSON(
 func(h *worldHandler)currentTravel(w http.ResponseWriter,r *http.Request){
  if h.context==nil{writeJSON(w,http.StatusServiceUnavailable,map[string]string{"error":"player persistence unavailable"});return}
  _,p,err:=h.context.Resolve(r.Context(),r);if err!=nil{writeJSON(w,http.StatusUnauthorized,map[string]string{"error":"authentication required"});return}
- t,ok:=h.travelService.Get(p.ID,time.Now().UTC());writeJSON(w,http.StatusOK,map[string]any{"traveling":ok,"travel":func()any{if !ok{return nil};return t}()})
+ now:=time.Now().UTC();t,ok:=h.travelService.Get(p.ID,now);if ok&&!now.Before(t.ArrivesAt){if err:=h.context.Profile.SetLocation(r.Context(),p.ID,t.To);err!=nil{writeJSON(w,http.StatusInternalServerError,map[string]string{"error":"location persistence failed"});return};p.LocationID=t.To;ok=false};writeJSON(w,http.StatusOK,map[string]any{"traveling":ok,"travel":func()any{if !ok{return nil};return t}(),"locationId":p.LocationID})
 }
 func(h *worldHandler)travel(w http.ResponseWriter,r *http.Request){
  if r.Method!="POST"{w.WriteHeader(http.StatusMethodNotAllowed);return}
@@ -18,7 +18,7 @@ func(h *worldHandler)travel(w http.ResponseWriter,r *http.Request){
  if h.context!=nil{
   _,p,err:=h.context.Resolve(r.Context(),r)
   if err!=nil{writeJSON(w,http.StatusUnauthorized,map[string]string{"error":"authentication required"});return}
-  if p.ID!=req.CharacterID{writeJSON(w,http.StatusForbidden,map[string]string{"error":"character does not belong to authenticated player"});return}
+  if p.ID!=req.CharacterID{writeJSON(w,http.StatusForbidden,map[string]string{"error":"character does not belong to authenticated player"});return};from:=p.LocationID;if from==""{from="central"};if req.From!=from{writeJSON(w,http.StatusConflict,map[string]string{"error":"travel origin does not match authoritative player location"});return};req.From=from
  }
  t,err:=h.travelService.Start(req.CharacterID,req.From,req.To,time.Now().UTC())
  if err!=nil{writeJSON(w,400,map[string]string{"error":err.Error()});return}
