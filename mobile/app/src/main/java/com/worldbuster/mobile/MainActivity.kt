@@ -28,6 +28,7 @@ import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -75,7 +76,7 @@ private val Blue = Color(0xFF68B9FF)
 @Composable
 fun WorldbusterApp(viewModel: WorldbusterViewModel = viewModel()) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    var tabName by remember { mutableStateOf(Tab.WORLD.name) }
+    var tabName by rememberSaveable { mutableStateOf(Tab.WORLD.name) }
     val tab = runCatching { Tab.valueOf(tabName) }.getOrDefault(Tab.WORLD)
 
     MaterialTheme(
