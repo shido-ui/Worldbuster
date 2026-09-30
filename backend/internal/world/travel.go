@@ -22,10 +22,15 @@ func(s *TravelService)Start(characterID,from,to string,now time.Time)(TravelStat
 }
 
 func(s *TravelService)Get(characterID string,now time.Time)(TravelState,bool){
- s.mu.Lock();defer s.mu.Unlock()
- t,ok:=s.active[characterID];if !ok{return TravelState{},false}
- if !now.Before(t.ArrivesAt){delete(s.active,characterID);return t,true}
+ s.mu.RLock();defer s.mu.RUnlock()
+ t,ok:=s.active[characterID];if !ok||!now.Before(t.ArrivesAt){return t,ok}
  return t,true
+}
+
+func(s *TravelService)Complete(characterID string,now time.Time)(TravelState,bool){
+ s.mu.Lock();defer s.mu.Unlock()
+ t,ok:=s.active[characterID];if !ok||now.Before(t.ArrivesAt){return t,ok}
+ delete(s.active,characterID);return t,true
 }
 func validLocation(id string)bool{for _,l:=range locations{if l.ID==id{return true}};return false}
 func routeSeconds(from,to string)int{for _,r:=range routes{if r.From==from&&r.To==to{return r.TravelSeconds}};return 0}
