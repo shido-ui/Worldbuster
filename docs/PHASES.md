@@ -8,15 +8,15 @@
 - 91 — Persistent NPC identity, memory, and action history
 - 92 — NPC relationships, social memory, and simulated reputation propagation
 - 93 — NPC autonomous economy foundation
+- 94 — NPC businesses and employment foundation
 
-## Phase 93 delivered
-- NPCs have deterministic wallets and economic state.
-- Work produces simulated income.
-- Study, social activity, and travel consume deterministic costs.
-- NPC spending is rejected when funds are insufficient.
-- Lifetime income/spending are tracked.
-- NPC economic state is persisted and auditable.
-- Economic state is included in simulation events for downstream systems.
+## Phase 94 delivered
+- Persistent NPC-owned business records.
+- Business types: retail, service, production.
+- Deterministic startup costs and baseline revenue/wage formulas.
+- Business cash/revenue/expense/reputation/employee state.
+- Business ledger and employment tables.
+- Repository operations for creating businesses and recording expenses.
 
 ## Next
-Phase 94 — NPC businesses and employment.
+Phase 95 — Production and supply chains.
