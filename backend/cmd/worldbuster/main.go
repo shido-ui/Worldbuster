@@ -120,6 +120,6 @@ if dbStore.SQL!=nil {
  log.Println("Worldbuster server listening on :8080");log.Fatal(server.ListenAndServe())
 }
 
-func prodRepoCreate(dbStore *store.DB,b simulation.BusinessState) error {
- _,err:= (store.SimulationRepository{DB:dbStore}).CreateBusiness(context.Background(),b); return err
+func prodRepoCreate(dbStore *store.DB,b simulation.BusinessState) (string,error) {
+ return (store.SimulationRepository{DB:dbStore}).CreateBusiness(context.Background(),b)
 }
