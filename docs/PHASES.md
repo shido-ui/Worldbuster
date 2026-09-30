@@ -6,9 +6,9 @@
 - Phase 2: player/account domain and client-storage architecture
 - Phase 3: identity, authentication and session-security foundation
 - Phase 4: persistent repository and transaction-layer foundation
+- Phase 5: world map and authoritative travel foundation
 
 ## Next
-- Locations/map/travel
 - Inventory/items
 - Economy/ledger
 - Activities/jobs/organizations
