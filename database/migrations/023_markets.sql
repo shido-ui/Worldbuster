@@ -28,5 +28,5 @@ CREATE TABLE IF NOT EXISTS market_trades (
  unit_price BIGINT NOT NULL CHECK(unit_price>0),
  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
-INSERT INTO market_assets(symbol,name,category,base_price) VALUES('WBX-CREDIT','World Credit','currency',100)
+INSERT INTO market_assets(symbol,name,category,base_price,current_price) VALUES('WBX-CREDIT','World Credit','currency',100,100)
 ON CONFLICT(symbol) DO NOTHING;
