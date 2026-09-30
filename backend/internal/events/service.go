@@ -2,6 +2,8 @@ package events
 
 import("crypto/rand";"encoding/hex";"errors";"sync";"time")
 type Service struct{mu sync.RWMutex;events []Event;notifications map[string][]Notification;subscribers map[chan Event]struct{}}
+var randomRead=rand.Read
+
 func NewService()*Service{return &Service{notifications:map[string][]Notification{},subscribers:map[chan Event]struct{}{}}}
 var randomRead=rand.Read
 
