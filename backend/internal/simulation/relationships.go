@@ -1,6 +1,6 @@
 package simulation
 
-import "sync"
+import ("sync";"time")
 
 type RelationshipKind string
 const (
@@ -15,6 +15,9 @@ type Relationship struct {
  Kind RelationshipKind `json:"kind"`
  Familiarity int `json:"familiarity"`
  Trust int `json:"trust"`
+ Affinity int `json:"affinity"`
+ Interactions int `json:"interactions"`
+ LastInteraction *time.Time `json:"lastInteraction,omitempty"`
 }
 
 type RelationshipService struct {
