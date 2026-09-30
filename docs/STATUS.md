@@ -1,34 +1,15 @@
-# Worldbuster Completion Status
+# Worldbuster Status
 
-## Implemented
-- Authoritative Go server
-- World clock/tick API
-- PostgreSQL schema + migrations
-- Redis/local Docker infrastructure
-- React web shell
-- Authentication/session foundation
-- Persistent repository/transaction foundation
-- Mobile-oriented data-driven world map
-- Server-authoritative timed travel
-- Route validation and travel lifecycle tests
-- Responsive UI foundation
+Current development phase: 92
 
-## Remaining
-- Runtime PostgreSQL service wiring
-- Android application/client
-- Inventory/items/equipment
-- Economy/markets/ledger
-- Jobs/companies/organizations
-- Social/messaging/notifications
-- Core gameplay/combat
-- Factions/territory/diplomacy
-- Persistent event bus/history
-- Simulated population
-- Missions/dynamic content
-- AI contextual services
-- Admin/moderation
-- Production observability/security/scaling
-- Final content/art/audio/balancing
-- Load testing/deployment/beta iteration
+The simulation now has persistent NPC identities, goals, deterministic decisions, behavioral needs, action history, memory, relationships, and simulated reputation. Human and simulated characters continue to use the same core action model while simulated controllers provide autonomous decisions.
 
-Status: foundational backend with the first world-navigation system; not feature-complete.
+Phase 92 added persistent relationship state with familiarity, trust, affinity, interaction history, social-memory creation, and deterministic simulated reputation propagation.
+
+Known production hardening still required:
+- Relationship state rehydration from PostgreSQL on process restart.
+- Avoid per-tick character upserts for large populations.
+- Batch/queue simulation persistence for scale.
+- Market inventory escrow/ownership integration.
+- Territory influence authorization and aggregate-control updates.
+- Broader test coverage and load testing.
