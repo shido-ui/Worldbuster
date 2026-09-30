@@ -69,6 +69,7 @@ if dbStore.SQL!=nil {
   router.WithPersistentJobs(&api.PersistentJobsAPI{Repo:store.JobRepository{DB:dbStore},Context:api.NewPlayerContext(dbStore,as)})
   router.WithPersistentSocial(&api.PersistentSocialAPI{Repo:store.SocialRepository{DB:dbStore},Context:api.NewPlayerContext(dbStore,as)})
   router.WithReputation(&api.ReputationAPI{Repo:store.SocialRepository{DB:dbStore},Context:api.NewPlayerContext(dbStore,as)})
+  router.WithPersistentOrganizations(&api.PersistentOrganizationsAPI{Repo:store.OrganizationRepository{DB:dbStore},Context:api.NewPlayerContext(dbStore,as)})
  }
   if dbStore.SQL!=nil {
   go func(){ticker:=time.NewTicker(time.Minute);defer ticker.Stop();for range ticker.C{
