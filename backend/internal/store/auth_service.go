@@ -30,19 +30,19 @@ func(s *DatabaseAuthService) Register(ctx context.Context,username,password stri
  if len(username)<3||len(username)>24{return auth.PublicAccount{},auth.ErrInvalidUsername}
  if len(password)<8{return auth.PublicAccount{},auth.ErrInvalidPassword}
  hash,err:=bcrypt.GenerateFromPassword([]byte(password),bcrypt.DefaultCost);if err!=nil{return auth.PublicAccount{},err}
- a,err:=s.Accounts.Create(ctx,username,string(hash))
+ var a auth.Account
+ err=s.DB.WithTx(ctx,func(tx *sql.Tx)error{
+  if err:=tx.QueryRowContext(ctx,"INSERT INTO accounts(username,password_hash) VALUES($1,$2) RETURNING id::text,username,password_hash,created_at,updated_at",username,string(hash)).Scan(&a.ID,&a.Username,&a.PasswordHash,&a.CreatedAt,&a.UpdatedAt);err!=nil{return err}
+  profile:=player.Profile{ID:a.ID,AccountID:a.ID,DisplayName:a.Username,Level:1,XP:0,Cash:0,Energy:100,Strength:1,Defense:1,Speed:1,Intelligence:1,Endurance:1}
+  if err:=tx.QueryRowContext(ctx,"INSERT INTO player_profiles(id,account_id,display_name,level,xp,cash,energy,strength,defense,speed,intelligence,endurance) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING id",a.ID,a.ID,profile.DisplayName,profile.Level,profile.XP,profile.Cash,profile.Energy,profile.Strength,profile.Defense,profile.Speed,profile.Intelligence,profile.Endurance).Scan(&profile.ID);err!=nil{return err}
+  _,err:=tx.ExecContext(ctx,"INSERT INTO economy_accounts(owner_account_id,currency,balance) VALUES($1,'WBX',0)",a.ID)
+  return err
+ })
  if err!=nil{
   var pe *pq.Error
   if errors.As(err,&pe)&&pe.Code=="23505"{return auth.PublicAccount{},auth.ErrUsernameTaken}
   return auth.PublicAccount{},err
  }
- profile:=player.Profile{ID:a.ID,AccountID:a.ID,DisplayName:a.Username,Level:1,XP:0,Cash:0,Energy:100,Strength:1,Defense:1,Speed:1,Intelligence:1,Endurance:1}
-if s.DB==nil||s.DB.SQL==nil{return auth.PublicAccount{},errors.New("database unavailable")}
- err=s.DB.WithTx(ctx,func(tx *sql.Tx)error{
-  if err:=tx.QueryRowContext(ctx,"INSERT INTO player_profiles(id,account_id,display_name,level,xp,cash,energy,strength,defense,speed,intelligence,endurance) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING id",a.ID,a.ID,profile.DisplayName,profile.Level,profile.XP,profile.Cash,profile.Energy,profile.Strength,profile.Defense,profile.Speed,profile.Intelligence,profile.Endurance).Scan(&profile.ID);err!=nil{return err}
-  _,err:=tx.ExecContext(ctx,"INSERT INTO economy_accounts(owner_account_id,currency,balance) VALUES($1,'WBX',0)",a.ID);return err
- })
- if err!=nil{return auth.PublicAccount{},err}
  return a.Public(),nil
 }
 
