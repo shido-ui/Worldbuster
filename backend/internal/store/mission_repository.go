@@ -67,3 +67,9 @@ func(r MissionRepository) Complete(ctx context.Context,missionID,playerID string
  if err=tx.Commit();err!=nil{return PlayerMissionRecord{},e,err}
  return x,e,nil
 }
+
+func(r MissionRepository) ListForPlayer(ctx context.Context,playerID string)([]PlayerMissionRecord,error){
+ rows,err:=r.DB.SQL.QueryContext(ctx,"SELECT id::text,mission_id::text,player_id::text,status,progress,accepted_at,completed_at FROM player_missions WHERE player_id=$1 ORDER BY accepted_at DESC",playerID)
+ if err!=nil{return nil,err};defer rows.Close();out:=[]PlayerMissionRecord{}
+ for rows.Next(){var x PlayerMissionRecord;if err:=rows.Scan(&x.ID,&x.MissionID,&x.PlayerID,&x.Status,&x.Progress,&x.AcceptedAt,&x.CompletedAt);err!=nil{return nil,err};out=append(out,x)};return out,rows.Err()
+}
