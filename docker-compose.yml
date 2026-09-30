@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: worldbuster
+      POSTGRES_USER: worldbuster
+      POSTGRES_PASSWORD: worldbuster_dev
+    ports: ["5432:5432"]
+    volumes: [worldbuster_pg:/var/lib/postgresql/data]
+  redis:
+    image: redis:8-alpine
+    ports: ["6379:6379"]
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    ports: ["8080:8080"]
+    depends_on: [postgres, redis]
+volumes:
+  worldbuster_pg:
