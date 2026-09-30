@@ -20,6 +20,7 @@ func securityHeaders(next http.Handler)http.Handler{return http.HandlerFunc(func
 
 
 func(r *Router) WithProgressionRepository(api *ProgressionAPI)*Router {
+ api.Auth=r.auth
  r.progressionDB=api
  return r
 }
