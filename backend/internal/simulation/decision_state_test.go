@@ -7,6 +7,6 @@ func TestChooseActionWithStateRestPressure(t *testing.T){
 }
 func TestChooseActionWithStateSocialPressure(t *testing.T){
  c:=SimCharacter{Goals:[]Goal{{Kind:"SOCIAL",Priority:50}},Personality:Personality{Sociability:100}}
- a,err:=ChooseActionWithState(c,Context{SocialOpportunity:true},BehavioralState{Needs:Needs{Energy:100,Rest:100,Social:0,Satisfaction:50}})
+ a,err:=ChooseActionWithState(c,Context{SocialOpportunity:true,SocialTargetID:"npc2"},BehavioralState{Needs:Needs{Energy:100,Rest:100,Social:0,Satisfaction:50}})
  if err!=nil||a.Type!=ActionSocialize{t.Fatal("social pressure should influence decision")}
 }
