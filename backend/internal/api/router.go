@@ -1,6 +1,6 @@
 package api
 
-import("context";"encoding/json";"net/http";"time";"github.com/shido-ui/Worldbuster/backend/internal/inventory";"github.com/shido-ui/Worldbuster/backend/internal/economy";"github.com/shido-ui/Worldbuster/backend/internal/organization";"github.com/shido-ui/Worldbuster/backend/internal/job";"github.com/shido-ui/Worldbuster/backend/internal/progression";"github.com/shido-ui/Worldbuster/backend/internal/social";"github.com/shido-ui/Worldbuster/backend/internal/events";"github.com/shido-ui/Worldbuster/backend/internal/world")
+import("context";"encoding/json";"log";"net/http";"time";"github.com/shido-ui/Worldbuster/backend/internal/inventory";"github.com/shido-ui/Worldbuster/backend/internal/economy";"github.com/shido-ui/Worldbuster/backend/internal/organization";"github.com/shido-ui/Worldbuster/backend/internal/job";"github.com/shido-ui/Worldbuster/backend/internal/progression";"github.com/shido-ui/Worldbuster/backend/internal/social";"github.com/shido-ui/Worldbuster/backend/internal/events";"github.com/shido-ui/Worldbuster/backend/internal/world")
 
 type PlayerContextResolver interface { PlayerID(context.Context,string)(string,error) }
 
