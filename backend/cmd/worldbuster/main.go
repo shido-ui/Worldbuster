@@ -3,14 +3,27 @@ package main
 import (
 	"log"
 	"net/http"
+	"time"
+
+	"github.com/shido-ui/Worldbuster/backend/internal/api"
+	"github.com/shido-ui/Worldbuster/backend/internal/world"
 )
 
 func main() {
-	mux := http.NewServeMux()
-	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write([]byte(`{"status":"ok","service":"worldbuster"}`))
-	})
-	log.Println("Worldbuster backend listening on :8080")
-	log.Fatal(http.ListenAndServe(":8080", mux))
+	worldService := world.NewService()
+	go func() {
+		ticker := time.NewTicker(time.Second)
+		defer ticker.Stop()
+		for range ticker.C {
+			worldService.Tick()
+		}
+	}()
+
+	server := &http.Server{
+		Addr:              ":8080",
+		Handler:           api.NewRouter(worldService).Handler(),
+		ReadHeaderTimeout: 5 * time.Second,
+	}
+	log.Println("Worldbuster server listening on :8080")
+	log.Fatal(server.ListenAndServe())
 }
