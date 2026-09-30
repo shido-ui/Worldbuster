@@ -13,4 +13,4 @@ func(r PlayerRepository) GetByAccountID(ctx context.Context,accountID string)(pl
  return p,err
 }
 
-func(r PlayerRepository)SetLocation(ctx context.Context,playerID,location string)error{_,err:=r.DB.SQL.ExecContext(ctx,"UPDATE player_profiles SET location_id=$2,updated_at=NOW() WHERE id=$1",playerID,location);return err}
+func(r PlayerRepository)SetLocation(ctx context.Context,playerID,location string)error{res,err:=r.DB.SQL.ExecContext(ctx,"UPDATE player_profiles SET location_id=$2,updated_at=NOW() WHERE id=$1",playerID,location);if err!=nil{return err};n,err:=res.RowsAffected();if err!=nil{return err};if n==0{return ErrNotFound};return nil}
