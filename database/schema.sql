@@ -1,0 +1,14 @@
+CREATE TABLE IF NOT EXISTS world_clock (
+  id SMALLINT PRIMARY KEY CHECK (id = 1),
+  tick BIGINT NOT NULL DEFAULT 0,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+INSERT INTO world_clock (id) VALUES (1) ON CONFLICT (id) DO NOTHING;
+
+CREATE TABLE IF NOT EXISTS characters (
+  id UUID PRIMARY KEY,
+  controller_type TEXT NOT NULL CHECK (controller_type IN ('HUMAN','SIMULATED')),
+  display_name TEXT NOT NULL UNIQUE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
