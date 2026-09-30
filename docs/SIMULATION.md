@@ -30,3 +30,8 @@ Simulated actions now have an explicit domain-executor boundary. The executor is
 ## Authoritative service delegation
 
 The service executor delegates simulated work, travel, study, socialization and rest to injected domain services. Missing services and domain validation failures reject the action. This keeps NPC consequences on the same mutation boundary as human gameplay.
+
+
+## Live domain integration
+
+The server now constructs the simulation alongside the authoritative world services. Each world-clock tick can invoke the integrated runner, whose adapter delegates accepted NPC actions into job, progression, social and travel services and emits structured simulation events. No separate NPC-only economy or progression authority is introduced.
