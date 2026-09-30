@@ -39,7 +39,7 @@ func(r *Runner)TickCharacters(chars []SimCharacter,now time.Time)int{
    continue
   }
   if !r.State.CanAffordAction(c.ID,result.Action.Type){
-   if r.Persistence!=nil{_=r.Persistence.RecordAction(context.Background(),c.ID,result.Action,false)}
+   if r.Persistence!=nil{r.reportPersistenceError("record_action",c.ID,r.Persistence.RecordAction(context.Background(),c.ID,result.Action,false))}
    r.State.Tick(c.ID)
    continue
   }
