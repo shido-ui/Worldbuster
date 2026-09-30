@@ -21,12 +21,26 @@ func main(){
  ws:=world.NewService();as:=auth.NewService();ts:=world.NewTravelService();is:=inventory.NewService();es:=economy.NewService();os:=organization.NewService();js:=job.NewService();ps:=progression.NewService();ss:=social.NewService();evs:=events.NewService()
  _=is.RegisterItem(inventory.Item{ID:"water",Name:"Water",Category:"supply",Stackable:true,MaxStack:10})
 
+ // Minimal deterministic seed content keeps the simulation runnable while the full data catalog is built.
+ _=js.Register(job.Job{ID:"general-work",Name:"General Workforce",Department:"Operations",Positions:[]job.Position{{ID:"worker",JobID:"general-work",Name:"Worker",Level:1,BaseSalary:100,RequiredEducation:0,RequiredStat:0}}})
+ _=ps.RegisterCourse(progression.Course{ID:"orientation",Name:"World Orientation",DurationHours:1,EducationGain:1,RequiredLevel:1})
+
  population:=simulation.NewService()
  state:=simulation.NewStateService()
- adapter:=&simulation.LiveAdapter{Jobs:js,Progression:ps,Social:ss,Travel:ts,Locations:map[string]string{}}
+ locations:=map[string]string{}
+ adapter:=&simulation.LiveAdapter{Jobs:js,Progression:ps,Social:ss,Travel:ts,Locations:locations}
+ generator:=simulation.NewPopulationGenerator(42,simulation.PopulationProfile{
+  Names:[]string{"Aster","Vale","Rin","Kade","Mira","Nox","Sora","Iris"},
+ })
+ for _,c:=range generator.Generate(50){
+  if err:=population.Register(c);err!=nil{log.Printf("simulation population: %v",err);continue}
+  locations[c.ID]="central"
+  _=js.Employ(c.ID,"general-work","worker",0,0)
+ }
  runner:=&simulation.IntegratedRunner{Population:population,State:state,World:adapter,Emit:func(t,actor,target string,payload map[string]any){evs.Publish(t,actor,target,payload)}}
+ runtime:=simulation.NewRuntime(runner,simulation.TierScheduler{Policy:simulation.LifecyclePolicy{ActivePercent:20,RecentPercent:30,BackgroundPercent:30}})
 
- go func(){ticker:=time.NewTicker(time.Second);defer ticker.Stop();for now:=range ticker.C{ws.Tick();runner.Tick(now)}}()
+ go func(){ticker:=time.NewTicker(time.Second);defer ticker.Stop();for now:=range ticker.C{ws.Tick();runtime.Tick(now)}}()
  server:=&http.Server{Addr:":8080",Handler:api.NewRouter(ws,as,ts,is,es,os,js,ps,ss,evs).Handler(),ReadHeaderTimeout:5*time.Second}
  log.Println("Worldbuster server listening on :8080");log.Fatal(server.ListenAndServe())
 }
