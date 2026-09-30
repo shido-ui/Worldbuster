@@ -39,8 +39,8 @@ func(r MarketRepository) Buy(ctx context.Context,buyer,orderID string,quantity i
  if x.Status!="OPEN"||x.SellerAccountID==buyer||quantity>x.Quantity{return MarketOrder{},ErrMarketInvalid}
  var itemID string
  if err=tx.QueryRowContext(ctx,"SELECT item_id FROM market_assets WHERE id=$1 AND item_id IS NOT NULL AND item_id<>''",x.AssetID).Scan(&itemID);err!=nil{return MarketOrder{},ErrMarketInvalid}
+ if x.UnitPrice<=0||quantity>9223372036854775807/x.UnitPrice{return MarketOrder{},ErrMarketInvalid}
  total:=quantity*x.UnitPrice
- if x.UnitPrice>0&&quantity>9223372036854775807/x.UnitPrice{return MarketOrder{},ErrMarketInvalid}
  var balance int64;var buyerAccount string
  if err=tx.QueryRowContext(ctx,"SELECT id::text,balance FROM economy_accounts WHERE owner_account_id=$1 FOR UPDATE",buyer).Scan(&buyerAccount,&balance);err!=nil||balance<total{return MarketOrder{},errors.New("insufficient funds")}
  var sellerAccount string
@@ -53,9 +53,12 @@ func(r MarketRepository) Buy(ctx context.Context,buyer,orderID string,quantity i
  if _,err=tx.ExecContext(ctx,"INSERT INTO economy_ledger(id,account_id,amount,balance_after,reason,reference_id) VALUES(gen_random_uuid(),$1,$2,$3,'market_sale',$4)",sellerAccount,total,sellerBalance,x.ID);err!=nil{return MarketOrder{},err}
  var buyerPlayer string
  if err=tx.QueryRowContext(ctx,"SELECT id::text FROM player_profiles WHERE account_id=$1 FOR UPDATE",buyer).Scan(&buyerPlayer);err!=nil{return MarketOrder{},err}
- var held int64
- if err=tx.QueryRowContext(ctx,"SELECT COALESCE(SUM(quantity),0) FROM inventory_stacks WHERE player_id=$1 FOR UPDATE",buyerPlayer).Scan(&held);err!=nil{return MarketOrder{},err}
- if held+quantity>100{return MarketOrder{},errors.New("inventory capacity exceeded")}
+var held int64
+rows,err:=tx.QueryContext(ctx,"SELECT quantity FROM inventory_stacks WHERE player_id=$1 FOR UPDATE",buyerPlayer)
+if err!=nil{return MarketOrder{},err}
+for rows.Next(){var q int64;if err:=rows.Scan(&q);err!=nil{rows.Close();return MarketOrder{},err};held+=q}
+if err:=rows.Close();err!=nil{return MarketOrder{},err}
+if held>100||quantity>100-held{return MarketOrder{},errors.New("inventory capacity exceeded")}
  if _,err=tx.ExecContext(ctx,"INSERT INTO inventory_stacks(player_id,item_id,quantity) VALUES($1,$2,$3) ON CONFLICT(player_id,item_id) DO UPDATE SET quantity=inventory_stacks.quantity+EXCLUDED.quantity",buyerPlayer,itemID,quantity);err!=nil{return MarketOrder{},err}
  remaining:=x.Quantity-quantity;status:="OPEN";if remaining==0{status="FILLED"}
  if _,err=tx.ExecContext(ctx,"UPDATE market_orders SET quantity=$1,status=$2 WHERE id=$3",remaining,status,x.ID);err!=nil{return MarketOrder{},err}
