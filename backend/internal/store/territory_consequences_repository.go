@@ -20,11 +20,11 @@ func(r TerritoryRepository) ResolveConsequences(ctx context.Context,limit int)(T
  for rows.Next(){
   var id string;var current *string;var stability int
   if err:=rows.Scan(&id,&current,&stability);err!=nil{return out,err}
-  var top,second,topOrg string
-  err=tx.QueryRowContext(ctx,`SELECT organization_id::text,influence FROM territory_influence WHERE territory_id=$1 ORDER BY influence DESC,organization_id LIMIT 1`,id).Scan(&topOrg,&top)
-  _=err
+  var topOrg string
   var topVal,secondVal int
-  if topOrg!="" { _=tx.QueryRowContext(ctx,`SELECT influence FROM territory_influence WHERE territory_id=$1 AND organization_id=$2`,id,topOrg).Scan(&topVal)
+  err=tx.QueryRowContext(ctx,`SELECT organization_id::text,influence FROM territory_influence WHERE territory_id=$1 ORDER BY influence DESC,organization_id LIMIT 1`,id).Scan(&topOrg,&topVal)
+  if err!=nil { topOrg="" }
+  if topOrg!="" {
     _=tx.QueryRowContext(ctx,`SELECT COALESCE(MAX(influence),0) FROM territory_influence WHERE territory_id=$1 AND organization_id<>$2`,id,topOrg).Scan(&secondVal)
   }
   outcome:=simulation.ResolveTerritory(simulation.TerritoryPressure{TopInfluence:topVal,SecondInfluence:secondVal,Stability:stability})
