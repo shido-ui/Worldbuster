@@ -1,0 +1,44 @@
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: worldbuster
+      POSTGRES_USER: worldbuster
+      POSTGRES_PASSWORD: change-me-in-production
+    volumes:
+      - worldbuster_pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL","pg_isready -U worldbuster -d worldbuster"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server","--appendonly","yes"]
+    volumes:
+      - worldbuster_redis:/data
+    healthcheck:
+      test: ["CMD","redis-cli","ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  worldbuster:
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile
+    environment:
+      WORLDBUSTER_DATABASE_URL: postgres://worldbuster:change-me-in-production@postgres:5432/worldbuster?sslmode=disable
+      WORLDBUSTER_SIM_POPULATION: "100"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+
+volumes:
+  worldbuster_pg:
+  worldbuster_redis:
