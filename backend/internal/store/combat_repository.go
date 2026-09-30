@@ -19,14 +19,16 @@ type CombatRepository struct{DB *DB}
 func(r CombatRepository) Resolve(ctx context.Context,attackerID,defenderID string)(CombatRecord,error){
  if attackerID==""||defenderID==""||attackerID==defenderID{return CombatRecord{},ErrCombatInvalid}
  tx,err:=r.DB.SQL.BeginTx(ctx,nil);if err!=nil{return CombatRecord{},err};defer tx.Rollback()
- var a,d struct{level,strength,defense,speed,endurance,energy int}
+ var a,d struct{level,strength,defense,speed,endurance,energy int;power,defenseBonus,speedBonus int}
  if err=tx.QueryRowContext(ctx,"SELECT level,strength,defense,speed,endurance,energy FROM player_profiles WHERE id=$1 FOR UPDATE",attackerID).Scan(&a.level,&a.strength,&a.defense,&a.speed,&a.endurance,&a.energy);err!=nil{return CombatRecord{},err}
+ if err=tx.QueryRowContext(ctx,"SELECT COALESCE(SUM(i.power_bonus),0),COALESCE(SUM(i.defense_bonus),0),COALESCE(SUM(i.speed_bonus),0) FROM player_equipment e JOIN item_definitions i ON i.id=e.item_id WHERE e.player_id=$1",attackerID).Scan(&a.power,&a.defenseBonus,&a.speedBonus);err!=nil{return CombatRecord{},err}
  if err=tx.QueryRowContext(ctx,"SELECT level,strength,defense,speed,endurance,energy FROM player_profiles WHERE id=$1 FOR UPDATE",defenderID).Scan(&d.level,&d.strength,&d.defense,&d.speed,&d.endurance,&d.energy);err!=nil{return CombatRecord{},err}
+ if err=tx.QueryRowContext(ctx,"SELECT COALESCE(SUM(i.power_bonus),0),COALESCE(SUM(i.defense_bonus),0),COALESCE(SUM(i.speed_bonus),0) FROM player_equipment e JOIN item_definitions i ON i.id=e.item_id WHERE e.player_id=$1",defenderID).Scan(&d.power,&d.defenseBonus,&d.speedBonus);err!=nil{return CombatRecord{},err}
  if a.energy<10{return CombatRecord{},ErrCombatEnergy}
  var available time.Time
  err=tx.QueryRowContext(ctx,"SELECT available_at FROM combat_cooldowns WHERE player_id=$1",attackerID).Scan(&available)
  if err==nil && time.Now().UTC().Before(available){return CombatRecord{},ErrCombatCooldown}
- result:=simulation.ResolveCombat(simulation.CombatInput{a.strength,a.speed,a.defense,a.endurance,d.strength,d.speed,d.defense,d.endurance,a.level,d.level})
+ result:=simulation.ResolveCombat(simulation.CombatInput{a.strength+a.power,a.speed+a.speedBonus,a.defense+a.defenseBonus,a.endurance,d.strength+d.power,d.speed+d.speedBonus,d.defense+d.defenseBonus,d.endurance,a.level,d.level})
  _,err=tx.ExecContext(ctx,"UPDATE player_profiles SET energy=energy-$2,updated_at=NOW() WHERE id=$1",attackerID,result.EnergyCost);if err!=nil{return CombatRecord{},err}
  availableAt:=time.Now().UTC().Add(30*time.Second)
  if _,err=tx.ExecContext(ctx,"INSERT INTO combat_cooldowns(player_id,available_at) VALUES($1,$2) ON CONFLICT(player_id) DO UPDATE SET available_at=EXCLUDED.available_at",attackerID,availableAt);err!=nil{return CombatRecord{},err}
