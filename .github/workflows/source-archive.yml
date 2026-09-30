@@ -11,7 +11,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Create source archive
-        run: zip -r Worldbuster-source.zip . -x ".git/*"
+        run: zip -r Worldbuster-source.zip . -x ".git/*" "*.zip"
       - name: Upload source archive
         uses: actions/upload-artifact@v4
         with:
