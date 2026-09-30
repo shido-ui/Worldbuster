@@ -25,7 +25,7 @@ func(r JobRepository) Employ(ctx context.Context,playerID,jobID string,level,sta
   var existing string
   err:=tx.QueryRowContext(ctx,"SELECT job_id::text FROM player_employment WHERE player_id=$1 FOR UPDATE",playerID).Scan(&existing)
   if err==nil{return ErrAlreadyEmployed};if err!=sql.ErrNoRows{return err}
-  err=tx.QueryRowContext(ctx,"SELECT id::text,name,department,base_salary,required_level,required_stat FROM jobs WHERE id=$1",jobID).Scan(&j.ID,&j.Name,&j.Department,&j.BaseSalary,&j.RequiredLevel,&j.RequiredStat)
+  err=tx.QueryRowContext(ctx,"SELECT id::text,name,department,base_salary,required_level,required_stat,required_education FROM jobs WHERE id=$1",jobID).Scan(&j.ID,&j.Name,&j.Department,&j.BaseSalary,&j.RequiredLevel,&j.RequiredStat,&j.RequiredEducation)
   if err==sql.ErrNoRows{return ErrJobNotFound};if err!=nil{return err};if level<j.RequiredLevel||stat<j.RequiredStat||education<j.RequiredEducation{return ErrJobRequirement}
   _,err=tx.ExecContext(ctx,"INSERT INTO player_employment(player_id,job_id) VALUES($1,$2)",playerID,jobID);return err
  });return j,err
