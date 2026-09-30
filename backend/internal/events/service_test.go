@@ -8,7 +8,7 @@ func TestEventsAndNotifications(t *testing.T){s:=NewService();e:=s.Publish("TRAV
 func TestEventSubscribers(t *testing.T){
  s:=NewService()
  ch:=s.Subscribe()
- e:=s.Publish("LIVE","actor","target",nil)
+ e,err:=s.Publish("LIVE","actor","target",nil);if err!=nil{t.Fatal(err)}
  select{case got:=<-ch: if got.ID!=e.ID{t.Fatal("subscriber received wrong event")}
  case <-time.After(time.Second): t.Fatal("subscriber did not receive event")}
  s.Unsubscribe(ch)
