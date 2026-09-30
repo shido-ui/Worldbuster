@@ -1,0 +1,21 @@
+# Go
+/bin/
+/dist/
+
+# Node
+node_modules/
+frontend/dist/
+
+# Python
+__pycache__/
+.venv/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# IDE
+.vscode/
+.idea/
+.DS_Store
