@@ -109,6 +109,7 @@ if dbStore.SQL!=nil {
   router.WithWorldEvents(&api.WorldEventsAPI{Repo:store.WorldEventRepository{DB:dbStore}})
   router.WithNews(&api.NewsAPI{Repo:store.NewsRepository{DB:dbStore}})
   router.WithAchievements(&api.AchievementsAPI{Repo:store.AchievementRepository{DB:dbStore},Context:api.NewPlayerContext(dbStore,as)})
+  router.WithAdmin(&api.AdminAPI{Repo:store.AdminRepository{DB:dbStore},Auth:as})
  }
   if dbStore.SQL!=nil {
   go func(){ticker:=time.NewTicker(time.Minute);defer ticker.Stop();for range ticker.C{
