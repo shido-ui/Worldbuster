@@ -17,6 +17,7 @@ data class ApiResponse(val code: Int, val body: String)
 class ApiClient(context: Context) {
     private val appContext = context.applicationContext
     private val prefs = appContext.getSharedPreferences("worldbuster", Context.MODE_PRIVATE)
+    private val secureStore = SecureStore(appContext)
     private val emulatorDefault = "http://10.0.2.2:8080"
 
     fun isPhysicalDevice(): Boolean {
@@ -57,7 +58,7 @@ class ApiClient(context: Context) {
         c.useCaches = false
         c.instanceFollowRedirects = false
         c.setRequestProperty("Accept", "application/json")
-        prefs.getString("session_cookie", null)?.let { c.setRequestProperty("Cookie", it) }
+        secureStore.get("session_cookie")?.let { c.setRequestProperty("Cookie", it) }
         return c
     }
 
@@ -90,7 +91,7 @@ class ApiClient(context: Context) {
             if (code in 200..299) {
                 c.headerFields.entries.firstOrNull { it.key.equals("Set-Cookie", ignoreCase = true) }
                     ?.value?.firstOrNull()?.substringBefore(';')?.let {
-                        prefs.edit().putString("session_cookie", it).apply()
+                        secureStore.put("session_cookie", it)
                     }
             }
             return ApiResponse(code, text)
@@ -100,8 +101,8 @@ class ApiClient(context: Context) {
     }
 
     fun health(): Result<ApiResponse> = request("/health")
-    fun hasSession(): Boolean = !prefs.getString("session_cookie", null).isNullOrBlank()
-    fun clearSession() { prefs.edit().remove("session_cookie").apply() }
+    fun hasSession(): Boolean = !secureStore.get("session_cookie").isNullOrBlank()
+    fun clearSession() { secureStore.remove("session_cookie") }
 
     fun login(username: String, password: String) =
         request("/api/v1/auth/login", "POST", credentials(username, password))
