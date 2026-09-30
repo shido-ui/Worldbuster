@@ -64,7 +64,7 @@ func(r MarketRepository) Buy(ctx context.Context,buyer,orderID string,quantity i
  var buyerPlayer string
  if err=tx.QueryRowContext(ctx,"SELECT id::text FROM player_profiles WHERE account_id=$1 FOR UPDATE",buyer).Scan(&buyerPlayer);err!=nil{return MarketOrder{},err}
 var held int64
-rows,err:=tx.QueryContext(ctx,"SELECT quantity FROM inventory_stacks WHERE player_id=$1 FOR UPDATE",buyerPlayer)
+rows,err=tx.QueryContext(ctx,"SELECT quantity FROM inventory_stacks WHERE player_id=$1 FOR UPDATE",buyerPlayer)
 if err!=nil{return MarketOrder{},err}
 for rows.Next(){var q int64;if err:=rows.Scan(&q);err!=nil{rows.Close();return MarketOrder{},err};held+=q}
 if err:=rows.Close();err!=nil{return MarketOrder{},err}
