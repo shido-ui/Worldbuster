@@ -56,6 +56,7 @@ func main(){
   pr:=store.PlayerRepository{DB:dbStore}
   router.WithProgressionRepository(&api.ProgressionAPI{Repo:store.ProgressionRepository{DB:dbStore},ResolvePlayer:func(ctx context.Context,accountID string)(string,error){p,err:=pr.GetByAccountID(ctx,accountID);return p.ID,err}})
   router.WithPlayerContext(api.NewPlayerContext(dbStore,as))
+  router.WithPersistentJobs(&api.PersistentJobsAPI{Repo:store.JobRepository{DB:dbStore},Context:api.NewPlayerContext(dbStore,as)})
  }
  server:=&http.Server{Addr:":8080",Handler:router.Handler(),ReadHeaderTimeout:5*time.Second}
  log.Println("Worldbuster server listening on :8080");log.Fatal(server.ListenAndServe())
