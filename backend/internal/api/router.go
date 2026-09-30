@@ -4,7 +4,7 @@ import("context";"encoding/json";"net/http";"time";"github.com/shido-ui/Worldbus
 
 type PlayerContextResolver interface { PlayerID(context.Context,string)(string,error) }
 
-type Router struct{progressionDB *ProgressionAPI; playerResolver PlayerContextResolver;world *world.Service;auth AuthBackend;travel *world.TravelService;inventory *inventory.Service;economy *economy.Service;organizations *organization.Service;jobs *job.Service;progression *progression.Service;social *social.Service;events *events.Service}
+type Router struct{progressionDB *ProgressionAPI; playerResolver PlayerContextResolver; playerContext *PlayerContext;world *world.Service;auth AuthBackend;travel *world.TravelService;inventory *inventory.Service;economy *economy.Service;organizations *organization.Service;jobs *job.Service;progression *progression.Service;social *social.Service;events *events.Service}
 func NewRouter(w *world.Service,a AuthBackend,t *world.TravelService,i *inventory.Service,e *economy.Service,o *organization.Service,j *job.Service,p *progression.Service,s *social.Service,ev *events.Service)*Router{return &Router{world:w,auth:a,travel:t,inventory:i,economy:e,organizations:o,jobs:j,progression:p,social:s,events:ev}}
 func(r *Router)Handler()http.Handler{
  mux:=http.NewServeMux();mux.HandleFunc("/health",r.health);mux.HandleFunc("/api/v1/world",r.worldState)
@@ -26,3 +26,5 @@ func(r *Router) WithProgressionRepository(api *ProgressionAPI)*Router {
 }
 
 func(r *Router) WithPlayerResolver(resolver PlayerContextResolver)*Router { r.playerResolver=resolver; if r.progressionDB!=nil { r.progressionDB.ResolvePlayer=resolver.PlayerID }; return r }
+
+func(r *Router) WithPlayerContext(pc *PlayerContext)*Router { r.playerContext=pc; return r }
