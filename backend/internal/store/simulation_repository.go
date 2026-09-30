@@ -1,10 +1,12 @@
 package store
 
-import("context";"time";"github.com/shido-ui/Worldbuster/backend/internal/simulation")
+import("context";"time";"encoding/json";"github.com/shido-ui/Worldbuster/backend/internal/simulation")
 
 type SimulationMemoryRecord struct{ID string;CharacterID string;MemoryType string;TargetID string;Event string;Importance int;Sentiment int;CreatedAt time.Time}
 type SimulationActionRecord struct{ID string;CharacterID string;ActionType string;TargetID string;DecisionScore int;Executed bool;CreatedAt time.Time}
 type SimulationRepository struct{DB *DB}
+func(r SimulationRepository) EnsureCharacter(ctx context.Context,c simulation.SimCharacter)error{p,_:=json.Marshal(c.Personality);g,_:=json.Marshal(c.Goals);_,err:=r.DB.SQL.ExecContext(ctx,"INSERT INTO simulated_characters(character_id,name,controller_type,personality,goals,active) VALUES($1,$2,$3,$4,$5,TRUE) ON CONFLICT(character_id) DO UPDATE SET name=EXCLUDED.name,personality=EXCLUDED.personality,goals=EXCLUDED.goals,active=TRUE",c.ID,c.Name,string(c.Controller),p,g);return err}
+func(r SimulationRepository) RecordMemory(ctx context.Context,characterID string,m simulation.Memory)error{_,err:=r.DB.SQL.ExecContext(ctx,"INSERT INTO simulated_character_memory(character_id,memory_type,target_id,event,importance,sentiment,created_at) VALUES($1,$2,$3,$4,$5,$6,to_timestamp($7))",characterID,m.Type,m.TargetID,m.Event,m.Importance,m.Sentiment,m.CreatedAt);return err}
 func(r SimulationRepository) RecordMemory(ctx context.Context,characterID,memoryType,targetID,event string,importance,sentiment int)error{
  _,err:=r.DB.SQL.ExecContext(ctx,"INSERT INTO simulated_character_memory(character_id,memory_type,target_id,event,importance,sentiment) VALUES($1,$2,$3,$4,$5,$6)",characterID,memoryType,targetID,event,importance,sentiment);return err
 }
