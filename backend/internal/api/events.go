@@ -39,4 +39,4 @@ func(h *eventHandler)markNotificationsRead(w http.ResponseWriter,r *http.Request
 func(h *eventHandler)stream(w http.ResponseWriter,r *http.Request){
  if h.context==nil{http.Error(w,"authentication required",401);return};if _,_,err:=h.context.Resolve(r.Context(),r);err!=nil{http.Error(w,"authentication required",401);return}
  f,ok:=w.(http.Flusher);if !ok{http.Error(w,"streaming unsupported",500);return};w.Header().Set("Content-Type","text/event-stream");w.Header().Set("Cache-Control","no-cache");w.Header().Set("Connection","keep-alive");ch:=h.s.Subscribe();defer h.s.Unsubscribe(ch);f.Flush();
- for{select{case <-r.Context().Done():return;case ev:=<-ch:b,_:=json.Marshal(ev);_,_=w.Write([]byte("event: world\ndata: "));_,_=w.Write(b);_,_=w.Write([]byte("\n\n"));f.Flush()}}}
+ for{select{case <-r.Context().Done():return;case ev,ok:=<-ch:if !ok{return};b,err:=json.Marshal(ev);if err!=nil{continue};if _,err=w.Write([]byte("event: world\ndata: "));err!=nil{return};if _,err=w.Write(b);err!=nil{return};if _,err=w.Write([]byte("\n\n"));err!=nil{return};f.Flush()}}}
