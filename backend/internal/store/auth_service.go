@@ -16,10 +16,11 @@ type DatabaseAuthService struct {
  Accounts AccountRepository
  Sessions SessionRepository
  Players PlayerRepository
+ Economy EconomyRepository
 }
 
 func NewDatabaseAuthService(db *DB)*DatabaseAuthService{
- return &DatabaseAuthService{Accounts:AccountRepository{DB:db},Sessions:SessionRepository{DB:db},Players:PlayerRepository{DB:db}}
+ return &DatabaseAuthService{Accounts:AccountRepository{DB:db},Sessions:SessionRepository{DB:db},Players:PlayerRepository{DB:db},Economy:EconomyRepository{DB:db}}
 }
 
 func(s *DatabaseAuthService) Register(ctx context.Context,username,password string)(auth.PublicAccount,error){
@@ -35,6 +36,7 @@ func(s *DatabaseAuthService) Register(ctx context.Context,username,password stri
  }
  profile:=player.Profile{ID:a.ID,AccountID:a.ID,DisplayName:a.Username,Level:1,XP:0,Cash:0,Energy:100,Strength:1,Defense:1,Speed:1,Intelligence:1,Endurance:1}
  if _,err=s.Players.Create(ctx,profile); err!=nil { _=s.Accounts.DeleteByID(ctx,a.ID); return auth.PublicAccount{},err }
+ if _,err=s.Economy.CreateForAccount(ctx,a.ID); err!=nil { _=s.Accounts.DeleteByID(ctx,a.ID); return auth.PublicAccount{},err }
  return a.Public(),nil
 }
 
