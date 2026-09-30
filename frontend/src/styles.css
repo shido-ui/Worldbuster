@@ -39,3 +39,20 @@
 @keyframes eventEnter{from{opacity:0;transform:translateY(8px) scale(.99)}to{opacity:1;transform:none}}
 @keyframes livePulse{0%,100%{opacity:.45}50%{opacity:1}}
 @media(prefers-reduced-motion:reduce){.event-enter,.event-pulse{animation:none}.mission-progress i,.notification-item{transition:none}}
+
+
+.map-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}
+.location-card{position:relative;padding:18px;border:1px solid var(--line);border-radius:var(--radius);background:linear-gradient(145deg,rgba(255,255,255,.035),rgba(255,255,255,.012));transition:transform .2s,border-color .2s,box-shadow .2s}
+.location-card:hover{transform:translateY(-2px);border-color:rgba(125,246,208,.28);box-shadow:0 12px 32px rgba(0,0,0,.2)}
+.location-card.current{border-color:rgba(125,246,208,.45);box-shadow:0 0 0 1px rgba(125,246,208,.08),0 12px 35px rgba(0,0,0,.2)}
+.location-badge{font-size:9px;letter-spacing:.14em;color:var(--accent)}
+.location-card h3{margin:8px 0 5px}
+.location-card p{color:var(--muted);min-height:36px}
+.route-action{width:100%;margin-top:8px;text-align:left}
+.travel-banner{display:flex;align-items:center;gap:14px;margin-top:14px;padding:16px 18px;border:1px solid rgba(125,246,208,.28);border-radius:var(--radius);background:rgba(125,246,208,.045);animation:eventEnter .35s ease}
+.travel-banner span{font-size:9px;letter-spacing:.15em;color:var(--accent)}
+.travel-banner small{margin-left:auto;color:var(--muted)}
+.travel-status{margin-top:10px;padding:8px;border-radius:8px;background:rgba(255,255,255,.04);font-size:10px;color:var(--muted)}
+.org-card{align-items:center}
+.org-actions{display:flex;gap:8px;flex-wrap:wrap}
+@media(max-width:760px){.travel-banner{align-items:flex-start;flex-direction:column}.travel-banner small{margin-left:0}.org-actions{width:100%}}
