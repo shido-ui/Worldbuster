@@ -47,5 +47,13 @@
 - Control/stability changes are audited by consequence cycles.
 - Territory consequence cycles run automatically with the server economy loop.
 
+## Phase 98 delivered
+- Organizations now track persistent activity and influence.
+- Organization membership/role checks protect alliance operations.
+- Organizations can propose and manage alliances.
+- Alliance changes are written to organization history.
+- Organization activity can feed future progression and territory systems.
+- New persistent organization expansion tables support alliances and organization goals.
+
 ## Next
-Phase 98 — Organizations/Faction Expansion.
+Phase 99 — Missions & Contracts.
