@@ -33,7 +33,7 @@ func TestPopulationSchedulerLifecycle(t *testing.T) {
  counts,err:=scheduler.Run(now)
  if err!=nil{t.Fatal(err)}
  if scheduler.LastRun!=now{t.Fatalf("last run=%v want %v",scheduler.LastRun,now)}
- if counts[Tier.Active]+counts[Tier.Recent] != 2{t.Fatalf("unexpected lifecycle counts: %+v",counts)}
+ if counts[TierActive]+counts[TierRecent] != 2{t.Fatalf("unexpected lifecycle counts: %+v",counts)}
 }
 
 func TestPopulationSchedulerSerializesRuns(t *testing.T) {
