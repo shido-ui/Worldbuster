@@ -38,14 +38,9 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import java.text.NumberFormat
-import java.text.SimpleDateFormat
-import java.util.Date
 import java.util.Locale
 
 private enum class Tab(val title: String) { WORLD("World"), MARKET("Market"), MISSIONS("Missions"), PROFILE("Profile") }
@@ -75,85 +70,10 @@ private val Danger = Color(0xFFFF7188)
 private val Blue = Color(0xFF68B9FF)
 
 @Composable
-fun WorldbusterApp() {
-    val context = androidx.compose.ui.platform.LocalContext.current
-    val scope = rememberCoroutineScope()
-    val api = remember { ApiClient(context) }
-    var authenticated by remember { mutableStateOf(api.hasSession()) }
-    var tab by remember { mutableStateOf(Tab.WORLD) }
-    var syncState by remember { mutableStateOf(if (authenticated) SyncState.OFFLINE else SyncState.AUTH) }
-    var dashboard by remember { mutableStateOf(DashboardView()) }
-    var loading by remember { mutableStateOf(false) }
-    var error by remember { mutableStateOf("") }
-
-    suspend fun load() {
-        if (!api.isNetworkAvailable() && api.baseUrl().isBlank()) {
-            syncState = SyncState.OFFLINE
-            error = "No network connection and no server address is configured."
-            return
-        }
-        loading = true
-        val endpoints = listOf(
-            Endpoint("world", "/api/v1/world"),
-            Endpoint("dashboard", "/api/v1/player/dashboard"),
-            Endpoint("market", "/api/v1/market/assets"),
-            Endpoint("missions", "/api/v1/missions"),
-            Endpoint("achievements", "/api/v1/achievements"),
-            Endpoint("organizations", "/api/v1/organizations"),
-            Endpoint("news", "/api/v1/news"),
-            Endpoint("events", "/api/v1/world-events")
-        )
-        val network = withContext(Dispatchers.IO) {
-            coroutineScope {
-                endpoints.map { endpoint -> async { endpoint to api.get(endpoint.path) } }.map { it.await() }
-            }
-        }
-
-        var unauthorized = false
-        var hadFailure = false
-        var usedCache = false
-        var next = dashboard
-
-        for ((endpoint, result) in network) {
-            val response = result.getOrNull()
-            if (response?.code == 401) {
-                unauthorized = true
-                continue
-            }
-            if (result.isSuccess && response != null && response.code in 200..299) {
-                api.cache(endpoint.key, response)
-                next = applyResponse(next, endpoint.key, response.body)
-            } else {
-                hadFailure = true
-                api.cached(endpoint.key)?.let {
-                    usedCache = true
-                    next = applyResponse(next, endpoint.key, it.body)
-                }
-            }
-        }
-
-        if (unauthorized) {
-            api.clearSession()
-            authenticated = false
-            syncState = SyncState.AUTH
-            error = "Your session expired. Sign in again."
-        } else {
-            dashboard = next.copy(lastSync = if (!hadFailure) nowLabel() else dashboard.lastSync)
-            syncState = when {
-                !hadFailure -> SyncState.CONNECTED
-                usedCache -> SyncState.DEGRADED
-                else -> SyncState.OFFLINE
-            }
-            error = when {
-                !hadFailure -> ""
-                usedCache -> "Some live data is unavailable. Showing the last successful sync."
-                else -> "World data is temporarily unavailable. Check the server connection and retry."
-            }
-        }
-        loading = false
-    }
-
-    LaunchedEffect(authenticated) { if (authenticated) load() }
+fun WorldbusterApp(viewModel: WorldbusterViewModel = viewModel()) {
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+    var tabName by remember { mutableStateOf(Tab.WORLD.name) }
+    val tab = runCatching { Tab.valueOf(tabName) }.getOrDefault(Tab.WORLD)
 
     MaterialTheme(
         colorScheme = darkColorScheme(
@@ -162,18 +82,21 @@ fun WorldbusterApp() {
             onSurface = PrimaryText, onSurfaceVariant = SecondaryText, outline = Border
         )
     ) {
-        if (!authenticated) {
-            LoginScreen(api, { authenticated = true }, { error = it })
+        if (!state.authenticated) {
+            LoginScreen(
+                viewModel = viewModel,
+                error = state.error
+            )
         } else {
             Scaffold(
                 containerColor = Bg,
-                topBar = { TopBar(syncState, dashboard.world) },
+                topBar = { TopBar(state.syncState, state.dashboard.world) },
                 bottomBar = {
                     NavigationBar(containerColor = Surface, tonalElevation = 0.dp) {
                         Tab.values().forEach { item ->
                             NavigationBarItem(
                                 selected = tab == item,
-                                onClick = { tab = item },
+                                onClick = { tabName = item.name },
                                 icon = {
                                     Icon(
                                         when (item) {
@@ -191,50 +114,57 @@ fun WorldbusterApp() {
                 }
             ) { pad ->
                 Column(Modifier.fillMaxSize().padding(pad)) {
-                    AnimatedVisibility(error.isNotBlank()) { ConnectionBanner(error, syncState) }
+                    AnimatedVisibility(state.error.isNotBlank()) {
+                        ConnectionBanner(state.error, state.syncState)
+                    }
                     LazyColumn(
                         Modifier.fillMaxSize(),
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 14.dp, bottom = 28.dp)
                     ) {
                         item {
-                            SyncToolbar(syncState, loading, dashboard.lastSync, { scope.launch { load() } }) {
-                                scope.launch {
-                                    withContext(Dispatchers.IO) { api.logout() }
-                                    authenticated = false
-                                    dashboard = DashboardView()
-                                    error = ""
-                                }
-                            }
+                            SyncToolbar(
+                                state.syncState,
+                                state.loading,
+                                state.dashboard.lastSync,
+                                viewModel::refresh,
+                                viewModel::logout
+                            )
                         }
                         when (tab) {
                             Tab.WORLD -> {
-                                item { WorldHero(dashboard.world, dashboard.player) }
-                                item { MarketPulse(dashboard.market.take(3)) }
+                                item { WorldHero(state.dashboard.world, state.dashboard.player) }
+                                item { MarketPulse(state.dashboard.market.take(3)) }
                                 item { SectionTitle("WORLD FEED", "Live consequences from the server") }
-                                items(dashboard.news.take(4)) { NewsCard(it) }
-                                items(dashboard.events.take(3)) { EventCard(it) }
-                                if (dashboard.news.isEmpty() && dashboard.events.isEmpty()) {
+                                items(state.dashboard.news.take(4)) { NewsCard(it) }
+                                items(state.dashboard.events.take(3)) { EventCard(it) }
+                                if (state.dashboard.news.isEmpty() && state.dashboard.events.isEmpty()) {
                                     item { EmptyCard("The world is quiet.", "New events and news will appear here as the simulation produces them.") }
                                 }
                             }
                             Tab.MARKET -> {
                                 item { SectionTitle("MARKET", "Authoritative live assets") }
-                                if (dashboard.market.isEmpty()) item { EmptyCard("No market assets available.", "The server has not published any assets yet.") }
-                                else items(dashboard.market) { MarketCard(it) }
+                                if (state.dashboard.market.isEmpty()) {
+                                    item { EmptyCard("No market assets available.", "The server has not published any assets yet.") }
+                                } else {
+                                    items(state.dashboard.market) { MarketCard(it) }
+                                }
                             }
                             Tab.MISSIONS -> {
                                 item { SectionTitle("MISSIONS", "Contracts issued by the world") }
-                                if (dashboard.missions.isEmpty()) item { EmptyCard("No missions available.", "New contracts will appear as the world unlocks them.") }
-                                else items(dashboard.missions) { MissionCard(it) }
+                                if (state.dashboard.missions.isEmpty()) {
+                                    item { EmptyCard("No missions available.", "New contracts will appear as the world unlocks them.") }
+                                } else {
+                                    items(state.dashboard.missions) { MissionCard(it) }
+                                }
                             }
                             Tab.PROFILE -> {
-                                item { ProfileHero(dashboard.player) }
-                                item { InventoryCard(dashboard.player) }
+                                item { ProfileHero(state.dashboard.player) }
+                                item { InventoryCard(state.dashboard.player) }
                                 item { SectionTitle("ACHIEVEMENTS", "Progress recorded by the server") }
-                                items(dashboard.achievements.take(6)) { AchievementCard(it) }
+                                items(state.dashboard.achievements.take(6)) { AchievementCard(it) }
                                 item { SectionTitle("ORGANIZATIONS", "Groups shaping the world") }
-                                items(dashboard.organizations.take(5)) { OrganizationCard(it) }
+                                items(state.dashboard.organizations.take(5)) { OrganizationCard(it) }
                             }
                         }
                     }
@@ -587,31 +517,31 @@ private fun ConnectionBanner(message: String, state: SyncState) {
 }
 
 @Composable
-private fun LoginScreen(api: ApiClient, onSuccess: () -> Unit, onError: (String) -> Unit) {
-    val scope = rememberCoroutineScope()
+private fun LoginScreen(
+    viewModel: WorldbusterViewModel,
+    error: String
+) {
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    var serverUrl by remember { mutableStateOf(api.baseUrl()) }
+    var serverUrl by remember(viewModel.serverUrl) { mutableStateOf(viewModel.serverUrl) }
     var registering by remember { mutableStateOf(false) }
-    var busy by remember { mutableStateOf(false) }
-    var checking by remember { mutableStateOf(false) }
     var showPassword by remember { mutableStateOf(false) }
-    var connected by remember { mutableStateOf(false) }
-    var connectionMessage by remember { mutableStateOf("") }
-    var showServerSettings by remember { mutableStateOf(api.isPhysicalDevice()) }
+    var showServerSettings by remember(viewModel.physicalDevice) { mutableStateOf(viewModel.physicalDevice) }
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
-        if (serverUrl.isNotBlank()) {
-            checking = true
-            val result = withContext(Dispatchers.IO) { api.health() }
-            checking = false
-            connected = result.isSuccess && result.getOrNull()?.code in 200..299
-            connectionMessage = if (connected) "Server reachable" else api.describeFailure(result)
-        }
+        if (serverUrl.isNotBlank()) viewModel.testConnection(serverUrl)
     }
 
-    Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color(0xFF17132A), Bg, Bg)))) {
-        Column(Modifier.fillMaxSize().padding(horizontal = 24.dp).padding(top = 52.dp, bottom = 26.dp), verticalArrangement = Arrangement.SpaceBetween) {
+    Box(
+        Modifier.fillMaxSize().background(
+            Brush.verticalGradient(listOf(Color(0xFF17132A), Bg, Bg))
+        )
+    ) {
+        Column(
+            Modifier.fillMaxSize().padding(horizontal = 24.dp).padding(top = 52.dp, bottom = 26.dp),
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
             Column(Modifier.fillMaxWidth()) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     WorldMark(46)
@@ -622,99 +552,165 @@ private fun LoginScreen(api: ApiClient, onSuccess: () -> Unit, onError: (String)
                     }
                 }
                 Spacer(Modifier.height(50.dp))
-                Text(if (registering) "Create your identity." else "Return to the world.", color = PrimaryText, fontSize = 34.sp, lineHeight = 39.sp, fontWeight = FontWeight.Bold)
+                Text(
+                    if (registering) "Create your identity." else "Return to the world.",
+                    color = PrimaryText,
+                    fontSize = 34.sp,
+                    lineHeight = 39.sp,
+                    fontWeight = FontWeight.Bold
+                )
                 Spacer(Modifier.height(10.dp))
-                Text(if (registering) "Your character exists in a world that keeps moving." else "Sign in to continue your persistent-world session.", color = SecondaryText, fontSize = 15.sp, lineHeight = 22.sp)
+                Text(
+                    if (registering) "Your character exists in a world that keeps moving."
+                    else "Sign in to continue your persistent-world session.",
+                    color = SecondaryText,
+                    fontSize = 15.sp,
+                    lineHeight = 22.sp
+                )
                 Spacer(Modifier.height(28.dp))
-                AuthField(username, { username = it }, "USERNAME", "Enter username", { Icon(Icons.Default.Person, null) })
+                AuthField(
+                    username,
+                    { username = it },
+                    "USERNAME",
+                    "Enter username",
+                    { Icon(Icons.Default.Person, null) }
+                )
                 Spacer(Modifier.height(12.dp))
-                AuthField(password, { password = it }, "PASSWORD", "Enter password", { Icon(Icons.Default.Lock, null) }, {
-                    IconButton(onClick = { showPassword = !showPassword }) {
-                        Icon(if (showPassword) Icons.Default.VisibilityOff else Icons.Default.Visibility, "Toggle password visibility")
-                    }
-                }, KeyboardType.Password, if (showPassword) VisualTransformation.None else PasswordVisualTransformation())
+                AuthField(
+                    password,
+                    { password = it },
+                    "PASSWORD",
+                    "Enter password",
+                    { Icon(Icons.Default.Lock, null) },
+                    {
+                        IconButton(onClick = { showPassword = !showPassword }) {
+                            Icon(
+                                if (showPassword) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                "Toggle password visibility"
+                            )
+                        }
+                    },
+                    KeyboardType.Password,
+                    if (showPassword) VisualTransformation.None else PasswordVisualTransformation()
+                )
                 Spacer(Modifier.height(16.dp))
-                Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(17.dp), color = SurfaceRaised, border = BorderStroke(1.dp, if (connected) Color(0x4062E6A8) else Border)) {
+                Surface(
+                    Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(17.dp),
+                    color = SurfaceRaised,
+                    border = BorderStroke(
+                        1.dp,
+                        if (state.serverConnected) Color(0x4062E6A8) else Border
+                    )
+                ) {
                     Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Icon(if (connected) Icons.Default.Wifi else Icons.Default.CloudOff, null, tint = if (connected) Success else SecondaryText)
+                        Icon(
+                            if (state.serverConnected) Icons.Default.Wifi else Icons.Default.CloudOff,
+                            null,
+                            tint = if (state.serverConnected) Success else SecondaryText
+                        )
                         Spacer(Modifier.width(10.dp))
                         Column(Modifier.weight(1f)) {
-                            Text(when { checking -> "CHECKING SERVER…"; connected -> "SERVER ONLINE"; else -> "SERVER NOT CONNECTED" }, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = if (connected) Success else PrimaryText)
-                            Text(connectionMessage.ifBlank { "Configure the server address to connect." }, fontSize = 10.sp, color = SecondaryText, maxLines = 2)
+                            Text(
+                                when {
+                                    state.checkingServer -> "CHECKING SERVER…"
+                                    state.serverConnected -> "SERVER ONLINE"
+                                    else -> "SERVER NOT CONNECTED"
+                                },
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (state.serverConnected) Success else PrimaryText
+                            )
+                            Text(
+                                state.serverMessage.ifBlank { "Configure the server address to connect." },
+                                fontSize = 10.sp,
+                                color = SecondaryText,
+                                maxLines = 2
+                            )
                         }
-                        TextButton(onClick = { showServerSettings = !showServerSettings }) { Text(if (showServerSettings) "HIDE" else "SERVER") }
+                        TextButton(onClick = { showServerSettings = !showServerSettings }) {
+                            Text(if (showServerSettings) "HIDE" else "SERVER")
+                        }
                     }
                 }
                 AnimatedVisibility(showServerSettings) {
                     Column {
                         Spacer(Modifier.height(10.dp))
-                        AuthField(serverUrl, {
-                            serverUrl = it
-                            connected = false
-                            connectionMessage = ""
-                        }, "SERVER ADDRESS", if (api.isPhysicalDevice()) "http://192.168.x.x:8080" else "http://10.0.2.2:8080", keyboardType = KeyboardType.Uri)
+                        AuthField(
+                            serverUrl,
+                            {
+                                serverUrl = it
+                                viewModel.setServerUrl(it)
+                            },
+                            "SERVER ADDRESS",
+                            if (viewModel.physicalDevice) "http://192.168.x.x:8080" else "http://10.0.2.2:8080",
+                            keyboardType = KeyboardType.Uri
+                        )
                         Spacer(Modifier.height(6.dp))
-                        Text(if (api.isPhysicalDevice()) "Physical phone: use the computer's LAN address running Worldbuster." else "Emulator: 10.0.2.2 reaches the development machine.", color = SecondaryText, fontSize = 10.sp, lineHeight = 15.sp)
-                        TextButton(enabled = !checking && serverUrl.isNotBlank(), onClick = {
-                            api.setBaseUrl(serverUrl)
-                            scope.launch {
-                                checking = true
-                                val result = withContext(Dispatchers.IO) { api.health() }
-                                checking = false
-                                connected = result.isSuccess && result.getOrNull()?.code in 200..299
-                                connectionMessage = if (connected) "Server reachable" else api.describeFailure(result)
-                            }
-                        }) { Text("TEST CONNECTION", color = AccentBright) }
+                        Text(
+                            if (viewModel.physicalDevice)
+                                "Physical phone: use the computer's LAN address running Worldbuster."
+                            else
+                                "Emulator: 10.0.2.2 reaches the development machine.",
+                            color = SecondaryText,
+                            fontSize = 10.sp,
+                            lineHeight = 15.sp
+                        )
+                        TextButton(
+                            enabled = !state.checkingServer && serverUrl.isNotBlank(),
+                            onClick = { viewModel.testConnection(serverUrl) }
+                        ) {
+                            Text("TEST CONNECTION", color = AccentBright)
+                        }
                     }
+                }
+                if (error.isNotBlank()) {
+                    Spacer(Modifier.height(10.dp))
+                    Text(error, color = if (error.startsWith("Account created")) Success else Danger, fontSize = 11.sp, lineHeight = 16.sp)
                 }
             }
             Column {
                 Button(
                     Modifier.fillMaxWidth().height(56.dp),
-                    enabled = !busy && username.length >= 3 && password.length >= 8 && serverUrl.isNotBlank(),
+                    enabled = !state.authBusy && username.length >= 3 && password.length >= 8 && serverUrl.isNotBlank(),
                     shape = RoundedCornerShape(17.dp),
                     onClick = {
-                        api.setBaseUrl(serverUrl)
-                        busy = true
-                        onError("")
-                        scope.launch {
-                            val result = withContext(Dispatchers.IO) {
-                                if (registering) api.register(username, password) else api.login(username, password)
-                            }
-                            busy = false
-                            val response = result.getOrNull()
-                            if (result.isFailure) {
-                                connected = false
-                                connectionMessage = api.describeFailure(result)
-                                onError(connectionMessage)
-                                return@launch
-                            }
-                            if (response!!.code !in 200..299) {
-                                onError(api.describeHttpError(response))
-                                return@launch
-                            }
-                            connected = true
-                            connectionMessage = "Server reachable"
-                            if (registering) {
-                                registering = false
-                                password = ""
-                                onError("Account created. Sign in to continue.")
-                            } else onSuccess()
-                        }
+                        viewModel.setServerUrl(serverUrl)
+                        viewModel.authenticate(username, password, registering)
                     }
                 ) {
-                    Text(if (busy) "CONNECTING…" else if (registering) "CREATE ACCOUNT" else "ENTER WORLD", fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
-                    if (!busy) {
+                    Text(
+                        if (state.authBusy) "CONNECTING…"
+                        else if (registering) "CREATE ACCOUNT"
+                        else "ENTER WORLD",
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.sp
+                    )
+                    if (!state.authBusy) {
                         Spacer(Modifier.width(8.dp))
                         Icon(Icons.Default.ArrowForward, null)
                     } else {
                         Spacer(Modifier.width(10.dp))
-                        CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp, color = Color.White)
+                        CircularProgressIndicator(
+                            Modifier.size(18.dp),
+                            strokeWidth = 2.dp,
+                            color = Color.White
+                        )
                     }
                 }
                 Spacer(Modifier.height(8.dp))
-                TextButton(Modifier.fillMaxWidth(), onClick = { registering = !registering; onError("") }) {
-                    Text(if (registering) "BACK TO SIGN IN" else "CREATE NEW IDENTITY", color = AccentBright, fontWeight = FontWeight.SemiBold)
+                TextButton(
+                    Modifier.fillMaxWidth(),
+                    onClick = {
+                        registering = !registering
+                        password = ""
+                    }
+                ) {
+                    Text(
+                        if (registering) "BACK TO SIGN IN" else "CREATE NEW IDENTITY",
+                        color = AccentBright,
+                        fontWeight = FontWeight.SemiBold
+                    )
                 }
             }
         }
