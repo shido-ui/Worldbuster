@@ -38,5 +38,14 @@
 - Server runtime executes periodic economy rebalancing.
 - Balance calculations remain deterministic and server authoritative.
 
+## Phase 97 delivered
+- Territory influence now requires authenticated organization membership.
+- Territory consequence resolution determines control from influence.
+- Contested territories reduce stability and commerce/safety modifiers.
+- Strong control produces positive commerce/safety effects.
+- Territory effects are persisted for downstream systems.
+- Control/stability changes are audited by consequence cycles.
+- Territory consequence cycles run automatically with the server economy loop.
+
 ## Next
-Phase 97 — Territory consequences.
+Phase 98 — Organizations/Faction Expansion.
