@@ -1,47 +1,37 @@
 # Worldbuster Completion Status
 
 ## Implemented
-- Repository foundation
-- Go authoritative server
-- Server world clock/tick
-- Health and world API
-- PostgreSQL starting schema
+- Authoritative Go server
+- World clock/tick API
+- PostgreSQL schema + migrations
 - Redis/local Docker infrastructure
-- React web shell
-- Responsive visual system
-- Live frontend polling
-- Account registration/login/logout
+- React web shell and responsive visual system
+- Authentication/session foundation
 - bcrypt password hashing
-- Server-side session lifecycle
-- HttpOnly SameSite session cookie
-- Baseline HTTP security headers
-- Auth-focused frontend gate
-- Basic backend unit tests
+- HttpOnly SameSite session cookies
+- Baseline security headers
+- Persistent repository interfaces for accounts, sessions and player profiles
+- Transaction boundary helper
+- Database integrity indexes/constraints
+- Backend unit-test foundation
 
-## Still required for a complete game
-- PostgreSQL-backed repositories and transaction boundaries
-- Full character model and progression
+## Remaining
+- Runtime wiring to PostgreSQL repositories
+- Locations/map/travel
 - Inventory/items/equipment
-- Economy, markets and transaction ledger
-- Jobs, companies and organizations
-- Social graph, messaging and notifications
-- Combat/gameplay systems
-- Travel/map/world locations
-- Factions, territory and diplomacy
-- NPC/simulated population engine
-- Event bus and persistent event history
-- Missions/quests
-- Moderation and abuse prevention
-- Admin/control center
+- Economy/markets/ledger
+- Jobs/companies/organizations
+- Social/messaging/notifications
+- Core gameplay/combat
+- Factions/territory/diplomacy
+- Persistent event bus/history
+- Simulated population
+- Missions/dynamic content
 - AI contextual services
-- Analytics/observability
-- Production migrations and backups
-- Security hardening
-- Comprehensive automated tests
-- Load/performance testing
-- Mobile client
-- Production deployment/CI-CD
-- Final content, art, audio and balancing
-- Beta testing and iteration
+- Admin/moderation
+- Production observability/security/scaling
+- Android client and multi-GB synchronization
+- Final content/art/audio/balancing
+- Load testing, deployment and beta iteration
 
-This remains an early playable foundation, not a feature-complete MMORPG.
+Status: foundational architecture with an expanding playable backend; not feature-complete.
