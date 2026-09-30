@@ -14,8 +14,19 @@ function App(){
  const [view,setView]=useState("Overview"),[account,setAccount]=useState<Account|null>(null),[checking,setChecking]=useState(true),[world,setWorld]=useState(worldFallback),[state,setState]=useState<State|null>(null),[jobs,setJobs]=useState<Job[]>([]),[employment,setEmployment]=useState<Job|null>(null),[courses,setCourses]=useState<Course[]>([]),[training,setTraining]=useState<any>(null),[education,setEducation]=useState(0),[courseBusy,setCourseBusy]=useState(false),[jobBusy,setJobBusy]=useState(false),[jobMessage,setJobMessage]=useState(""),[inbox,setInbox]=useState<any[]>([]),[reputation,setReputation]=useState<any>(null);
  const refresh=()=>Promise.all([
   fetch("/api/v1/world",{credentials:"include"}).then(r=>r.ok?r.json():null),
-  fetch("/api/v1/player/state",{credentials:"include"}).then(r=>r.ok?r.json():null)
- ]).then(([w,s])=>{if(w)setWorld(w);if(s)setState(s)}).catch(()=>{});
+  fetch("/api/v1/player/state",{credentials:"include"}).then(r=>r.ok?r.json():null),
+  fetch("/api/v1/jobs",{credentials:"include"}).then(r=>r.ok?r.json():null),
+  fetch("/api/v1/jobs/status",{credentials:"include"}).then(r=>r.ok?r.json():null),
+  fetch("/api/v1/education/courses",{credentials:"include"}).then(r=>r.ok?r.json():null),
+  fetch("/api/v1/education/status",{credentials:"include"}).then(r=>r.ok?r.json():null),
+  fetch("/api/v1/social/inbox",{credentials:"include"}).then(r=>r.ok?r.json():null),
+  fetch("/api/v1/reputation",{credentials:"include"}).then(r=>r.ok?r.json():null)
+ ]).then(([w,s,j,e,coursesData,trainingData,si,rep])=>{
+  if(w)setWorld(w);if(s)setState(s);if(j)setJobs(j.jobs??j);if(e)setEmployment(e.job??null);
+  if(coursesData)setCourses(coursesData.courses??coursesData);
+  if(trainingData){setEducation(trainingData.education??0);setTraining(trainingData.training??null)}
+  if(si)setInbox(si.messages??[]);if(rep)setReputation(rep)
+ }).catch(()=>{});
  useEffect(()=>{fetch("/api/v1/auth/me",{credentials:"include"}).then(async r=>r.ok?setAccount({id:(await r.json()).accountId,username:"PLAYER"}):null).finally(()=>setChecking(false))},[]);
  useEffect(()=>{if(!account)return;refresh();const id=setInterval(refresh,5000);return()=>clearInterval(id)},[account]);
  const enroll=async(courseId:string)=>{setCourseBusy(true);try{const r=await fetch("/api/v1/education/enroll",{method:"POST",credentials:"include",headers:{"Content-Type":"application/json"},body:JSON.stringify({courseId})});const d=await r.json();if(!r.ok){setJobMessage(d.error??"Unable to enroll");return}setTraining(d.training);setJobMessage("Training started.")}catch{setJobMessage("Connection error.")}finally{setCourseBusy(false)}};
