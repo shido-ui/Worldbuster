@@ -3,22 +3,22 @@
 ## Completed
 - Phase 0: repository and architecture foundation
 - Phase 1: backend/world server foundation
-- Phase 2: initial player/account domain and client-storage architecture
+- Phase 2: player/account domain and client-storage architecture
 - Phase 3: identity, authentication and session-security foundation
+- Phase 4: persistent repository and transaction-layer foundation
 
-## Next major phases
-- Persistent repositories and transactional service layer
+## Next
 - Locations/map/travel
 - Inventory/items
-- Economy and ledger
+- Economy/ledger
 - Activities/jobs/organizations
 - Social systems
-- Core gameplay/combat
-- Events and notifications
+- Core gameplay
+- Events/notifications
 - Simulated population
 - Missions/dynamic content
 - AI contextual services
 - Admin/moderation
-- Production security/observability/scaling
-- Android client and multi-GB content synchronization
-- Content, art, audio, balancing and beta
+- Production hardening/scaling
+- Android client/content synchronization
+- Final content/art/audio/balancing/beta
