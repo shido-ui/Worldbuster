@@ -7,6 +7,7 @@ import (
  "testing"
  "time"
 
+ "github.com/shido-ui/Worldbuster/backend/internal/auth"
  "github.com/shido-ui/Worldbuster/backend/internal/economy"
  "github.com/shido-ui/Worldbuster/backend/internal/events"
  "github.com/shido-ui/Worldbuster/backend/internal/inventory"
@@ -52,12 +53,12 @@ func TestSimulationProductionPathThroughREST(t *testing.T) {
    eventsService.Publish(eventType,actorID,targetID,payload)
   },
  }
- runtime := simulation.NewRuntime(runner,simulation.TierScheduler{})
+ runtime := simulation.NewRuntime(runner,simulation.TierScheduler{Policy:simulation.LifecyclePolicy{ActivePercent:100,RecentPercent:0,BackgroundPercent:0}})
  if got := runtime.Tick(time.Unix(1,0)); got != 1 {
   t.Fatalf("production simulation runner executed %d actions, want 1",got)
  }
 
- authBackend := MemoryAuthBackend{}
+ authBackend := MemoryAuthBackend{Service:auth.NewService()}
  router := NewRouter(ws,authBackend,world.NewTravelService(),inventory.NewService(),economy.NewService(),organization.NewService(),jobs,progression.NewService(),social.NewService(),eventsService)
  req := httptest.NewRequest(http.MethodGet,"/api/v1/events?limit=10",nil)
  rr := httptest.NewRecorder()
