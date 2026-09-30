@@ -64,7 +64,7 @@ fun WorldbusterApp(){
   }
   val unauthorized=result.firstOrNull{it.getOrNull()?.code==401}!=null
   if(unauthorized){api.clearSession();authenticated=false;live=LiveData(status="AUTHENTICATION_REQUIRED");error="Session expired. Sign in again."}
-  else if(result.any{it.isFailure||it.getOrNull()?.code?:200>=500}){live=live.copy(status="SERVER_ERROR");error="One or more live services are unavailable."}
+  else if(result.any{it.isFailure || ((it.getOrNull()?.code ?: 200) >= 500)}){live=live.copy(status="SERVER_ERROR");error="One or more live services are unavailable."}
   else {
    val values=result.map{it.getOrNull()?.body.orEmpty()}
    live=LiveData(values[0],values[2],values[3],values[1],values[4],values[5],values[6],values[7],"CONNECTED")
@@ -102,11 +102,6 @@ fun WorldbusterApp(){
    }
   }
  }
-}
-
-private object LaunchedEffectKey {
- var launch:(suspend()->Unit)?=null
- var logout:(()->Unit)?=null
 }
 
 @Composable
