@@ -18,5 +18,15 @@
 - Business ledger and employment tables.
 - Repository operations for creating businesses and recording expenses.
 
+## Phase 95 delivered
+- Deterministic production recipes with safe generic commodities.
+- Persistent business inventories for raw inputs and produced outputs.
+- Production-run history for auditability.
+- Labor-cost consumption tied to business cash.
+- World supply signals tracking generated supply.
+- Periodic production-cycle execution from the server runtime.
+- Seeded NPC production businesses with starter inputs so the pipeline is observable when PostgreSQL is enabled.
+- Production remains server/DB authoritative; no AI-generated state changes.
+
 ## Next
-Phase 95 — Production and supply chains.
+Phase 96 — Dynamic economy balancing.
