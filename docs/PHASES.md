@@ -28,5 +28,15 @@
 - Seeded NPC production businesses with starter inputs so the pipeline is observable when PostgreSQL is enabled.
 - Production remains server/DB authoritative; no AI-generated state changes.
 
+## Phase 96 delivered
+- Supply/demand-driven deterministic price adjustment.
+- Per-cycle price movement capped to prevent runaway market shocks.
+- Price history and economy rebalance audit records.
+- Supply/demand pressure decays after each rebalance cycle.
+- Production outputs now feed market asset supply when matching goods exist.
+- Seeded safe commodity market assets for the production chain.
+- Server runtime executes periodic economy rebalancing.
+- Balance calculations remain deterministic and server authoritative.
+
 ## Next
-Phase 96 — Dynamic economy balancing.
+Phase 97 — Territory consequences.
