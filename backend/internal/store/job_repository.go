@@ -29,3 +29,48 @@ func(r JobRepository) Employ(ctx context.Context,playerID,jobID string,level,sta
   _,err=tx.ExecContext(ctx,"INSERT INTO player_employment(player_id,job_id) VALUES($1,$2)",playerID,jobID);return err
  });return j,err
 }
+
+type SalaryPayment struct {
+ PlayerID string
+ AccountID string
+ JobID string
+ Amount int64
+ Level int
+ XP int64
+}
+
+func(r JobRepository) SettleDueSalaries(ctx context.Context, intervalMinutes int)([]SalaryPayment,error){
+ if intervalMinutes<=0 { intervalMinutes=60 }
+ payments:=[]SalaryPayment{}
+ err:=r.DB.WithTx(ctx,func(tx *sql.Tx) error{
+  rows,err:=tx.QueryContext(ctx,fmt.Sprintf(`SELECT pe.player_id::text,p.account_id::text,pe.job_id::text,j.base_salary
+   FROM player_employment pe
+   JOIN player_profiles p ON p.id=pe.player_id
+   JOIN jobs j ON j.id=pe.job_id
+   WHERE pe.last_paid_at <= NOW() - INTERVAL '%d minutes'
+   ORDER BY pe.last_paid_at
+   FOR UPDATE OF pe SKIP LOCKED LIMIT 100`,intervalMinutes))
+  if err!=nil{return err};defer rows.Close()
+  type due struct{player,account,job string;salary int64}
+  var ds []due
+  for rows.Next(){var d due;if err:=rows.Scan(&d.player,&d.account,&d.job,&d.salary);err!=nil{return err};ds=append(ds,d)}
+  if err:=rows.Err();err!=nil{return err}
+  for _,d:=range ds{
+   var balance int64
+   var accountID string
+   if err:=tx.QueryRowContext(ctx,`SELECT id::text,balance FROM economy_accounts WHERE owner_account_id=$1 FOR UPDATE`,d.account).Scan(&accountID,&balance);err!=nil{return err}
+   balance+=d.salary
+   if _,err:=tx.ExecContext(ctx,`UPDATE economy_accounts SET balance=$1,updated_at=NOW() WHERE id=$2`,balance,accountID);err!=nil{return err}
+   if _,err:=tx.ExecContext(ctx,`INSERT INTO economy_ledger(id,account_id,amount,balance_after,reason,reference_id) VALUES(gen_random_uuid(),$1,$2,$3,'job_salary',$4)`,accountID,d.salary,balance,d.player);err!=nil{return err}
+   var level int;var xp int64
+   if err:=tx.QueryRowContext(ctx,`SELECT level,xp FROM player_profiles WHERE id=$1 FOR UPDATE`,d.player).Scan(&level,&xp);err!=nil{return err}
+   xp += 25
+   for level<100 {need:=int64(level*level*100);if xp<need{break};xp-=need;level++}
+   if _,err:=tx.ExecContext(ctx,`UPDATE player_profiles SET level=$2,xp=$3,updated_at=NOW() WHERE id=$1`,d.player,level,xp);err!=nil{return err}
+   if _,err:=tx.ExecContext(ctx,`UPDATE player_employment SET last_paid_at=NOW() WHERE player_id=$1`,d.player);err!=nil{return err}
+   payments=append(payments,SalaryPayment{PlayerID:d.player,AccountID:d.account,JobID:d.job,Amount:d.salary,Level:level,XP:xp})
+  }
+  return nil
+ })
+ return payments,err
+}
