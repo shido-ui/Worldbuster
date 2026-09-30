@@ -42,3 +42,16 @@ func(s *GroupService) Get(id string)(Group,bool){
 func(s *GroupService) GroupOf(characterID string)(Group,bool){
  s.mu.RLock();defer s.mu.RUnlock();id,ok:=s.membership[characterID];if !ok{return Group{},false};g:=s.groups[id];out:=*g;out.MemberIDs=append([]string(nil),g.MemberIDs...);return out,true
 }
+
+
+func (s *GroupService) List() []Group {
+ s.mu.RLock()
+ defer s.mu.RUnlock()
+ out:=make([]Group,0,len(s.groups))
+ for _,g:=range s.groups {
+  cp:=*g
+  cp.MemberIDs=append([]string(nil),g.MemberIDs...)
+  out=append(out,cp)
+ }
+ return out
+}
