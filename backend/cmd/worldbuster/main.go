@@ -47,14 +47,34 @@ func main(){
   if err:=population.Register(c);err!=nil{log.Printf("simulation population: %v",err);continue}
   locations[c.ID]="central"
   _=js.Employ(c.ID,"general-work","worker",0,0)
+  if dbStore.SQL!=nil {
+   simRepo:=store.SimulationRepository{DB:dbStore}
+   if err:=simRepo.EnsureCharacter(context.Background(),c);err!=nil {log.Printf("simulation persistence: %v",err)}
+  }
  }
  runner:=&simulation.IntegratedRunner{Population:population,State:state,World:adapter,Emit:func(t,actor,target string,payload map[string]any){evs.Publish(t,actor,target,payload)}}
+ if dbStore.SQL!=nil {
+  prodRepo:=store.ProductionRepository{DB:dbStore}
+  for i,c:=range generator.Generate(5) {
+   if i>=5 {break}
+   bType:=simulation.BusinessProduction
+   b:=simulation.BusinessState{ID:simulation.NewBusinessID(),OwnerID:c.ID,Name:c.Name+" Works",Type:bType,Cash:500,Level:1,Active:true}
+   if b.ID=="" {continue}
+   if err:=prodRepoCreate(dbStore, b);err!=nil {log.Printf("npc business seed: %v",err);continue}
+   input:="raw-water";qty:=25
+   if i%2==1 {input="fiber"}
+   if err:=prodRepo.SeedBusinessInventory(context.Background(),b.ID,input,int64(qty));err!=nil {log.Printf("npc supply seed: %v",err)}
+  }
+ }
  if dbStore.SQL!=nil { runner.Persistence=store.SimulationRepository{DB:dbStore} }
  runtime:=simulation.NewRuntime(runner,simulation.TierScheduler{Policy:simulation.LifecyclePolicy{ActivePercent:20,RecentPercent:30,BackgroundPercent:30}})
 
  go func(){ticker:=time.NewTicker(time.Second);defer ticker.Stop();for now:=range ticker.C{ws.Tick();runtime.Tick(now)}}()
  if dbStore.SQL!=nil {
   go func(){ticker:=time.NewTicker(time.Minute);defer ticker.Stop();for range ticker.C{
+   result,err:=store.ProductionRepository{DB:dbStore}.RunCycle(context.Background(),100)
+   if err!=nil {log.Printf("production cycle: %v",err)} else if result.Produced>0 {evs.Publish("world.production.cycle","world","world",map[string]any{"businessesProcessed":result.Processed,"produced":result.Produced,"inputsConsumed":result.InputsConsumed,"outputsCreated":result.OutputsCreated,"laborSpent":result.LaborSpent})}
+
    payments,err:=store.JobRepository{DB:dbStore}.SettleDueSalaries(context.Background(),60)
    if err!=nil {log.Printf("salary settlement: %v",err);continue}
    for _,pay:=range payments {evs.Publish("job.salary.paid",pay.PlayerID,pay.PlayerID,map[string]any{"amount":pay.Amount,"jobId":pay.JobID,"xp":25,"level":pay.Level})}
@@ -81,4 +101,8 @@ if dbStore.SQL!=nil {
  }
  server:=&http.Server{Addr:":8080",Handler:router.Handler(),ReadHeaderTimeout:5*time.Second}
  log.Println("Worldbuster server listening on :8080");log.Fatal(server.ListenAndServe())
+}
+
+func prodRepoCreate(dbStore *store.DB,b simulation.BusinessState) error {
+ return (store.SimulationRepository{DB:dbStore}).CreateBusiness(context.Background(),b)
 }
