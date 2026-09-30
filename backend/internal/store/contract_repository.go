@@ -15,7 +15,10 @@ func(r ContractRepository) ListOpen(ctx context.Context)([]ContractRecord,error)
 }
 
 func(r ContractRepository) Accept(ctx context.Context,id,playerID string)(ContractClaimRecord,error){
+ tx,err:=r.DB.SQL.BeginTx(ctx,nil);if err!=nil{return ContractClaimRecord{},err};defer tx.Rollback()
  var x ContractClaimRecord
- err:=r.DB.SQL.QueryRowContext(ctx,"INSERT INTO contract_claims(contract_id,player_id) SELECT id,$2 FROM contracts WHERE id=$1 AND status='OPEN' AND (expires_at IS NULL OR expires_at>NOW()) RETURNING contract_id::text,player_id::text,accepted_at,completed_at",id,playerID).Scan(&x.ContractID,&x.PlayerID,&x.AcceptedAt,&x.CompletedAt)
- if err==sql.ErrNoRows{return x,ErrContractState};return x,err
+ err=tx.QueryRowContext(ctx,"INSERT INTO contract_claims(contract_id,player_id) SELECT id,$2 FROM contracts WHERE id=$1 AND status='OPEN' AND (expires_at IS NULL OR expires_at>NOW()) RETURNING contract_id::text,player_id::text,accepted_at,completed_at",id,playerID).Scan(&x.ContractID,&x.PlayerID,&x.AcceptedAt,&x.CompletedAt)
+ if err==sql.ErrNoRows{return x,ErrContractState};if err!=nil{return x,err}
+ if _,err=tx.ExecContext(ctx,"UPDATE contracts SET status='ACCEPTED' WHERE id=$1 AND status='OPEN'",id);err!=nil{return x,err}
+ if err=tx.Commit();err!=nil{return x,err};return x,nil
 }
