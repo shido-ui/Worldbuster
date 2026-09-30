@@ -75,6 +75,8 @@ func main(){
   go func(){ticker:=time.NewTicker(time.Minute);defer ticker.Stop();for range ticker.C{
    result,err:=store.ProductionRepository{DB:dbStore}.RunCycle(context.Background(),100)
    if err!=nil {log.Printf("production cycle: %v",err)} else if result.Produced>0 {evs.Publish("world.production.cycle","world","world",map[string]any{"businessesProcessed":result.Processed,"produced":result.Produced,"inputsConsumed":result.InputsConsumed,"outputsCreated":result.OutputsCreated,"laborSpent":result.LaborSpent})}
+   balance,berr:=store.EconomyBalanceRepository{DB:dbStore}.Rebalance(context.Background(),250)
+   if berr!=nil {log.Printf("economy rebalance: %v",berr)} else if balance.PriceChanges>0 {evs.Publish("world.economy.rebalanced","world","world",map[string]any{"assets":balance.ProcessedAssets,"priceChanges":balance.PriceChanges,"supply":balance.TotalSupply,"demand":balance.TotalDemand})}
 
    payments,err:=store.JobRepository{DB:dbStore}.SettleDueSalaries(context.Background(),60)
    if err!=nil {log.Printf("salary settlement: %v",err);continue}
