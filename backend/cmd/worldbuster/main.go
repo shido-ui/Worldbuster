@@ -101,6 +101,7 @@ if dbStore.SQL!=nil {
   router.WithMissions(&api.MissionsAPI{Repo:store.MissionRepository{DB:dbStore},Context:api.NewPlayerContext(dbStore,as)})
   router.WithCombat(&api.CombatAPI{Repo:store.CombatRepository{DB:dbStore},Context:api.NewPlayerContext(dbStore,as)})
   router.WithEquipment(&api.EquipmentAPI{Repo:store.EquipmentRepository{DB:dbStore},Context:api.NewPlayerContext(dbStore,as)})
+  router.WithWorldEvents(&api.WorldEventsAPI{Repo:store.WorldEventRepository{DB:dbStore}})
  }
   if dbStore.SQL!=nil {
   go func(){ticker:=time.NewTicker(time.Minute);defer ticker.Stop();for range ticker.C{
