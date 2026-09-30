@@ -57,6 +57,12 @@ jobs:
           gradle-version: "8.10"
       - name: Android build
         run: gradle :app:assembleDebug --no-daemon
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: worldbuster-debug-apk
+          path: mobile/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
 
   database:
     runs-on: ubuntu-latest
