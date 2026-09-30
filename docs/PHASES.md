@@ -4,9 +4,9 @@
 - Phase 0: repository and architecture foundation
 - Phase 1: backend/world server foundation
 - Phase 2: initial player/account domain and client-storage architecture
+- Phase 3: identity, authentication and session-security foundation
 
 ## Next major phases
-- Identity/authentication and session security
 - Persistent repositories and transactional service layer
 - Locations/map/travel
 - Inventory/items
