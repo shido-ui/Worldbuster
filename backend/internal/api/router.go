@@ -1,9 +1,9 @@
 package api
 
-import("encoding/json";"net/http";"time";"github.com/shido-ui/Worldbuster/backend/internal/auth";"github.com/shido-ui/Worldbuster/backend/internal/inventory";"github.com/shido-ui/Worldbuster/backend/internal/economy";"github.com/shido-ui/Worldbuster/backend/internal/world")
+import("encoding/json";"net/http";"time";"github.com/shido-ui/Worldbuster/backend/internal/auth";"github.com/shido-ui/Worldbuster/backend/internal/inventory";"github.com/shido-ui/Worldbuster/backend/internal/economy";"github.com/shido-ui/Worldbuster/backend/internal/organization";"github.com/shido-ui/Worldbuster/backend/internal/world")
 
-type Router struct{world *world.Service;auth *auth.Service;travel *world.TravelService;inventory *inventory.Service;economy *economy.Service}
-func NewRouter(w *world.Service,a *auth.Service,t *world.TravelService,i *inventory.Service,e *economy.Service)*Router{return &Router{world:w,auth:a,travel:t,inventory:i,economy:e}}
+type Router struct{world *world.Service;auth *auth.Service;travel *world.TravelService;inventory *inventory.Service;economy *economy.Service;organizations *organization.Service}
+func NewRouter(w *world.Service,a *auth.Service,t *world.TravelService,i *inventory.Service,e *economy.Service,o *organization.Service)*Router{return &Router{world:w,auth:a,travel:t,inventory:i,economy:e,organizations:o}}
 func(r *Router)Handler()http.Handler{
  mux:=http.NewServeMux();mux.HandleFunc("/health",r.health);mux.HandleFunc("/api/v1/world",r.worldState)
  wh:=newWorldHandler(r.travel);ih:=newInventoryHandler(r.inventory);eh:=newEconomyHandler(r.economy);mux.HandleFunc("/api/v1/world/locations",wh.locations);mux.HandleFunc("/api/v1/world/travel",wh.travel);mux.HandleFunc("/api/v1/inventory",ih.get);mux.HandleFunc("/api/v1/inventory/add",ih.add);mux.HandleFunc("/api/v1/economy/balance",eh.balance);mux.HandleFunc("/api/v1/economy/credit",eh.credit);mux.HandleFunc("/api/v1/economy/history",eh.history)
