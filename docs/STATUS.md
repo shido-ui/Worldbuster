@@ -10,10 +10,16 @@
 - React web shell
 - Responsive visual system
 - Live frontend polling
-- Basic backend unit test
+- Account registration/login/logout
+- bcrypt password hashing
+- Server-side session lifecycle
+- HttpOnly SameSite session cookie
+- Baseline HTTP security headers
+- Auth-focused frontend gate
+- Basic backend unit tests
 
 ## Still required for a complete game
-- Authentication and accounts
+- PostgreSQL-backed repositories and transaction boundaries
 - Full character model and progression
 - Inventory/items/equipment
 - Economy, markets and transaction ledger
@@ -38,4 +44,4 @@
 - Final content, art, audio and balancing
 - Beta testing and iteration
 
-This is currently a foundation/prototype, not a feature-complete MMORPG.
+This remains an early playable foundation, not a feature-complete MMORPG.
