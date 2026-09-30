@@ -57,7 +57,13 @@ func(r MissionRepository) Complete(ctx context.Context,missionID,playerID string
  var x PlayerMissionRecord
  err=tx.QueryRowContext(ctx,"UPDATE player_missions SET status='COMPLETED',completed_at=$1 WHERE mission_id=$2 AND player_id=$3 RETURNING id::text,mission_id::text,player_id::text,status,progress,accepted_at,completed_at",now,missionID,playerID).Scan(&x.ID,&x.MissionID,&x.PlayerID,&x.Status,&x.Progress,&x.AcceptedAt,&x.CompletedAt)
  if err!=nil{return PlayerMissionRecord{},e,err}
- _=rewardXP
+ if rewardXP>0 {
+  var xp,level int64
+  if err=tx.QueryRowContext(ctx,"SELECT xp,level FROM player_profiles WHERE id=$1 FOR UPDATE",playerID).Scan(&xp,&level);err!=nil{return PlayerMissionRecord{},e,err}
+  xp+=rewardXP
+  for level<100 && xp>=level*level*100 { xp-=level*level*100; level++ }
+  if _,err=tx.ExecContext(ctx,"UPDATE player_profiles SET xp=$1,level=$2,updated_at=NOW() WHERE id=$3",xp,level,playerID);err!=nil{return PlayerMissionRecord{},e,err}
+ }
  if err=tx.Commit();err!=nil{return PlayerMissionRecord{},e,err}
  return x,e,nil
 }
