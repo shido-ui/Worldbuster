@@ -31,3 +31,12 @@ func(s *PopulationScheduler)Run(now time.Time)(map[Tier]int,error){
  for _,c:=range chars{t:=tiers[c.ID];counts[t]++}
  s.LastRun=now;return counts,nil
 }
+
+func(s TierScheduler)Cadence(t Tier)time.Duration{
+ switch t{case TierActive:return time.Second;case TierRecent:return 5*time.Second;case TierBackground:return 30*time.Second;default:return 5*time.Minute}
+}
+func(s TierScheduler)Due(chars []SimCharacter,now time.Time)[]SimCharacter{
+ tiers:=s.Classify(chars,now);out:=make([]SimCharacter,0,len(chars))
+ for _,c:=range chars{last:=time.Unix(c.LastTick,0);if c.LastTick==0||now.Sub(last)>=s.Cadence(tiers[c.ID]){out=append(out,c)}}
+ return out
+}
