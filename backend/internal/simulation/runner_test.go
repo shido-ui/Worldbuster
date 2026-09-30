@@ -20,7 +20,7 @@ func TestRunnerDoesNotReportFailedEconomy(t *testing.T){
 
 type failingPersistence struct{}
 
-func(failingPersistence)EnsureCharacter(context.Context,SimCharacter)error{return errors.New("ensure failed")}
+func(failingPersistence)EnsureCharacter(context.Context,SimCharacter)error{return nil}
 func(failingPersistence)RecordMemory(context.Context,string,Memory)error{return errors.New("memory failed")}
 func(failingPersistence)RecordAction(context.Context,string,Action,bool)error{return errors.New("action failed")}
 
