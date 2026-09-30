@@ -28,7 +28,7 @@ func main(){
  if dsn!="" { var err error; db,err=sql.Open("postgres",dsn); if err!=nil {log.Fatal(err)}; defer db.Close(); if err=db.Ping(); err!=nil {log.Fatal(err)} }
  dbStore:=store.New(db)
  if dbStore.SQL!=nil { if err:=store.ApplyMigrations(context.Background(),dbStore,"database/migrations"); err!=nil { log.Fatal(err) } }
- ws:=world.NewService();as:=auth.NewService();ts:=world.NewTravelService();is:=inventory.NewService();es:=economy.NewService();os:=organization.NewService();js:=job.NewService();ps:=progression.NewService();ss:=social.NewService();evs:=events.NewService()
+ ws:=world.NewService();var as api.AuthBackend;if dbStore.SQL!=nil { as=store.NewDatabaseAuthService(dbStore) } else { as=api.MemoryAuthBackend{Service:auth.NewService()} }ts:=world.NewTravelService();is:=inventory.NewService();es:=economy.NewService();os:=organization.NewService();js:=job.NewService();ps:=progression.NewService();ss:=social.NewService();evs:=events.NewService()
  _=is.RegisterItem(inventory.Item{ID:"water",Name:"Water",Category:"supply",Stackable:true,MaxStack:10})
 
  // Minimal deterministic seed content keeps the simulation runnable while the full data catalog is built.
@@ -51,6 +51,11 @@ func main(){
  runtime:=simulation.NewRuntime(runner,simulation.TierScheduler{Policy:simulation.LifecyclePolicy{ActivePercent:20,RecentPercent:30,BackgroundPercent:30}})
 
  go func(){ticker:=time.NewTicker(time.Second);defer ticker.Stop();for now:=range ticker.C{ws.Tick();runtime.Tick(now)}}()
- server:=&http.Server{Addr:":8080",Handler:api.NewRouter(ws,as,ts,is,es,os,js,ps,ss,evs).Handler(),ReadHeaderTimeout:5*time.Second}
+ router:=api.NewRouter(ws,as,ts,is,es,os,js,ps,ss,evs)
+ if dbStore.SQL!=nil {
+  pr:=store.PlayerRepository{DB:dbStore}
+  router.WithProgressionRepository(&api.ProgressionAPI{Repo:store.ProgressionRepository{DB:dbStore},ResolvePlayer:func(ctx context.Context,accountID string)(string,error){p,err:=pr.GetByAccountID(ctx,accountID);return p.ID,err}})
+ }
+ server:=&http.Server{Addr:":8080",Handler:router.Handler(),ReadHeaderTimeout:5*time.Second}
  log.Println("Worldbuster server listening on :8080");log.Fatal(server.ListenAndServe())
 }
