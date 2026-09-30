@@ -1,8 +1,19 @@
 package api
 
-import("encoding/json";"net/http";"github.com/shido-ui/Worldbuster/backend/internal/progression")
-type progressionHandler struct{s *progression.Service}
-func newProgressionHandler(s *progression.Service)*progressionHandler{return &progressionHandler{s:s}}
-func(h *progressionHandler)get(w http.ResponseWriter,r *http.Request){id:=r.URL.Query().Get("characterId");if id==""{writeJSON(w,400,map[string]string{"error":"characterId is required"});return};writeJSON(w,200,h.s.Get(id))}
-func(h *progressionHandler)courses(w http.ResponseWriter,_ *http.Request){writeJSON(w,200,h.s.ListCourses())}
-func(h *progressionHandler)enroll(w http.ResponseWriter,r *http.Request){var q struct{CharacterID string `json:"characterId"`;CourseID string `json:"courseId"`};if json.NewDecoder(r.Body).Decode(&q)!=nil{writeJSON(w,400,map[string]string{"error":"invalid json"});return};if err:=h.s.Enroll(q.CharacterID,q.CourseID);err!=nil{writeJSON(w,400,map[string]string{"error":err.Error()});return};writeJSON(w,200,h.s.Get(q.CharacterID))}
+import (
+ "encoding/json"
+ "net/http"
+ "github.com/shido-ui/Worldbuster/backend/internal/store"
+)
+
+type ProgressionAPI struct{ Repo store.ProgressionRepository }
+
+func(a ProgressionAPI) AddXP(w http.ResponseWriter,r *http.Request){
+ if r.Method!="POST"{http.Error(w,"method not allowed",http.StatusMethodNotAllowed);return}
+ var req struct{PlayerID string `json:"playerId"`;Amount int64 `json:"amount"`}
+ if err:=json.NewDecoder(r.Body).Decode(&req);err!=nil||req.PlayerID==""||req.Amount<=0{http.Error(w,"invalid request",http.StatusBadRequest);return}
+ result,err:=a.Repo.AddXPAndUnlocks(r.Context(),req.PlayerID,req.Amount,nil)
+ if err!=nil{http.Error(w,"progression update failed",http.StatusInternalServerError);return}
+ w.Header().Set("Content-Type","application/json")
+ _=json.NewEncoder(w).Encode(result)
+}
