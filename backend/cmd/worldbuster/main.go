@@ -116,7 +116,7 @@ if dbStore.SQL!=nil {
    if _,err:=(store.EducationRepository{DB:dbStore}).CompleteDue(context.Background());err!=nil{log.Printf("education completion: %v",err)}
   }}()
  }
- server:=&http.Server{Addr:":8080",Handler:router.Handler(),ReadHeaderTimeout:5*time.Second}
+ server:=&http.Server{Addr:":8080",Handler:router.Handler(),ReadHeaderTimeout:5*time.Second,ReadTimeout:15*time.Second,WriteTimeout:15*time.Second,IdleTimeout:60*time.Second}
  log.Println("Worldbuster server listening on :8080");log.Fatal(server.ListenAndServe())
 }
 
