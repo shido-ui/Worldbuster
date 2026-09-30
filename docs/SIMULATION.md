@@ -20,3 +20,8 @@ Future balancing will use configurable population distributions, regional densit
 ## Lifecycle and regional distribution
 
 Population is divided into active, recent, background and dormant tiers so simulation compute can be budgeted instead of ticking every simulated character equally. Regional weights provide deterministic population density across locations. These controls are configuration-driven and remain separate from authoritative action validation.
+
+
+## Domain execution boundary
+
+Simulated actions now have an explicit domain-executor boundary. The executor is intentionally the single mutation point for simulated behavior and is designed to delegate each action to the same authoritative services used by human players. Unsupported actions are rejected rather than silently mutating state.
