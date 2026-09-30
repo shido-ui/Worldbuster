@@ -2,6 +2,7 @@ package main
 
 import(
  "log"
+ "fmt"
  "database/sql"
  "context"
  "os"
@@ -78,7 +79,7 @@ func main(){
    territory,tberr:=store.TerritoryRepository{DB:dbStore}.ResolveConsequences(context.Background(),250)
    if tberr!=nil {log.Printf("territory consequences: %v",tberr)} else if territory.ControlChanges>0 || territory.StabilityChanges>0 {evs.Publish("world.territory.cycle","world","world",map[string]any{"territories":territory.TerritoriesProcessed,"controlChanges":territory.ControlChanges,"stabilityChanges":territory.StabilityChanges})}
    balance,berr:=store.EconomyBalanceRepository{DB:dbStore}.Rebalance(context.Background(),250)
-   if berr==nil && balance.PriceChanges>0 { if we,err:=store.WorldEventRepository{DB:dbStore}.Create(context.Background(),"market-fluctuation",1,"central",map[string]any{"priceChanges":balance.PriceChanges}); err==nil { evs.Publish("world.event.created","world",we.ID,map[string]any{"code":we.Code,"severity":we.Severity}) } }
+   if berr==nil && balance.PriceChanges>0 { if we,err:=store.WorldEventRepository{DB:dbStore}.Create(context.Background(),"market-fluctuation",1,"central",map[string]any{"priceChanges":balance.PriceChanges}); err==nil { evs.Publish("world.event.created","world",we.ID,map[string]any{"code":we.Code,"severity":we.Severity}); if _,nerr:=store.NewsRepository{DB:dbStore}.Publish(context.Background(),we.ID,"Market conditions shift","Local market prices changed across "+fmt.Sprint(balance.PriceChanges)+" tracked assets.","ECONOMY",1,"central"); nerr!=nil {log.Printf("news publish: %v",nerr)} } }
    if berr!=nil {log.Printf("economy rebalance: %v",berr)} else if balance.PriceChanges>0 {evs.Publish("world.economy.rebalanced","world","world",map[string]any{"assets":balance.ProcessedAssets,"priceChanges":balance.PriceChanges,"supply":balance.TotalSupply,"demand":balance.TotalDemand})}
 
    payments,err:=store.JobRepository{DB:dbStore}.SettleDueSalaries(context.Background(),60)
@@ -103,6 +104,7 @@ if dbStore.SQL!=nil {
   router.WithCombat(&api.CombatAPI{Repo:store.CombatRepository{DB:dbStore},Context:api.NewPlayerContext(dbStore,as)})
   router.WithEquipment(&api.EquipmentAPI{Repo:store.EquipmentRepository{DB:dbStore},Context:api.NewPlayerContext(dbStore,as)})
   router.WithWorldEvents(&api.WorldEventsAPI{Repo:store.WorldEventRepository{DB:dbStore}})
+  router.WithNews(&api.NewsAPI{Repo:store.NewsRepository{DB:dbStore}})
  }
   if dbStore.SQL!=nil {
   go func(){ticker:=time.NewTicker(time.Minute);defer ticker.Stop();for range ticker.C{
