@@ -10,7 +10,7 @@ type MissionsAPI struct{Repo store.MissionRepository;Context *PlayerContext}
 
 func(a *MissionsAPI) List(w http.ResponseWriter,r *http.Request){
  _,p,err:=a.Context.Resolve(r.Context(),r);if err!=nil{writeJSON(w,401,map[string]string{"error":"authentication required"});return}
- x,err:=a.Repo.List(r.Context(),p.Level);if err!=nil{writeJSON(w,500,map[string]string{"error":"missions unavailable"});return};writeJSON(w,200,map[string]any{"missions":x})
+ x,err:=a.Repo.List(r.Context(),p.Level);if err!=nil{writeJSON(w,500,map[string]string{"error":"missions unavailable"});return};active,err:=a.Repo.ListForPlayer(r.Context(),p.ID);if err!=nil{writeJSON(w,500,map[string]string{"error":"player missions unavailable"});return};writeJSON(w,200,map[string]any{"missions":x,"playerMissions":active})
 }
 func(a *MissionsAPI) Accept(w http.ResponseWriter,r *http.Request){
  _,p,err:=a.Context.Resolve(r.Context(),r);if err!=nil{writeJSON(w,401,map[string]string{"error":"authentication required"});return}
