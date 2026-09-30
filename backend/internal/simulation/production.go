@@ -1,6 +1,6 @@
 package simulation
 
-import "crypto/rand"
+import ("crypto/rand";"errors")
 
 type ProductionRecipe struct {
  ID string
@@ -33,12 +33,14 @@ func CanProduce(b BusinessState, r ProductionRecipe, inputQuantity int64) bool {
  return b.Cash >= r.LaborCost
 }
 
-func NewBusinessID() string {
+var ErrBusinessIDEntropyFailure=errors.New("business ID entropy failure")
+
+func NewBusinessID() (string,error) {
  var b [16]byte
- if _,err:=rand.Read(b[:]);err!=nil{return ""}
+ if _,err:=rand.Read(b[:]);err!=nil{return "",ErrBusinessIDEntropyFailure}
  b[6]=(b[6]&0x0f)|0x40
  b[8]=(b[8]&0x3f)|0x80
- return fmtUUID(b)
+ return fmtUUID(b),nil
 }
 
 func fmtUUID(b [16]byte) string {
