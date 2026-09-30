@@ -1,0 +1,2 @@
+CREATE TABLE IF NOT EXISTS simulated_characters (character_id UUID PRIMARY KEY,name TEXT NOT NULL,controller_type TEXT NOT NULL CHECK(controller_type='SIMULATED'),personality JSONB NOT NULL DEFAULT '{}'::jsonb,goals JSONB NOT NULL DEFAULT '[]'::jsonb,last_tick BIGINT NOT NULL DEFAULT 0,active BOOLEAN NOT NULL DEFAULT TRUE,created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());
+CREATE INDEX IF NOT EXISTS idx_simulated_active_tick ON simulated_characters(active,last_tick);
