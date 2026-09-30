@@ -28,7 +28,8 @@ func main(){
  if dsn!="" { var err error; db,err=sql.Open("postgres",dsn); if err!=nil {log.Fatal(err)}; defer db.Close(); if err=db.Ping(); err!=nil {log.Fatal(err)} }
  dbStore:=store.New(db)
  if dbStore.SQL!=nil { if err:=store.ApplyMigrations(context.Background(),dbStore,"database/migrations"); err!=nil { log.Fatal(err) } }
- ws:=world.NewService();var as api.AuthBackend;if dbStore.SQL!=nil { as=store.NewDatabaseAuthService(dbStore) } else { as=api.MemoryAuthBackend{Service:auth.NewService()} }ts:=world.NewTravelService();is:=inventory.NewService();es:=economy.NewService();os:=organization.NewService();js:=job.NewService();ps:=progression.NewService();ss:=social.NewService();evs:=events.NewService()
+ ws:=world.NewService();var as api.AuthBackend;if dbStore.SQL!=nil { as=store.NewDatabaseAuthService(dbStore) } else { as=api.MemoryAuthBackend{Service:auth.NewService()} }
+ ts:=world.NewTravelService();is:=inventory.NewService();es:=economy.NewService();os:=organization.NewService();js:=job.NewService();ps:=progression.NewService();ss:=social.NewService();evs:=events.NewService()
  _=is.RegisterItem(inventory.Item{ID:"water",Name:"Water",Category:"supply",Stackable:true,MaxStack:10})
 
  // Minimal deterministic seed content keeps the simulation runnable while the full data catalog is built.
