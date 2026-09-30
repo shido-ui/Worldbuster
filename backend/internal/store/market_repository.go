@@ -5,7 +5,7 @@ import("context";"database/sql";"errors";"time")
 var ErrMarketInvalid=errors.New("invalid market request")
 
 type MarketAsset struct{ID string `json:"id"`;Symbol string `json:"symbol"`;Name string `json:"name"`;Category string `json:"category"`;BasePrice int64 `json:"basePrice"`;CurrentPrice int64 `json:"currentPrice"`;Supply int64 `json:"supply"`;Demand int64 `json:"demand"`;UpdatedAt time.Time `json:"updatedAt"`}
-type MarketOrder struct{ID string `json:"id"`;AssetID string `json:"assetId"`;SellerAccountID string `json:"sellerAccountId"`;Quantity int64 `json:"quantity"`;UnitPrice int64 `json:"unitPrice"`;Status string `json:"status"`;CreatedAt time.Time `json:"createdAt"`}
+type MarketOrder struct{ID string `json:"id"`;AssetID string `json:"assetId"`;SellerAccountID string `json:"sellerAccountId"`;Quantity int64 `json:"quantity"`;UnitPrice int64 `json:"unitPrice"`;Status string `json:"status"`;CreatedAt time.Time `json:"createdAt"`;IsOwner bool `json:"isOwner,omitempty"`}
 type MarketRepository struct{DB *DB}
 
 func(r MarketRepository) Assets(ctx context.Context)([]MarketAsset,error){rows,err:=r.DB.SQL.QueryContext(ctx,"SELECT id::text,symbol,name,category,base_price,current_price,supply,demand,updated_at FROM market_assets ORDER BY symbol");if err!=nil{return nil,err};defer rows.Close();out:=[]MarketAsset{};for rows.Next(){var x MarketAsset;if err:=rows.Scan(&x.ID,&x.Symbol,&x.Name,&x.Category,&x.BasePrice,&x.CurrentPrice,&x.Supply,&x.Demand,&x.UpdatedAt);err!=nil{return nil,err};out=append(out,x)};return out,rows.Err()}
