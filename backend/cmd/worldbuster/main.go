@@ -66,6 +66,7 @@ if dbStore.SQL!=nil {
   router.WithProgressionRepository(&api.ProgressionAPI{Repo:store.ProgressionRepository{DB:dbStore},ResolvePlayer:func(ctx context.Context,accountID string)(string,error){p,err:=pr.GetByAccountID(ctx,accountID);return p.ID,err}})
   router.WithPlayerContext(api.NewPlayerContext(dbStore,as))
   router.WithPersistentJobs(&api.PersistentJobsAPI{Repo:store.JobRepository{DB:dbStore},Context:api.NewPlayerContext(dbStore,as)})
+  router.WithPersistentSocial(&api.PersistentSocialAPI{Repo:store.SocialRepository{DB:dbStore},Context:api.NewPlayerContext(dbStore,as)})
  }
   if dbStore.SQL!=nil {
   go func(){ticker:=time.NewTicker(time.Minute);defer ticker.Stop();for range ticker.C{
