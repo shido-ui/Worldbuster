@@ -10,5 +10,10 @@ type Profile struct {
 	XP          int64     `json:"xp"`
 	Cash        int64     `json:"cash"`
 	Energy      int       `json:"energy"`
+ Strength    int       `json:"strength"`
+ Defense     int       `json:"defense"`
+ Speed       int       `json:"speed"`
+ Intelligence int      `json:"intelligence"`
+ Endurance   int       `json:"endurance"`
 	UpdatedAt   time.Time `json:"updatedAt"`
 }
