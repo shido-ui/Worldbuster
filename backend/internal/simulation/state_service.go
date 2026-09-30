@@ -1,51 +1,13 @@
 package simulation
 
-import (
- "sync"
- "time"
-)
+import ("sync";"time")
 
-type StateService struct {
- mu sync.RWMutex
- states map[string]*BehavioralState
-}
-
-func NewStateService()*StateService{return &StateService{states:map[string]*BehavioralState{}}}
-
-func(s *StateService) Get(id string) BehavioralState {
- s.mu.RLock(); defer s.mu.RUnlock()
- if v,ok:=s.states[id];ok{return cloneState(*v)}
- return BehavioralState{Needs:Needs{Energy:100,Social:50,Rest:50,Satisfaction:50},Mood:25}
-}
-
-func(s *StateService) Tick(id string){
- s.mu.Lock(); defer s.mu.Unlock()
- st:=s.getLocked(id)
- // Needs drift slowly between actions, creating pressure for future decisions.
- st.Needs.Energy-=1
- st.Needs.Social-=1
- st.Needs.Rest-=1
- if st.Needs.Satisfaction>0 {st.Needs.Satisfaction-=1}
- clampNeeds(&st.Needs)
- if st.Stress>100 {st.Stress=100}
- if st.Stress>0 {st.Stress--}
- st.Mood=st.Needs.Satisfaction-st.Stress/2
-}
-
-func(s *StateService) Apply(id string, action ActionType, now time.Time){
- s.mu.Lock(); defer s.mu.Unlock()
- st:=s.getLocked(id)
- UpdateBehavior(st,action,now)
-}
-
-func(s *StateService) getLocked(id string)*BehavioralState{
- if st,ok:=s.states[id];ok{return st}
- st:=&BehavioralState{Needs:Needs{Energy:100,Social:50,Rest:50,Satisfaction:50},Mood:25}
- s.states[id]=st
- return st
-}
-
-func cloneState(st BehavioralState)BehavioralState{
- st.Memories=append([]Memory(nil),st.Memories...)
- return st
-}
+type StateService struct{mu sync.RWMutex;states map[string]BehavioralState}
+func NewStateService()*StateService{return &StateService{states:map[string]BehavioralState{}}}
+func(s *StateService)Get(id string)BehavioralState{s.mu.RLock();defer s.mu.RUnlock();x,ok:=s.states[id];if !ok{return defaultState()};return cloneState(x)}
+func defaultState()BehavioralState{return BehavioralState{Mood:25,Needs:Needs{Energy:100,Social:50,Rest:50,Satisfaction:50},Memories:[]Memory{},Relationships:map[string]Relationship{}}}
+func cloneState(x BehavioralState)BehavioralState{y:=x;y.Memories=append([]Memory(nil),x.Memories...);y.Relationships=map[string]Relationship{};for k,v:=range x.Relationships{y.Relationships[k]=v};return y}
+func(s *StateService)ensure(id string)BehavioralState{if x,ok:=s.states[id];ok{return x};x:=defaultState();s.states[id]=x;return x}
+func(s *StateService)Apply(id string,a ActionType,now time.Time){s.mu.Lock();defer s.mu.Unlock();x:=s.ensure(id);x=applyBehavior(x,a,now);s.states[id]=x}
+func(s *StateService)Tick(id string){s.mu.Lock();defer s.mu.Unlock();x:=s.ensure(id);x.Needs.Energy=clamp(x.Needs.Energy-1,0,100);x.Needs.Rest=clamp(x.Needs.Rest-1,0,100);x.Needs.Social=clamp(x.Needs.Social-1,0,100);s.states[id]=x}
+func(s *StateService)RecordRelationship(id string,r Relationship,now time.Time){s.mu.Lock();defer s.mu.Unlock();x:=s.ensure(id);if x.Relationships==nil{x.Relationships=map[string]Relationship{}};x.Relationships[r.TargetID]=r;x.Memories=append(x.Memories,Memory{Type:"SOCIAL_RELATIONSHIP",TargetID:r.TargetID,Event:"social interaction",Importance:3,Sentiment:r.Affinity,CreatedAt:now});if len(x.Memories)>50{x.Memories=x.Memories[len(x.Memories)-50:]};s.states[id]=x}
