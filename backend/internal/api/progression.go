@@ -2,6 +2,7 @@ package api
 
 import (
  "encoding/json"
+ "log"
  "net/http"
  "context"
  "github.com/shido-ui/Worldbuster/backend/internal/store"
@@ -23,5 +24,5 @@ func(a ProgressionAPI) AddXP(w http.ResponseWriter,r *http.Request){
  result,err:=a.Repo.AddXPAndUnlocks(r.Context(),playerID,req.Amount,nil)
  if err!=nil{http.Error(w,"progression update failed",http.StatusInternalServerError);return}
  w.Header().Set("Content-Type","application/json")
- _=json.NewEncoder(w).Encode(result)
+ if err:=json.NewEncoder(w).Encode(result);err!=nil{log.Printf("progression response encoding: %v",err)}
 }
