@@ -57,7 +57,7 @@ func main(){
    if err:=simRepo.EnsureCharacter(context.Background(),c);err!=nil {log.Printf("simulation persistence: %v",err)}
   }
  }
- runner:=&simulation.IntegratedRunner{Population:population,State:state,World:adapter,Emit:func(t,actor,target string,payload map[string]any){evs.Publish(t,actor,target,payload)}}
+ runner:=&simulation.IntegratedRunner{Population:population,State:state,World:adapter,Emit:func(t,actor,target string,payload map[string]any){evs.Publish(t,actor,target,payload)},PersistenceError:func(operation,characterID string,err error){log.Printf("simulation persistence: operation=%s character=%s: %v",operation,characterID,err)}}
  if dbStore.SQL!=nil {
   prodRepo:=store.ProductionRepository{DB:dbStore}
   for i,c:=range generated {
