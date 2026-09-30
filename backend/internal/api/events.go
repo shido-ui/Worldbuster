@@ -2,6 +2,7 @@ package api
 
 import (
  "net/http"
+ "encoding/json"
  "strconv"
  "github.com/shido-ui/Worldbuster/backend/internal/events"
 )
@@ -34,3 +35,8 @@ func(h *eventHandler)markNotificationsRead(w http.ResponseWriter,r *http.Request
  if h.context==nil{writeJSON(w,http.StatusForbidden,map[string]string{"error":"notifications require player context"});return}
  _,profile,err:=h.context.Resolve(r.Context(),r);if err!=nil{writeJSON(w,http.StatusUnauthorized,map[string]string{"error":"authentication required"});return};writeJSON(w,http.StatusOK,map[string]any{"marked":h.s.MarkAllRead(profile.ID)})
 }
+
+func(h *eventHandler)stream(w http.ResponseWriter,r *http.Request){
+ if h.context==nil{http.Error(w,"authentication required",401);return};if _,_,err:=h.context.Resolve(r.Context(),r);err!=nil{http.Error(w,"authentication required",401);return}
+ f,ok:=w.(http.Flusher);if !ok{http.Error(w,"streaming unsupported",500);return};w.Header().Set("Content-Type","text/event-stream");w.Header().Set("Cache-Control","no-cache");w.Header().Set("Connection","keep-alive");ch:=h.s.Subscribe();defer h.s.Unsubscribe(ch);f.Flush();
+ for{select{case <-r.Context().Done():return;case ev:=<-ch:b,_:=json.Marshal(ev);_,_=w.Write([]byte("event: world\ndata: "));_,_=w.Write(b);_,_=w.Write([]byte("\n\n"));f.Flush()}}}
