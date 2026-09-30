@@ -11,6 +11,7 @@ import java.net.SocketTimeoutException
 import java.net.URL
 import java.net.UnknownHostException
 import kotlin.math.min
+import kotlinx.coroutines.delay
 
 data class ApiResponse(val code: Int, val body: String)
 
@@ -62,7 +63,7 @@ class ApiClient(context: Context) {
         return c
     }
 
-    fun request(path: String, method: String = "GET", body: String? = null): Result<ApiResponse> {
+    suspend fun request(path: String, method: String = "GET", body: String? = null): Result<ApiResponse> {
         val attempts = if (method == "GET") 2 else 1
         var last: Result<ApiResponse> = Result.failure(IllegalStateException("request not attempted"))
         repeat(attempts) { attempt ->
@@ -72,7 +73,7 @@ class ApiClient(context: Context) {
                 response?.code == 408 || response?.code == 429 ||
                 (response?.code ?: 0) in 500..599
             if (!retryable || attempt == attempts - 1) return last
-            Thread.sleep(min(750L, 250L * (attempt + 1)))
+            delay(min(750L, 250L * (attempt + 1)))
         }
         return last
     }
@@ -100,26 +101,26 @@ class ApiClient(context: Context) {
         }
     }
 
-    fun health(): Result<ApiResponse> = request("/health")
+    suspend fun health(): Result<ApiResponse> = request("/health")
     fun hasSession(): Boolean = !secureStore.get("session_cookie").isNullOrBlank()
     fun clearSession() {
         clearCache()
         secureStore.remove("session_cookie")
     }
 
-    fun login(username: String, password: String) =
+    suspend fun login(username: String, password: String) =
         request("/api/v1/auth/login", "POST", credentials(username, password))
 
-    fun register(username: String, password: String) =
+    suspend fun register(username: String, password: String) =
         request("/api/v1/auth/register", "POST", credentials(username, password))
 
-    fun logout(): Result<ApiResponse> {
+    suspend fun logout(): Result<ApiResponse> {
         val result = request("/api/v1/auth/logout", "POST")
         clearSession()
         return result
     }
 
-    fun get(path: String) = request(path)
+    suspend fun get(path: String) = request(path)
 
     fun cache(key: String, response: ApiResponse) {
         if (response.code in 200..299) {
