@@ -37,7 +37,7 @@ func (r MarketRepository) Assets(ctx context.Context) ([]MarketAsset, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	out := []MarketAsset{}
 	for rows.Next() {
 		var x MarketAsset
@@ -56,7 +56,7 @@ func (r MarketRepository) Orders(ctx context.Context, assetID string) ([]MarketO
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	out := []MarketOrder{}
 	for rows.Next() {
 		var x MarketOrder
