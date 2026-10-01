@@ -24,7 +24,7 @@ func (r AchievementRepository) List(ctx context.Context, playerID string) ([]Ach
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	out := []Achievement{}
 	for rows.Next() {
 		var a Achievement
