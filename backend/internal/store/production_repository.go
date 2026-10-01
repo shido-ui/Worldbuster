@@ -33,7 +33,7 @@ func (r ProductionRepository) RunCycle(ctx context.Context, limit int) (Producti
 	if err != nil {
 		return ProductionCycleResult{}, err
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 	rows, err := tx.QueryContext(ctx, `SELECT b.id::text,b.business_type,b.cash_balance,b.level,b.reputation,b.employees,b.revenue_total,b.expense_total,b.active,
   r.id::text,r.name,r.business_type,r.min_level,r.input_item,r.input_quantity,r.output_item,r.output_quantity,r.labor_cost
   FROM simulated_businesses b CROSS JOIN production_recipes r
