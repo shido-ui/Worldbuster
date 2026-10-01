@@ -16,14 +16,15 @@ CI now verifies Go formatting and module cleanliness, and project contribution/s
 - Database startup is authoritative by default; memory mode requires explicit `WORLDBUSTER_ALLOW_MEMORY=1`.
 - `WORLDBUSTER_ADDR` controls the HTTP listen address.
 - `go.sum`, LICENSE, CONTRIBUTING.md, SECURITY.md, CODE_OF_CONDUCT.md, and golangci-lint configuration are present.
+- CI runs golangci-lint and verifies module tidiness without a standalone database-job tidy step.
+- World content and NPC population configuration are loaded from `database/seed/content.json` through a validated seed loader.
 - CI checks formatting and fails when `go mod tidy` would modify tracked module files.
 
 ### Next foundation work
 
-1. Validate the refactor with the full Go race/vet/build matrix.
-2. Add golangci-lint to CI and resolve findings.
-3. Replace the current migration runner with immutable, checksummed migrations and explicit legacy compatibility.
-4. Move seed content into versioned fixtures and make every seed idempotent.
+1. Validate the refactor with the full Go race/vet/build/lint matrix.
+2. Add fresh-DB migration/schema verification and explicit legacy migration compatibility.
+3. Make persistent NPC/business fixtures stable and idempotent.
 5. Continue persistence/domain interface extraction and observability.
 6. Then build the gameplay loops end-to-end.
 
