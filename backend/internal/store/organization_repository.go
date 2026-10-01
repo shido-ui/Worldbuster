@@ -63,7 +63,7 @@ func (r OrganizationRepository) Join(ctx context.Context, orgID, playerID, role 
 	if err != nil {
 		return OrganizationMemberRecord{}, err
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 	var max, count int
 	if err = tx.QueryRowContext(ctx, "SELECT max_members,(SELECT COUNT(*) FROM organization_members WHERE organization_id=organizations.id) FROM organizations WHERE id=$1 FOR UPDATE", orgID).Scan(&max, &count); err != nil {
 		return OrganizationMemberRecord{}, ErrOrganizationNotFound
@@ -112,7 +112,7 @@ func (r OrganizationRepository) ChangeFactionReputation(ctx context.Context, org
 	if err != nil {
 		return 0, err
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 	_, err = tx.ExecContext(ctx, "INSERT INTO organization_reputation(organization_id,player_id) VALUES($1,$2) ON CONFLICT DO NOTHING", orgID, playerID)
 	if err != nil {
 		return 0, err
@@ -156,7 +156,7 @@ func (r OrganizationRepository) ProposeAlliance(ctx context.Context, orgID, targ
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 	var role string
 	if err = tx.QueryRowContext(ctx, "SELECT role FROM organization_members WHERE organization_id=$1 AND character_id=$2", orgID, actorID).Scan(&role); err != nil {
 		return ErrOrganizationNotMember
@@ -188,7 +188,7 @@ func (r OrganizationRepository) SetAllianceStatus(ctx context.Context, orgID, ta
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 	var role string
 	if err = tx.QueryRowContext(ctx, "SELECT role FROM organization_members WHERE organization_id=$1 AND character_id=$2", orgID, actorID).Scan(&role); err != nil {
 		return ErrOrganizationNotMember
