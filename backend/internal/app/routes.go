@@ -17,7 +17,7 @@ import (
 )
 
 type Dependencies struct {
-	Cache *cache.Client
+	Cache        *cache.Client
 	DB           *store.DB
 	Auth         api.AuthBackend
 	World        *world.Service
