@@ -42,7 +42,7 @@ func (r ProductionRepository) RunCycle(ctx context.Context, limit int) (Producti
 	if err != nil {
 		return ProductionCycleResult{}, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	out := ProductionCycleResult{}
 	for rows.Next() {
 		var b simulation.BusinessState
