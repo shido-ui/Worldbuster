@@ -41,12 +41,12 @@ func (g *PopulationGenerator) Generate(count int) []SimCharacter {
 			name = g.profile.Names[g.rng.Intn(len(g.profile.Names))]
 		}
 		out = append(out, SimCharacter{
-			ID:           deterministicCharacterID(g.seed, g.next),
-			Name:         name + " " + formatID(g.next),
-			Controller:   ControllerSimulated,
-			Personality:  g.profile.PersonalityBias,
-			Goals:        []Goal{{ID: "work", Kind: "WORK", Priority: 50}},
-			Active:       false,
+			ID:          deterministicCharacterID(g.seed, g.next),
+			Name:        name + " " + formatID(g.next),
+			Controller:  ControllerSimulated,
+			Personality: g.profile.PersonalityBias,
+			Goals:       []Goal{{ID: "work", Kind: "WORK", Priority: 50}},
+			Active:      false,
 		})
 	}
 	return out
