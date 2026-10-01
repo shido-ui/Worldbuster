@@ -50,7 +50,7 @@ func (r EquipmentRepository) Equip(ctx context.Context, playerID, itemID string,
 	if err != nil {
 		return EquipmentRecord{}, err
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 	var slot string
 	var maxDur, req int
 	if err = tx.QueryRowContext(ctx, "SELECT slot,durability_max,required_level FROM item_definitions WHERE id=$1 AND active", itemID).Scan(&slot, &maxDur, &req); err == sql.ErrNoRows {
