@@ -65,9 +65,10 @@ func (r CombatRepository) Resolve(ctx context.Context, attackerID, defenderID st
 		return CombatRecord{}, err
 	}
 	var winner interface{}
-	if result.Winner == 1 {
+	switch result.Winner {
+	case 1:
 		winner = attackerID
-	} else if result.Winner == 2 {
+	case 2:
 		winner = defenderID
 	}
 	var id string
@@ -97,13 +98,14 @@ func (r CombatRepository) Resolve(ctx context.Context, attackerID, defenderID st
 	if _, err = tx.ExecContext(ctx, "UPDATE player_profiles SET level=$2,xp=$3,updated_at=NOW() WHERE id=$1", attackerID, level, xp); err != nil {
 		return CombatRecord{}, err
 	}
-	if result.Winner == 1 {
+	switch result.Winner {
+	case 1:
 		_, err = tx.ExecContext(ctx, "UPDATE combat_profiles SET wins=wins+1,rating=rating+10,updated_at=NOW() WHERE player_id=$1", attackerID)
 		if err != nil {
 			return CombatRecord{}, err
 		}
 		_, err = tx.ExecContext(ctx, "UPDATE combat_profiles SET losses=losses+1,rating=GREATEST(0,rating-10),updated_at=NOW() WHERE player_id=$1", defenderID)
-	} else if result.Winner == 2 {
+	case 2:
 		_, err = tx.ExecContext(ctx, "UPDATE combat_profiles SET losses=losses+1,rating=GREATEST(0,rating-10),updated_at=NOW() WHERE player_id=$1", attackerID)
 		if err != nil {
 			return CombatRecord{}, err
@@ -117,9 +119,10 @@ func (r CombatRepository) Resolve(ctx context.Context, attackerID, defenderID st
 		return CombatRecord{}, err
 	}
 	var w *string
-	if result.Winner == 1 {
+	switch result.Winner {
+	case 1:
 		w = &attackerID
-	} else if result.Winner == 2 {
+	case 2:
 		w = &defenderID
 	}
 	return CombatRecord{ID: id, AttackerID: attackerID, DefenderID: defenderID, WinnerID: w, AttackerScore: result.AttackerScore, DefenderScore: result.DefenderScore, EnergyCost: result.EnergyCost, XPReward: result.XPReward, CreatedAt: time.Now().UTC()}, nil
@@ -130,7 +133,7 @@ func (r CombatRepository) History(ctx context.Context, playerID string) ([]Comba
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	out := []CombatRecord{}
 	for rows.Next() {
 		var x CombatRecord
