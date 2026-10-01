@@ -120,7 +120,7 @@ func openDatabase(ctx context.Context) (*store.DB, func(), error) {
 		migrationDir = "database/migrations"
 	}
 	if err := store.ApplyMigrations(ctx, dbStore, migrationDir); err != nil {
-		db.Close()
+		_ = db.Close()
 		return nil, func() {}, err
 	}
 
