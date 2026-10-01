@@ -38,8 +38,5 @@ func (s *StatBlock) Add(stat string, amount int) bool {
 	default:
 		return false
 	}
-	if !s.Valid() {
-		return false
-	}
-	return true
+	return s.Valid()
 }
