@@ -15,7 +15,13 @@ jobs:
           go-version: "1.24"
           cache: false
       - name: Verify Go formatting
-        run: test -z "$(gofmt -l backend)"
+        run: |
+          files="$(gofmt -l backend)"
+          if [ -n "$files" ]; then
+            echo "Unformatted Go files:"
+            printf "%s\n" "$files"
+            exit 1
+          fi
       - name: Verify Go modules are tidy
         run: |
           go mod tidy
