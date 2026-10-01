@@ -33,7 +33,7 @@ func (r EquipmentRepository) ListItems(ctx context.Context) ([]ItemDefinition, e
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	out := []ItemDefinition{}
 	for rows.Next() {
 		var x ItemDefinition
@@ -97,7 +97,7 @@ func (r EquipmentRepository) ListEquipped(ctx context.Context, playerID string) 
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	out := []EquipmentRecord{}
 	for rows.Next() {
 		var x EquipmentRecord
