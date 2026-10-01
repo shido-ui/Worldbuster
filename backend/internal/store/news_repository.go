@@ -34,7 +34,7 @@ func (r NewsRepository) Recent(ctx context.Context, limit int) ([]NewsRecord, er
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	out := []NewsRecord{}
 	for rows.Next() {
 		var n NewsRecord
