@@ -20,6 +20,7 @@ services:
     environment:
       WORLDBUSTER_DATABASE_URL: postgres://worldbuster:change-me-in-production@postgres:5432/worldbuster?sslmode=disable
       WORLDBUSTER_SIM_POPULATION: "100"
+      WORLDBUSTER_REDIS_ADDR: redis:6379
     depends_on:
       postgres:
         condition: service_healthy
