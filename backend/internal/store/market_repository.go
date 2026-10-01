@@ -144,7 +144,7 @@ func (r MarketRepository) Buy(ctx context.Context, buyer, orderID string, quanti
 		var id, owner string
 		var balance int64
 		if err := rows.Scan(&id, &owner, &balance); err != nil {
-			rows.Close()
+			_ = rows.Close()
 			return MarketOrder{}, err
 		}
 		switch owner {
