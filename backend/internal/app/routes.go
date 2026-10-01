@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/shido-ui/Worldbuster/backend/internal/api"
+	"github.com/shido-ui/Worldbuster/backend/internal/cache"
 	"github.com/shido-ui/Worldbuster/backend/internal/economy"
 	"github.com/shido-ui/Worldbuster/backend/internal/events"
 	"github.com/shido-ui/Worldbuster/backend/internal/inventory"
@@ -16,6 +17,7 @@ import (
 )
 
 type Dependencies struct {
+	Cache *cache.Client
 	DB           *store.DB
 	Auth         api.AuthBackend
 	World        *world.Service
