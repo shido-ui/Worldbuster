@@ -33,7 +33,7 @@ func (r MissionRepository) List(ctx context.Context, level int) ([]MissionRecord
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	out := []MissionRecord{}
 	for rows.Next() {
 		var m MissionRecord
@@ -140,7 +140,7 @@ func (r MissionRepository) ListForPlayer(ctx context.Context, playerID string) (
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	out := []PlayerMissionRecord{}
 	for rows.Next() {
 		var x PlayerMissionRecord
