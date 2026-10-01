@@ -51,7 +51,7 @@ func (r SocialRepository) Inbox(ctx context.Context, to string) ([]MessageRecord
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	out := []MessageRecord{}
 	for rows.Next() {
 		var m MessageRecord
