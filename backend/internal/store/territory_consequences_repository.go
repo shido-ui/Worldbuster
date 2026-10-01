@@ -20,7 +20,7 @@ func (r TerritoryRepository) ResolveConsequences(ctx context.Context, limit int)
 	if err != nil {
 		return TerritoryCycleResult{}, err
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 	rows, err := tx.QueryContext(ctx, `SELECT id::text,controlling_organization_id::text,stability FROM territories ORDER BY updated_at LIMIT $1 FOR UPDATE`, limit)
 	if err != nil {
 		return TerritoryCycleResult{}, err
