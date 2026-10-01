@@ -17,6 +17,8 @@ CI now verifies Go formatting and module cleanliness, and project contribution/s
 - `WORLDBUSTER_ADDR` controls the HTTP listen address.
 - `go.sum`, LICENSE, CONTRIBUTING.md, SECURITY.md, CODE_OF_CONDUCT.md, and golangci-lint configuration are present.
 - CI runs golangci-lint and verifies module tidiness without a standalone database-job tidy step.
+- Production bootstrap now requires PostgreSQL; persistent routes no longer silently downgrade to in-memory behavior.
+- Job persistence is injected through a `store.JobStore` interface, with the PostgreSQL repository as the production implementation.
 - World content and NPC population configuration are loaded from `database/seed/content.json` through a validated seed loader.
 - CI checks formatting and fails when `go mod tidy` would modify tracked module files.
 
@@ -24,7 +26,7 @@ CI now verifies Go formatting and module cleanliness, and project contribution/s
 
 1. Validate the refactor with the full Go race/vet/build/lint matrix.
 2. Add fresh-DB migration/schema verification and explicit legacy migration compatibility.
-3. Make persistent NPC/business fixtures stable and idempotent.
+3. Extract interfaces for player/economy/inventory persistence and complete dependency-container wiring.
 5. Continue persistence/domain interface extraction and observability.
 6. Then build the gameplay loops end-to-end.
 
