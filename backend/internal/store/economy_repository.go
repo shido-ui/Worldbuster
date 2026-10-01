@@ -49,7 +49,7 @@ func (r EconomyRepository) LedgerByAccountID(ctx context.Context, accountID stri
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	out := []economy.LedgerEntry{}
 	for rows.Next() {
 		var e economy.LedgerEntry
