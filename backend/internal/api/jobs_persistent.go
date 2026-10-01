@@ -4,12 +4,13 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
-	"github.com/shido-ui/Worldbuster/backend/internal/store"
 	"net/http"
+
+	"github.com/shido-ui/Worldbuster/backend/internal/store"
 )
 
 type PersistentJobsAPI struct {
-	Repo    store.JobRepository
+	Repo    store.JobStore
 	Context *PlayerContext
 }
 
