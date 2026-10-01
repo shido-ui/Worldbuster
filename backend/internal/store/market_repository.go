@@ -76,7 +76,7 @@ func (r MarketRepository) PlaceSell(ctx context.Context, accountID, assetID stri
 	if err != nil {
 		return MarketOrder{}, err
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 	var itemID sql.NullString
 	if err = tx.QueryRowContext(ctx, "SELECT item_id FROM market_assets WHERE id=$1", assetID).Scan(&itemID); err != nil {
 		return MarketOrder{}, err
