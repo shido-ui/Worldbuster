@@ -44,7 +44,7 @@ func ConfigureRouter(d Dependencies) *api.Router {
 	)
 
 	playerContext := api.NewPlayerContext(d.DB, d.Auth)
-	playerRepo := store.PlayerRepository{DB: d.DB}
+	var playerRepo store.PlayerStore = store.PlayerRepository{DB: d.DB}
 
 	router.
 		WithEducation(&api.EducationAPI{
