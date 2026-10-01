@@ -147,10 +147,11 @@ func (r MarketRepository) Buy(ctx context.Context, buyer, orderID string, quanti
 			rows.Close()
 			return MarketOrder{}, err
 		}
-		if owner == buyer {
+		switch owner {
+		case buyer:
 			buyerAccount = id
 			buyerBalance = balance
-		} else if owner == x.SellerAccountID {
+		case x.SellerAccountID:
 			sellerAccount = id
 			sellerBalance = balance
 		}
