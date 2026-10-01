@@ -78,7 +78,7 @@ func (r TerritoryRepository) AddInfluence(ctx context.Context, territoryID, orgI
 	if err != nil {
 		return TerritoryRecord{}, err
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 	var exists bool
 	if err = tx.QueryRowContext(ctx, "SELECT EXISTS(SELECT 1 FROM territories WHERE id=$1)", territoryID).Scan(&exists); err != nil || !exists {
 		return TerritoryRecord{}, ErrTerritoryNotFound
