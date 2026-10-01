@@ -19,7 +19,7 @@ func TestPopulationGenerator(t *testing.T) {
 func TestPopulationGeneratorIsDeterministic(t *testing.T) {
 	profile := PopulationProfile{
 		Names: []string{"Aster", "Mira", "Nox"},
-		PersonalityBias: Personality{Curiosity: 7, Aggression: 3},
+		PersonalityBias: Personality{Curiosity: 7, RiskTolerance: 3},
 	}
 	first := NewPopulationGenerator(42, profile).Generate(20)
 	second := NewPopulationGenerator(42, profile).Generate(20)
