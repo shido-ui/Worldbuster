@@ -118,9 +118,7 @@ jobs:
           for i in $(seq 1 30); do curl -fsS http://127.0.0.1:8080/health >/dev/null && break; sleep 1; done
           curl -fsS http://127.0.0.1:8080/health
           curl -fsS -X POST http://127.0.0.1:8080/api/v1/auth/register -H 'Content-Type: application/json' -d "{\"username\":\"ci_player_${GITHUB_RUN_ID}\",\"password\":\"correct-horse-battery-staple\"}"
-          curl -fsS -D /tmp/login.headers -c /tmp/wb.cookies -X POST http://127.0.0.1:8080/api/v1/auth/login -H 'Content-Type: application/json' -d "{\"username\":\"ci_player_${GITHUB_RUN_ID}\",\"password\":\"correct-horse-battery-staple\"}"
-          cat /tmp/login.headers
-          cat /tmp/wb.cookies
+          curl -fsS -c /tmp/wb.cookies -X POST http://127.0.0.1:8080/api/v1/auth/login -H 'Content-Type: application/json' -d "{\"username\":\"ci_player_${GITHUB_RUN_ID}\",\"password\":\"correct-horse-battery-staple\"}"
           curl -fsS -b /tmp/wb.cookies http://127.0.0.1:8080/api/v1/player/state
           curl -fsS -b /tmp/wb.cookies http://127.0.0.1:8080/api/v1/player/dashboard
           curl -fsS -b /tmp/wb.cookies http://127.0.0.1:8080/api/v1/notifications
