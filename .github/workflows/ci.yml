@@ -24,7 +24,7 @@ jobs:
           fi
       - name: Verify Go modules are tidy
         run: |
-          go mod tidy
+          GOSUMDB=off go mod tidy
           echo "Generated Gomega checksum:"
           grep 'github.com/bsm/gomega v1.27.10/go.mod' go.sum | od -An -tx1
           echo "Committed Gomega checksum:"
