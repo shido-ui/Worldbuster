@@ -16,7 +16,6 @@ import (
 	_ "github.com/lib/pq"
 
 	"github.com/shido-ui/Worldbuster/backend/internal/api"
-	"github.com/shido-ui/Worldbuster/backend/internal/auth"
 	"github.com/shido-ui/Worldbuster/backend/internal/economy"
 	"github.com/shido-ui/Worldbuster/backend/internal/events"
 	"github.com/shido-ui/Worldbuster/backend/internal/inventory"
@@ -100,10 +99,7 @@ func configuredAddress() string {
 func openDatabase(ctx context.Context) (*store.DB, func(), error) {
 	dsn := os.Getenv("WORLDBUSTER_DATABASE_URL")
 	if dsn == "" {
-		if os.Getenv("WORLDBUSTER_ALLOW_MEMORY") != "1" {
-			return nil, func() {}, errors.New("WORLDBUSTER_DATABASE_URL is required; set WORLDBUSTER_ALLOW_MEMORY=1 only for local development")
-		}
-		return store.New(nil), func() {}, nil
+		return nil, func() {}, errors.New("WORLDBUSTER_DATABASE_URL is required")
 	}
 
 	db, err := sql.Open("postgres", dsn)
@@ -170,12 +166,7 @@ func buildDependencies(ctx context.Context, db *store.DB, logger *slog.Logger) (
 		}
 	}
 
-	var authBackend api.AuthBackend
-	if db.SQL != nil {
-		authBackend = store.NewDatabaseAuthService(db)
-	} else {
-		authBackend = api.MemoryAuthBackend{Service: auth.NewService()}
-	}
+	authBackend := api.AuthBackend(store.NewDatabaseAuthService(db))
 
 	population := simulation.NewService()
 	state := simulation.NewStateService()
