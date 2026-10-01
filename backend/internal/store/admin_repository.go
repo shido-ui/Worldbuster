@@ -34,7 +34,7 @@ func (r AdminRepository) Flags(ctx context.Context) (map[string]json.RawMessage,
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	out := map[string]json.RawMessage{}
 	for rows.Next() {
 		var k string
