@@ -30,8 +30,8 @@ func (s *Service) Snapshot() WorldState {
 	minutes := int(elapsed.Minutes()) % 60
 	return WorldState{
 		Tick: s.tick, OnlineCount: s.onlineCount,
-		Day: int(elapsed.Hours()/24) + 1,
-		Time: time.Date(2000,1,1,hours,minutes,0,0,time.UTC).Format("15:04"),
+		Day:    int(elapsed.Hours()/24) + 1,
+		Time:   time.Date(2000, 1, 1, hours, minutes, 0, 0, time.UTC).Format("15:04"),
 		Status: "ONLINE",
 	}
 }

@@ -6,10 +6,10 @@ import (
 )
 
 type Runtime struct {
-	mu sync.Mutex
-	Runner *IntegratedRunner
+	mu        sync.Mutex
+	Runner    *IntegratedRunner
 	Scheduler TierScheduler
-	LastTick time.Time
+	LastTick  time.Time
 }
 
 func NewRuntime(runner *IntegratedRunner, scheduler TierScheduler) *Runtime {

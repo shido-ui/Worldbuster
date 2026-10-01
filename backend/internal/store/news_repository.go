@@ -1,6 +1,47 @@
 package store
-import ("context";"time")
-type NewsRecord struct{ID string;EventID *string;Headline,Body,Category string;Importance int;LocationID *string;PublishedAt time.Time}
-type NewsRepository struct{DB *DB}
-func(r NewsRepository)Publish(ctx context.Context,eventID,headline,body,category string,importance int,location string)(NewsRecord,error){if importance<1{importance=1};if importance>5{importance=5};var n NewsRecord;err:=r.DB.SQL.QueryRowContext(ctx,"INSERT INTO world_news(event_id,headline,body,category,importance,location_id) VALUES($1,$2,$3,$4,$5,$6) ON CONFLICT(event_id) DO UPDATE SET headline=EXCLUDED.headline,body=EXCLUDED.body,category=EXCLUDED.category,importance=EXCLUDED.importance RETURNING id::text,event_id::text,headline,body,category,importance,location_id,published_at",eventID,headline,body,category,importance,location).Scan(&n.ID,&n.EventID,&n.Headline,&n.Body,&n.Category,&n.Importance,&n.LocationID,&n.PublishedAt);return n,err}
-func(r NewsRepository)Recent(ctx context.Context,limit int)([]NewsRecord,error){if limit<=0||limit>100{limit=50};rows,err:=r.DB.SQL.QueryContext(ctx,"SELECT id::text,event_id::text,headline,body,category,importance,location_id,published_at FROM world_news ORDER BY published_at DESC LIMIT $1",limit);if err!=nil{return nil,err};defer rows.Close();out:=[]NewsRecord{};for rows.Next(){var n NewsRecord;if err:=rows.Scan(&n.ID,&n.EventID,&n.Headline,&n.Body,&n.Category,&n.Importance,&n.LocationID,&n.PublishedAt);err!=nil{return nil,err};out=append(out,n)};return out,rows.Err()}
+
+import (
+	"context"
+	"time"
+)
+
+type NewsRecord struct {
+	ID                       string
+	EventID                  *string
+	Headline, Body, Category string
+	Importance               int
+	LocationID               *string
+	PublishedAt              time.Time
+}
+type NewsRepository struct{ DB *DB }
+
+func (r NewsRepository) Publish(ctx context.Context, eventID, headline, body, category string, importance int, location string) (NewsRecord, error) {
+	if importance < 1 {
+		importance = 1
+	}
+	if importance > 5 {
+		importance = 5
+	}
+	var n NewsRecord
+	err := r.DB.SQL.QueryRowContext(ctx, "INSERT INTO world_news(event_id,headline,body,category,importance,location_id) VALUES($1,$2,$3,$4,$5,$6) ON CONFLICT(event_id) DO UPDATE SET headline=EXCLUDED.headline,body=EXCLUDED.body,category=EXCLUDED.category,importance=EXCLUDED.importance RETURNING id::text,event_id::text,headline,body,category,importance,location_id,published_at", eventID, headline, body, category, importance, location).Scan(&n.ID, &n.EventID, &n.Headline, &n.Body, &n.Category, &n.Importance, &n.LocationID, &n.PublishedAt)
+	return n, err
+}
+func (r NewsRepository) Recent(ctx context.Context, limit int) ([]NewsRecord, error) {
+	if limit <= 0 || limit > 100 {
+		limit = 50
+	}
+	rows, err := r.DB.SQL.QueryContext(ctx, "SELECT id::text,event_id::text,headline,body,category,importance,location_id,published_at FROM world_news ORDER BY published_at DESC LIMIT $1", limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	out := []NewsRecord{}
+	for rows.Next() {
+		var n NewsRecord
+		if err := rows.Scan(&n.ID, &n.EventID, &n.Headline, &n.Body, &n.Category, &n.Importance, &n.LocationID, &n.PublishedAt); err != nil {
+			return nil, err
+		}
+		out = append(out, n)
+	}
+	return out, rows.Err()
+}

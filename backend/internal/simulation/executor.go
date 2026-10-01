@@ -9,11 +9,13 @@ type DomainExecutor struct {
 }
 
 func (e DomainExecutor) Execute(action Action, character SimCharacter) ActionResult {
-	if e.Now == nil { e.Now=time.Now }
+	if e.Now == nil {
+		e.Now = time.Now
+	}
 	switch action.Type {
 	case ActionWork, ActionTravel, ActionStudy, ActionSocialize, ActionRest:
-		return ActionResult{Accepted:true,Action:action}
+		return ActionResult{Accepted: true, Action: action}
 	default:
-		return ActionResult{Accepted:false,Action:action,Reason:"unsupported action"}
+		return ActionResult{Accepted: false, Action: action, Reason: "unsupported action"}
 	}
 }

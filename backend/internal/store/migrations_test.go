@@ -1,5 +1,10 @@
 package store
 
-import ("testing";"context")
+import (
+	"context"
+	"testing"
+)
 
-func TestMigrationRunnerSymbol(t *testing.T){ var _ func(context.Context,*DB,string) error = ApplyMigrations }
+func TestMigrationRunnerSymbol(t *testing.T) {
+	var _ func(context.Context, *DB, string) error = ApplyMigrations
+}

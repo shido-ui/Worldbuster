@@ -1,57 +1,164 @@
 package simulation
 
 import (
- "sort"
- "sync"
- "time"
+	"sort"
+	"sync"
+	"time"
 )
 
 type Tier string
-const(
- TierActive Tier="ACTIVE"
- TierRecent Tier="RECENT"
- TierBackground Tier="BACKGROUND"
- TierDormant Tier="DORMANT"
+
+const (
+	TierActive     Tier = "ACTIVE"
+	TierRecent     Tier = "RECENT"
+	TierBackground Tier = "BACKGROUND"
+	TierDormant    Tier = "DORMANT"
 )
 
-type LifecyclePolicy struct{ActivePercent int;RecentPercent int;BackgroundPercent int}
-type TierScheduler struct{Policy LifecyclePolicy}
-func(s TierScheduler)Classify(chars []SimCharacter,now time.Time)map[string]Tier{
- out:=map[string]Tier{};sorted:=append([]SimCharacter(nil),chars...)
- sort.Slice(sorted,func(i,j int)bool{return sorted[i].LastTick>sorted[j].LastTick})
- n:=len(sorted);if n==0{return out}
- active:=n*s.Policy.ActivePercent/100;recent:=n*(s.Policy.ActivePercent+s.Policy.RecentPercent)/100;background:=n*(s.Policy.ActivePercent+s.Policy.RecentPercent+s.Policy.BackgroundPercent)/100
- for i,c:=range sorted{t:=TierDormant;if i<active{t=TierActive}else if i<recent{t=TierRecent}else if i<background{t=TierBackground};out[c.ID]=t}
- _=now;return out
+type LifecyclePolicy struct {
+	ActivePercent     int
+	RecentPercent     int
+	BackgroundPercent int
+}
+type TierScheduler struct{ Policy LifecyclePolicy }
+
+func (s TierScheduler) Classify(chars []SimCharacter, now time.Time) map[string]Tier {
+	out := map[string]Tier{}
+	sorted := append([]SimCharacter(nil), chars...)
+	sort.Slice(sorted, func(i, j int) bool { return sorted[i].LastTick > sorted[j].LastTick })
+	n := len(sorted)
+	if n == 0 {
+		return out
+	}
+	active := n * s.Policy.ActivePercent / 100
+	recent := n * (s.Policy.ActivePercent + s.Policy.RecentPercent) / 100
+	background := n * (s.Policy.ActivePercent + s.Policy.RecentPercent + s.Policy.BackgroundPercent) / 100
+	for i, c := range sorted {
+		t := TierDormant
+		if i < active {
+			t = TierActive
+		} else if i < recent {
+			t = TierRecent
+		} else if i < background {
+			t = TierBackground
+		}
+		out[c.ID] = t
+	}
+	_ = now
+	return out
 }
 
-type PopulationScheduler struct{Population *Service;Policy TierScheduler;mu sync.Mutex;LastRun time.Time}
-func(s *PopulationScheduler)Run(now time.Time)(map[Tier]int,error){
- s.mu.Lock();defer s.mu.Unlock();chars:=s.Population.List(1000);tiers:=s.Policy.Classify(chars,now);counts:=map[Tier]int{}
- for _,c:=range chars{t:=tiers[c.ID];counts[t]++}
- s.LastRun=now;return counts,nil
+type PopulationScheduler struct {
+	Population *Service
+	Policy     TierScheduler
+	mu         sync.Mutex
+	LastRun    time.Time
 }
 
-func(s TierScheduler)ShouldTick(position,total int,now time.Time)bool{
- if total<=0||position<1||position>total{return false}
- tier:=TierDormant
- active:=total*s.Policy.ActivePercent/100
- recent:=total*(s.Policy.ActivePercent+s.Policy.RecentPercent)/100
- background:=total*(s.Policy.ActivePercent+s.Policy.RecentPercent+s.Policy.BackgroundPercent)/100
- if position<=active{tier=TierActive}else if position<=recent{tier=TierRecent}else if position<=background{tier=TierBackground}
- return tier!=TierDormant && (tier==TierActive || now.Unix()%int64(s.Cadence(tier)/time.Second)==0)
+func (s *PopulationScheduler) Run(now time.Time) (map[Tier]int, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	chars := s.Population.List(1000)
+	tiers := s.Policy.Classify(chars, now)
+	counts := map[Tier]int{}
+	for _, c := range chars {
+		t := tiers[c.ID]
+		counts[t]++
+	}
+	s.LastRun = now
+	return counts, nil
 }
 
-func(s TierScheduler)Cadence(t Tier)time.Duration{
- switch t{case TierActive:return time.Second;case TierRecent:return 5*time.Second;case TierBackground:return 30*time.Second;default:return 5*time.Minute}
-}
-func(s TierScheduler)Due(chars []SimCharacter,now time.Time)[]SimCharacter{
- tiers:=s.Classify(chars,now);out:=make([]SimCharacter,0,len(chars))
- for _,c:=range chars{last:=time.Unix(c.LastTick,0);if c.LastTick==0||now.Sub(last)>=s.Cadence(tiers[c.ID]){out=append(out,c)}}
- return out
+func (s TierScheduler) ShouldTick(position, total int, now time.Time) bool {
+	if total <= 0 || position < 1 || position > total {
+		return false
+	}
+	tier := TierDormant
+	active := total * s.Policy.ActivePercent / 100
+	recent := total * (s.Policy.ActivePercent + s.Policy.RecentPercent) / 100
+	background := total * (s.Policy.ActivePercent + s.Policy.RecentPercent + s.Policy.BackgroundPercent) / 100
+	if position <= active {
+		tier = TierActive
+	} else if position <= recent {
+		tier = TierRecent
+	} else if position <= background {
+		tier = TierBackground
+	}
+	return tier != TierDormant && (tier == TierActive || now.Unix()%int64(s.Cadence(tier)/time.Second) == 0)
 }
 
+func (s TierScheduler) Cadence(t Tier) time.Duration {
+	switch t {
+	case TierActive:
+		return time.Second
+	case TierRecent:
+		return 5 * time.Second
+	case TierBackground:
+		return 30 * time.Second
+	default:
+		return 5 * time.Minute
+	}
+}
+func (s TierScheduler) Due(chars []SimCharacter, now time.Time) []SimCharacter {
+	tiers := s.Classify(chars, now)
+	out := make([]SimCharacter, 0, len(chars))
+	for _, c := range chars {
+		last := time.Unix(c.LastTick, 0)
+		if c.LastTick == 0 || now.Sub(last) >= s.Cadence(tiers[c.ID]) {
+			out = append(out, c)
+		}
+	}
+	return out
+}
 
-type PopulationRegion struct { Name string; Weight int }
-func ClassifyPopulation(position,total int,p LifecyclePolicy) Tier { if total<=0||position<1||position>total{return TierDormant}; a:=total*p.ActivePercent/100; r:=total*(p.ActivePercent+p.RecentPercent)/100; b:=total*(p.ActivePercent+p.RecentPercent+p.BackgroundPercent)/100; if position<=a{return TierActive}; if position<=r{return TierRecent}; if position<=b{return TierBackground}; return TierDormant }
-func SelectRegion(value int,regions []PopulationRegion) string { if len(regions)==0{return ""}; total:=0;for _,r:=range regions{if r.Weight>0{total+=r.Weight}};if total<=0{return regions[0].Name};n:=value%total;if n<0{n+=total};for _,r:=range regions{if r.Weight<=0{continue};if n<r.Weight{return r.Name};n-=r.Weight};return regions[len(regions)-1].Name }
+type PopulationRegion struct {
+	Name   string
+	Weight int
+}
+
+func ClassifyPopulation(position, total int, p LifecyclePolicy) Tier {
+	if total <= 0 || position < 1 || position > total {
+		return TierDormant
+	}
+	a := total * p.ActivePercent / 100
+	r := total * (p.ActivePercent + p.RecentPercent) / 100
+	b := total * (p.ActivePercent + p.RecentPercent + p.BackgroundPercent) / 100
+	if position <= a {
+		return TierActive
+	}
+	if position <= r {
+		return TierRecent
+	}
+	if position <= b {
+		return TierBackground
+	}
+	return TierDormant
+}
+func SelectRegion(value int, regions []PopulationRegion) string {
+	if len(regions) == 0 {
+		return ""
+	}
+	total := 0
+	for _, r := range regions {
+		if r.Weight > 0 {
+			total += r.Weight
+		}
+	}
+	if total <= 0 {
+		return regions[0].Name
+	}
+	n := value % total
+	if n < 0 {
+		n += total
+	}
+	for _, r := range regions {
+		if r.Weight <= 0 {
+			continue
+		}
+		if n < r.Weight {
+			return r.Name
+		}
+		n -= r.Weight
+	}
+	return regions[len(regions)-1].Name
+}

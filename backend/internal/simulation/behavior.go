@@ -3,7 +3,9 @@ package simulation
 import "time"
 
 func UpdateBehavior(state *BehavioralState, action ActionType, now time.Time) {
-	if state == nil { return }
+	if state == nil {
+		return
+	}
 	state.CurrentAction = action
 	switch action {
 	case ActionWork:
@@ -28,17 +30,25 @@ func UpdateBehavior(state *BehavioralState, action ActionType, now time.Time) {
 		state.Stress += 1
 	}
 	clampNeeds(&state.Needs)
-	if state.Stress < 0 { state.Stress = 0 }
-	if state.Stress > 100 { state.Stress = 100 }
+	if state.Stress < 0 {
+		state.Stress = 0
+	}
+	if state.Stress > 100 {
+		state.Stress = 100
+	}
 	state.Mood = state.Needs.Satisfaction - state.Stress/2
-	if state.Mood < -100 { state.Mood = -100 }
-	if state.Mood > 100 { state.Mood = 100 }
+	if state.Mood < -100 {
+		state.Mood = -100
+	}
+	if state.Mood > 100 {
+		state.Mood = 100
+	}
 	state.Memories = append(state.Memories, Memory{
-		ID: now.UTC().Format("20060102150405.000000000"),
-		Type: "ACTION",
-		Event: string(action),
+		ID:         now.UTC().Format("20060102150405.000000000"),
+		Type:       "ACTION",
+		Event:      string(action),
 		Importance: 1,
-		CreatedAt: now.Unix(),
+		CreatedAt:  now.Unix(),
 	})
 	if len(state.Memories) > 50 {
 		state.Memories = state.Memories[len(state.Memories)-50:]
@@ -46,8 +56,28 @@ func UpdateBehavior(state *BehavioralState, action ActionType, now time.Time) {
 }
 
 func clampNeeds(n *Needs) {
-	if n.Energy < 0 { n.Energy = 0 }; if n.Energy > 100 { n.Energy = 100 }
-	if n.Social < 0 { n.Social = 0 }; if n.Social > 100 { n.Social = 100 }
-	if n.Rest < 0 { n.Rest = 0 }; if n.Rest > 100 { n.Rest = 100 }
-	if n.Satisfaction < 0 { n.Satisfaction = 0 }; if n.Satisfaction > 100 { n.Satisfaction = 100 }
+	if n.Energy < 0 {
+		n.Energy = 0
+	}
+	if n.Energy > 100 {
+		n.Energy = 100
+	}
+	if n.Social < 0 {
+		n.Social = 0
+	}
+	if n.Social > 100 {
+		n.Social = 100
+	}
+	if n.Rest < 0 {
+		n.Rest = 0
+	}
+	if n.Rest > 100 {
+		n.Rest = 100
+	}
+	if n.Satisfaction < 0 {
+		n.Satisfaction = 0
+	}
+	if n.Satisfaction > 100 {
+		n.Satisfaction = 100
+	}
 }

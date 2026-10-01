@@ -5,7 +5,7 @@ import "time"
 type ControllerType string
 
 const (
-	ControllerHuman    ControllerType = "HUMAN"
+	ControllerHuman     ControllerType = "HUMAN"
 	ControllerSimulated ControllerType = "SIMULATED"
 )
 
@@ -21,9 +21,9 @@ type Character struct {
 }
 
 type WorldState struct {
-	Tick        int64     `json:"tick"`
-	OnlineCount int       `json:"onlineCount"`
-	Day         int       `json:"day"`
-	Time        string    `json:"time"`
-	Status      string    `json:"status"`
+	Tick        int64  `json:"tick"`
+	OnlineCount int    `json:"onlineCount"`
+	Day         int    `json:"day"`
+	Time        string `json:"time"`
+	Status      string `json:"status"`
 }

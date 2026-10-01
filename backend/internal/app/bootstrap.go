@@ -154,8 +154,8 @@ func buildDependencies(ctx context.Context, db *store.DB, logger *slog.Logger) (
 		return Dependencies{}, nil, fmt.Errorf("seed water item: %w", err)
 	}
 	if err := jobService.Register(job.Job{
-		ID: "general-work",
-		Name: "General Workforce",
+		ID:         "general-work",
+		Name:       "General Workforce",
 		Department: "Operations",
 		Positions: []job.Position{{
 			ID: "worker", JobID: "general-work", Name: "Worker", Level: 1,
@@ -267,13 +267,13 @@ func buildDependencies(ctx context.Context, db *store.DB, logger *slog.Logger) (
 	}
 
 	return Dependencies{
-		DB: db, Auth: authBackend, World: ws, Travel: travel,
-		Inventory: inventoryService, Economy: economyService,
-		Organization: organizationService, Job: jobService,
-		Progression: progressionService, Social: socialService, Events: eventService,
-	}, &simulationRuntime{
-		world: ws, runtime: runtime, events: eventService, population: population,
-	}, nil
+			DB: db, Auth: authBackend, World: ws, Travel: travel,
+			Inventory: inventoryService, Economy: economyService,
+			Organization: organizationService, Job: jobService,
+			Progression: progressionService, Social: socialService, Events: eventService,
+		}, &simulationRuntime{
+			world: ws, runtime: runtime, events: eventService, population: population,
+		}, nil
 }
 
 func buildSchedulerJobs(deps Dependencies, runtime *simulationRuntime, logger *slog.Logger) []scheduler.Job {
@@ -322,8 +322,8 @@ func buildSchedulerJobs(deps Dependencies, runtime *simulationRuntime, logger *s
 				}
 				if result.ControlChanges > 0 || result.StabilityChanges > 0 {
 					publishEvent(runtime.events, "world.territory.cycle", "world", "world", map[string]any{
-						"territories": result.TerritoriesProcessed,
-						"controlChanges": result.ControlChanges,
+						"territories":      result.TerritoriesProcessed,
+						"controlChanges":   result.ControlChanges,
 						"stabilityChanges": result.StabilityChanges,
 					}, logger)
 				}

@@ -1,17 +1,112 @@
 package store
 
-import ("context";"errors";"time")
+import (
+	"context"
+	"errors"
+	"time"
+)
 
 var ErrInvalidSocialTarget = errors.New("invalid social target")
-type RelationshipRecord struct { CharacterID string `json:"characterId"`; TargetID string `json:"targetId"`; Kind string `json:"kind"`; Score int `json:"score"`; UpdatedAt time.Time `json:"updatedAt"` }
-type MessageRecord struct { ID string `json:"id"`; FromID string `json:"fromId"`; ToID string `json:"toId"`; Body string `json:"body"`; CreatedAt time.Time `json:"createdAt"`; ReadAt *time.Time `json:"readAt,omitempty"` }
-type SocialRepository struct{DB *DB}
-func(r SocialRepository) SetRelationship(ctx context.Context,from,to,kind string,score int)(RelationshipRecord,error){if from==""||to==""||from==to||score < -1000||score > 1000{return RelationshipRecord{},ErrInvalidSocialTarget};var x RelationshipRecord;err:=r.DB.SQL.QueryRowContext(ctx,"INSERT INTO relationships(character_id,target_id,kind,score,updated_at) VALUES($1,$2,$3,$4,NOW()) ON CONFLICT(character_id,target_id) DO UPDATE SET kind=EXCLUDED.kind,score=EXCLUDED.score,updated_at=NOW() RETURNING character_id::text,target_id::text,kind,score,updated_at",from,to,kind,score).Scan(&x.CharacterID,&x.TargetID,&x.Kind,&x.Score,&x.UpdatedAt);return x,err}
-func(r SocialRepository) Relationship(ctx context.Context,from,to string)(RelationshipRecord,error){var x RelationshipRecord;err:=r.DB.SQL.QueryRowContext(ctx,"SELECT character_id::text,target_id::text,kind,score,updated_at FROM relationships WHERE character_id=$1 AND target_id=$2",from,to).Scan(&x.CharacterID,&x.TargetID,&x.Kind,&x.Score,&x.UpdatedAt);return x,err}
-func(r SocialRepository) Send(ctx context.Context,from,to,body string)(MessageRecord,error){if from==""||to==""||from==to||body==""||len(body)>2000{return MessageRecord{},ErrInvalidSocialTarget};var m MessageRecord;err:=r.DB.SQL.QueryRowContext(ctx,"INSERT INTO messages(id,from_id,to_id,body) VALUES(gen_random_uuid(),$1,$2,$3) RETURNING id::text,from_id::text,to_id::text,body,created_at,read_at",from,to,body).Scan(&m.ID,&m.FromID,&m.ToID,&m.Body,&m.CreatedAt,&m.ReadAt);return m,err}
-func(r SocialRepository) Inbox(ctx context.Context,to string)([]MessageRecord,error){rows,err:=r.DB.SQL.QueryContext(ctx,"SELECT id::text,from_id::text,to_id::text,body,created_at,read_at FROM messages WHERE to_id=$1 ORDER BY created_at DESC LIMIT 100",to);if err!=nil{return nil,err};defer rows.Close();out:=[]MessageRecord{};for rows.Next(){var m MessageRecord;if err:=rows.Scan(&m.ID,&m.FromID,&m.ToID,&m.Body,&m.CreatedAt,&m.ReadAt);err!=nil{return nil,err};out=append(out,m)};return out,rows.Err()}
 
-type ReputationRecord struct { PlayerID string `json:"playerId"`; PublicScore int `json:"publicScore"`; TrustScore int `json:"trustScore"`; NotorietyScore int `json:"notorietyScore"`; UpdatedAt time.Time `json:"updatedAt"` }
-type ReputationChange struct { Source string `json:"source"`; PublicDelta int `json:"publicDelta"`; TrustDelta int `json:"trustDelta"`; NotorietyDelta int `json:"notorietyDelta"`; Reason string `json:"reason"` }
-func(r SocialRepository) Reputation(ctx context.Context,playerID string)(ReputationRecord,error){var x ReputationRecord;err:=r.DB.SQL.QueryRowContext(ctx,"INSERT INTO player_reputation(player_id) VALUES($1) ON CONFLICT(player_id) DO NOTHING RETURNING player_id::text,public_score,trust_score,notoriety_score,updated_at",playerID).Scan(&x.PlayerID,&x.PublicScore,&x.TrustScore,&x.NotorietyScore,&x.UpdatedAt);if err!=nil {err=r.DB.SQL.QueryRowContext(ctx,"SELECT player_id::text,public_score,trust_score,notoriety_score,updated_at FROM player_reputation WHERE player_id=$1",playerID).Scan(&x.PlayerID,&x.PublicScore,&x.TrustScore,&x.NotorietyScore,&x.UpdatedAt)};return x,err}
-func(r SocialRepository) ChangeReputation(ctx context.Context,playerID string,c ReputationChange)(ReputationRecord,error){tx,err:=r.DB.SQL.BeginTx(ctx,nil);if err!=nil{return ReputationRecord{},err};defer tx.Rollback();_,err=tx.ExecContext(ctx,"INSERT INTO player_reputation(player_id) VALUES($1) ON CONFLICT(player_id) DO NOTHING",playerID);if err!=nil{return ReputationRecord{},err};var x ReputationRecord;err=tx.QueryRowContext(ctx,"UPDATE player_reputation SET public_score=GREATEST(-1000,LEAST(1000,public_score+$2)),trust_score=GREATEST(-1000,LEAST(1000,trust_score+$3)),notoriety_score=GREATEST(0,LEAST(1000,notoriety_score+$4)),updated_at=NOW() WHERE player_id=$1 RETURNING player_id::text,public_score,trust_score,notoriety_score,updated_at",playerID,c.PublicDelta,c.TrustDelta,c.NotorietyDelta).Scan(&x.PlayerID,&x.PublicScore,&x.TrustScore,&x.NotorietyScore,&x.UpdatedAt);if err!=nil{return ReputationRecord{},err};_,err=tx.ExecContext(ctx,"INSERT INTO reputation_history(player_id,source,public_delta,trust_delta,notoriety_delta,reason) VALUES($1,$2,$3,$4,$5,$6)",playerID,c.Source,c.PublicDelta,c.TrustDelta,c.NotorietyDelta,c.Reason);if err!=nil{return ReputationRecord{},err};if err=tx.Commit();err!=nil{return ReputationRecord{},err};return x,nil}
+type RelationshipRecord struct {
+	CharacterID string    `json:"characterId"`
+	TargetID    string    `json:"targetId"`
+	Kind        string    `json:"kind"`
+	Score       int       `json:"score"`
+	UpdatedAt   time.Time `json:"updatedAt"`
+}
+type MessageRecord struct {
+	ID        string     `json:"id"`
+	FromID    string     `json:"fromId"`
+	ToID      string     `json:"toId"`
+	Body      string     `json:"body"`
+	CreatedAt time.Time  `json:"createdAt"`
+	ReadAt    *time.Time `json:"readAt,omitempty"`
+}
+type SocialRepository struct{ DB *DB }
+
+func (r SocialRepository) SetRelationship(ctx context.Context, from, to, kind string, score int) (RelationshipRecord, error) {
+	if from == "" || to == "" || from == to || score < -1000 || score > 1000 {
+		return RelationshipRecord{}, ErrInvalidSocialTarget
+	}
+	var x RelationshipRecord
+	err := r.DB.SQL.QueryRowContext(ctx, "INSERT INTO relationships(character_id,target_id,kind,score,updated_at) VALUES($1,$2,$3,$4,NOW()) ON CONFLICT(character_id,target_id) DO UPDATE SET kind=EXCLUDED.kind,score=EXCLUDED.score,updated_at=NOW() RETURNING character_id::text,target_id::text,kind,score,updated_at", from, to, kind, score).Scan(&x.CharacterID, &x.TargetID, &x.Kind, &x.Score, &x.UpdatedAt)
+	return x, err
+}
+func (r SocialRepository) Relationship(ctx context.Context, from, to string) (RelationshipRecord, error) {
+	var x RelationshipRecord
+	err := r.DB.SQL.QueryRowContext(ctx, "SELECT character_id::text,target_id::text,kind,score,updated_at FROM relationships WHERE character_id=$1 AND target_id=$2", from, to).Scan(&x.CharacterID, &x.TargetID, &x.Kind, &x.Score, &x.UpdatedAt)
+	return x, err
+}
+func (r SocialRepository) Send(ctx context.Context, from, to, body string) (MessageRecord, error) {
+	if from == "" || to == "" || from == to || body == "" || len(body) > 2000 {
+		return MessageRecord{}, ErrInvalidSocialTarget
+	}
+	var m MessageRecord
+	err := r.DB.SQL.QueryRowContext(ctx, "INSERT INTO messages(id,from_id,to_id,body) VALUES(gen_random_uuid(),$1,$2,$3) RETURNING id::text,from_id::text,to_id::text,body,created_at,read_at", from, to, body).Scan(&m.ID, &m.FromID, &m.ToID, &m.Body, &m.CreatedAt, &m.ReadAt)
+	return m, err
+}
+func (r SocialRepository) Inbox(ctx context.Context, to string) ([]MessageRecord, error) {
+	rows, err := r.DB.SQL.QueryContext(ctx, "SELECT id::text,from_id::text,to_id::text,body,created_at,read_at FROM messages WHERE to_id=$1 ORDER BY created_at DESC LIMIT 100", to)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	out := []MessageRecord{}
+	for rows.Next() {
+		var m MessageRecord
+		if err := rows.Scan(&m.ID, &m.FromID, &m.ToID, &m.Body, &m.CreatedAt, &m.ReadAt); err != nil {
+			return nil, err
+		}
+		out = append(out, m)
+	}
+	return out, rows.Err()
+}
+
+type ReputationRecord struct {
+	PlayerID       string    `json:"playerId"`
+	PublicScore    int       `json:"publicScore"`
+	TrustScore     int       `json:"trustScore"`
+	NotorietyScore int       `json:"notorietyScore"`
+	UpdatedAt      time.Time `json:"updatedAt"`
+}
+type ReputationChange struct {
+	Source         string `json:"source"`
+	PublicDelta    int    `json:"publicDelta"`
+	TrustDelta     int    `json:"trustDelta"`
+	NotorietyDelta int    `json:"notorietyDelta"`
+	Reason         string `json:"reason"`
+}
+
+func (r SocialRepository) Reputation(ctx context.Context, playerID string) (ReputationRecord, error) {
+	var x ReputationRecord
+	err := r.DB.SQL.QueryRowContext(ctx, "INSERT INTO player_reputation(player_id) VALUES($1) ON CONFLICT(player_id) DO NOTHING RETURNING player_id::text,public_score,trust_score,notoriety_score,updated_at", playerID).Scan(&x.PlayerID, &x.PublicScore, &x.TrustScore, &x.NotorietyScore, &x.UpdatedAt)
+	if err != nil {
+		err = r.DB.SQL.QueryRowContext(ctx, "SELECT player_id::text,public_score,trust_score,notoriety_score,updated_at FROM player_reputation WHERE player_id=$1", playerID).Scan(&x.PlayerID, &x.PublicScore, &x.TrustScore, &x.NotorietyScore, &x.UpdatedAt)
+	}
+	return x, err
+}
+func (r SocialRepository) ChangeReputation(ctx context.Context, playerID string, c ReputationChange) (ReputationRecord, error) {
+	tx, err := r.DB.SQL.BeginTx(ctx, nil)
+	if err != nil {
+		return ReputationRecord{}, err
+	}
+	defer tx.Rollback()
+	_, err = tx.ExecContext(ctx, "INSERT INTO player_reputation(player_id) VALUES($1) ON CONFLICT(player_id) DO NOTHING", playerID)
+	if err != nil {
+		return ReputationRecord{}, err
+	}
+	var x ReputationRecord
+	err = tx.QueryRowContext(ctx, "UPDATE player_reputation SET public_score=GREATEST(-1000,LEAST(1000,public_score+$2)),trust_score=GREATEST(-1000,LEAST(1000,trust_score+$3)),notoriety_score=GREATEST(0,LEAST(1000,notoriety_score+$4)),updated_at=NOW() WHERE player_id=$1 RETURNING player_id::text,public_score,trust_score,notoriety_score,updated_at", playerID, c.PublicDelta, c.TrustDelta, c.NotorietyDelta).Scan(&x.PlayerID, &x.PublicScore, &x.TrustScore, &x.NotorietyScore, &x.UpdatedAt)
+	if err != nil {
+		return ReputationRecord{}, err
+	}
+	_, err = tx.ExecContext(ctx, "INSERT INTO reputation_history(player_id,source,public_delta,trust_delta,notoriety_delta,reason) VALUES($1,$2,$3,$4,$5,$6)", playerID, c.Source, c.PublicDelta, c.TrustDelta, c.NotorietyDelta, c.Reason)
+	if err != nil {
+		return ReputationRecord{}, err
+	}
+	if err = tx.Commit(); err != nil {
+		return ReputationRecord{}, err
+	}
+	return x, nil
+}

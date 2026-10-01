@@ -16,17 +16,17 @@ import (
 )
 
 type Dependencies struct {
-	DB          *store.DB
-	Auth        api.AuthBackend
-	World       *world.Service
-	Travel      *world.TravelService
-	Inventory   *inventory.Service
-	Economy     *economy.Service
+	DB           *store.DB
+	Auth         api.AuthBackend
+	World        *world.Service
+	Travel       *world.TravelService
+	Inventory    *inventory.Service
+	Economy      *economy.Service
 	Organization *organization.Service
-	Job         *job.Service
-	Progression *progression.Service
-	Social      *social.Service
-	Events      *events.Service
+	Job          *job.Service
+	Progression  *progression.Service
+	Social       *social.Service
+	Events       *events.Service
 }
 
 func ConfigureRouter(d Dependencies) *api.Router {
