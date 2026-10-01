@@ -43,10 +43,6 @@ func ConfigureRouter(d Dependencies) *api.Router {
 		d.Events,
 	)
 
-	if d.DB.SQL == nil {
-		return router
-	}
-
 	playerContext := api.NewPlayerContext(d.DB, d.Auth)
 	playerRepo := store.PlayerRepository{DB: d.DB}
 
