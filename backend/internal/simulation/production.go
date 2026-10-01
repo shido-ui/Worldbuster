@@ -2,6 +2,7 @@ package simulation
 
 import (
 	"crypto/rand"
+	"crypto/sha256"
 	"errors"
 )
 
@@ -62,4 +63,14 @@ func fmtUUID(b [16]byte) string {
 		j += 2
 	}
 	return string(out)
+}
+
+
+func DeterministicBusinessID(ownerID string, businessType BusinessType) string {
+	sum := sha256.Sum256([]byte("worldbuster:business:" + ownerID + ":" + string(businessType)))
+	var b [16]byte
+	copy(b[:], sum[:16])
+	b[6] = (b[6] & 0x0f) | 0x40
+	b[8] = (b[8] & 0x3f) | 0x80
+	return fmtUUID(b)
 }
