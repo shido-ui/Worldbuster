@@ -25,6 +25,10 @@ jobs:
       - name: Verify Go modules are tidy
         run: |
           go mod tidy
+          echo "Generated Gomega checksum:"
+          grep 'github.com/bsm/gomega v1.27.10/go.mod' go.sum | od -An -tx1
+          echo "Committed Gomega checksum:"
+          git show HEAD:go.sum | grep 'github.com/bsm/gomega v1.27.10/go.mod' | od -An -tx1
           git diff --exit-code -- go.mod go.sum
       - name: Go lint
         uses: golangci/golangci-lint-action@v8
