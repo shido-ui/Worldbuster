@@ -20,7 +20,7 @@ func (r ProductionRepository) SeedBusinessInventory(ctx context.Context, busines
 		return nil
 	}
 	_, err := r.DB.SQL.ExecContext(ctx, `INSERT INTO simulated_business_inventory(business_id,item_id,quantity) VALUES($1,$2,$3)
- ON CONFLICT(business_id,item_id) DO UPDATE SET quantity=simulated_business_inventory.quantity+EXCLUDED.quantity,updated_at=NOW()`, businessID, itemID, quantity)
+ ON CONFLICT(business_id,item_id) DO NOTHING`, businessID, itemID, quantity)
 	return err
 }
 
