@@ -245,10 +245,7 @@ func buildDependencies(ctx context.Context, db *store.DB, logger *slog.Logger) (
 			if i >= 5 {
 				break
 			}
-			businessID, err := simulation.NewBusinessID()
-			if err != nil {
-				return Dependencies{}, nil, fmt.Errorf("create business id: %w", err)
-			}
+			businessID := simulation.DeterministicBusinessID(character.ID, simulation.BusinessProduction)
 			business := simulation.BusinessState{
 				ID: businessID, OwnerID: character.ID, Name: character.Name + " Works",
 				Type: simulation.BusinessProduction, Cash: 500, Level: 1, Active: true,
