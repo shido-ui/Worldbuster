@@ -8,6 +8,7 @@ FROM alpine:3.22
 WORKDIR /app
 COPY --from=build /out/worldbuster /app/worldbuster
 COPY database/migrations /app/database/migrations
+COPY database/seed /app/database/seed
 EXPOSE 8080
 ENV WORLDBUSTER_MIGRATIONS_DIR=/app/database/migrations
 ENTRYPOINT ["/app/worldbuster"]
