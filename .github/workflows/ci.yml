@@ -24,6 +24,7 @@ jobs:
           fi
       - name: Verify Go modules are tidy
         run: |
+          sed -i '/github.com\/bsm\/gomega v1.27.10/d' go.sum
           go mod tidy
           git diff --exit-code -- go.mod go.sum
       - name: Go lint
