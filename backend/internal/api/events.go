@@ -81,7 +81,7 @@ func (h *eventHandler) markNotificationsRead(w http.ResponseWriter, r *http.Requ
 
 func (h *eventHandler) stream(w http.ResponseWriter, r *http.Request) {
 	if h.context == nil {
-		http.Error(w, "authentication required", 401)
+		http.Error(w, "authentication required", http.StatusUnauthorized)
 		return
 	}
 	if _, _, err := h.context.Resolve(r.Context(), r); err != nil {
