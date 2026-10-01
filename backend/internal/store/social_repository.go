@@ -91,7 +91,7 @@ func (r SocialRepository) ChangeReputation(ctx context.Context, playerID string,
 	if err != nil {
 		return ReputationRecord{}, err
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 	_, err = tx.ExecContext(ctx, "INSERT INTO player_reputation(player_id) VALUES($1) ON CONFLICT(player_id) DO NOTHING", playerID)
 	if err != nil {
 		return ReputationRecord{}, err
