@@ -59,7 +59,7 @@ func (r AchievementRepository) Rankings(ctx context.Context, rankingID string) (
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	out := []RankingEntry{}
 	rank := 1
 	for rows.Next() {
