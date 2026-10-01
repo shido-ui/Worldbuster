@@ -12,7 +12,7 @@ func (r InventoryRepository) Get(ctx context.Context, playerID string) (inventor
 	if err != nil {
 		return inventory.Inventory{}, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	out := inventory.Inventory{CharacterID: playerID, Capacity: 100}
 	for rows.Next() {
 		var s inventory.Stack
