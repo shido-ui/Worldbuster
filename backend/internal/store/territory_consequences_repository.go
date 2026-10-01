@@ -25,7 +25,7 @@ func (r TerritoryRepository) ResolveConsequences(ctx context.Context, limit int)
 	if err != nil {
 		return TerritoryCycleResult{}, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	out := TerritoryCycleResult{}
 	for rows.Next() {
 		var id string
