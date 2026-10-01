@@ -5,7 +5,7 @@
 2. PostgreSQL as production source of truth with explicit test fakes
 3. Immutable/checksummed migration system and schema drift checks
 4. Idempotent fixture-driven seeding
-5. Redis integration for sessions, rate limits, presence, realtime fan-out, and short-lived caches
+5. Shared-state infrastructure integration for sessions, rate limits, presence, realtime fan-out, and short-lived caches
 6. Structured logging, metrics, tracing, health/readiness, and operational dashboards
 7. Security hardening and audit logging
 8. Race, fuzz, integration, and economy-concurrency testing
