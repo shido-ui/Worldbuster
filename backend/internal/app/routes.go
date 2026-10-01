@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/shido-ui/Worldbuster/backend/internal/api"
 	"github.com/shido-ui/Worldbuster/backend/internal/cache"
@@ -113,6 +114,21 @@ func ConfigureRouter(d Dependencies) *api.Router {
 		WithAdmin(&api.AdminAPI{
 			Repo: store.AdminRepository{DB: d.DB},
 			Auth: d.Auth,
+		}).
+		WithMetrics(api.NewMetrics()).
+		WithReadiness(func(ctx context.Context) error {
+			if d.DB == nil || d.DB.SQL == nil {
+				return fmt.Errorf("database is not configured")
+			}
+			if err := d.DB.SQL.PingContext(ctx); err != nil {
+				return fmt.Errorf("database: %w", err)
+			}
+			if d.Cache != nil {
+				if err := d.Cache.Ping(ctx); err != nil {
+					return fmt.Errorf("redis: %w", err)
+				}
+			}
+			return nil
 		})
 	return router
 }
