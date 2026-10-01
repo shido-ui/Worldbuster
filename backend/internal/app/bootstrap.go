@@ -110,7 +110,7 @@ func openDatabase(ctx context.Context) (*store.DB, func(), error) {
 	pingCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	if err := db.PingContext(pingCtx); err != nil {
-		db.Close()
+		_ = db.Close()
 		return nil, func() {}, err
 	}
 
