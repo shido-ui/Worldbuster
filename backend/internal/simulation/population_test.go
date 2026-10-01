@@ -15,3 +15,20 @@ func TestPopulationGenerator(t *testing.T) {
 		t.Fatal("duplicate ids")
 	}
 }
+
+func TestPopulationGeneratorIsDeterministic(t *testing.T) {
+	profile := PopulationProfile{
+		Names: []string{"Aster", "Mira", "Nox"},
+		PersonalityBias: Personality{Curiosity: 7, Aggression: 3},
+	}
+	first := NewPopulationGenerator(42, profile).Generate(20)
+	second := NewPopulationGenerator(42, profile).Generate(20)
+
+	for i := range first {
+		if first[i].ID != second[i].ID ||
+			first[i].Name != second[i].Name ||
+			first[i].Personality != second[i].Personality {
+			t.Fatalf("population differs at index %d", i)
+		}
+	}
+}
