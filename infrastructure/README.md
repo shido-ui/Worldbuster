@@ -4,16 +4,15 @@ This directory defines a local production-like baseline.
 
 ## Services
 - PostgreSQL: authoritative persistent state.
-- Redis: cache/session/rate-limit infrastructure.
 - Worldbuster API: Go server.
 
 ## Production rules
 1. Replace all example credentials through secrets/environment management.
 2. Use TLS at the edge and keep the database private.
-3. Do not expose PostgreSQL or Redis publicly.
+3. Do not expose PostgreSQL publicly.
 4. Back up PostgreSQL and periodically verify restoration.
 5. Set resource limits and monitor CPU, memory, database latency and API errors.
-6. Scale API instances only after shared state is moved to production Redis/database infrastructure.
+6. Scale API instances only after shared state is moved to production database infrastructure.
 7. Never treat client state as authoritative.
 
 ## Required secrets
