@@ -18,7 +18,7 @@ PostgreSQL is the authoritative persistent store when WORLDBUSTER_DATABASE_URL i
 | 012_skills.sql | player skills |
 | 013_unlocks.sql | player unlocks |
 
-At startup, ApplyMigrations creates schema_migrations, executes pending SQL migrations in lexical order, and records successful versions.
+At startup, ApplyMigrations acquires a PostgreSQL advisory lock, executes pending SQL migrations in lexical order, and records each version with a SHA-256 checksum. Previously applied migrations are verified against their stored checksum; legacy rows without checksums are backfilled once. A changed applied migration fails startup instead of silently drifting the schema.
 
 Identity flow: session -> account -> player profile. Authoritative operations resolve the player from the authenticated account rather than trusting a client-supplied player ID.
 
