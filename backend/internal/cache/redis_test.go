@@ -1,8 +1,6 @@
 package cache
 
-import (
-	"testing"
-)
+import "testing"
 
 func TestNewRequiresAddress(t *testing.T) {
 	if _, err := New("", "", 0); err == nil {
