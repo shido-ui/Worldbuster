@@ -44,30 +44,18 @@ func (m *Metrics) Handler(w http.ResponseWriter, _ *http.Request) {
 		average = m.totalNanos.Load() / requests
 	}
 	w.Header().Set("Content-Type", "text/plain; version=0.0.4")
-	fmt.Fprintf(w, "# HELP worldbuster_http_requests_total Total HTTP requests handled.
-")
-	fmt.Fprintf(w, "# TYPE worldbuster_http_requests_total counter
-")
-	fmt.Fprintf(w, "worldbuster_http_requests_total %d
-", requests)
-	fmt.Fprintf(w, "# HELP worldbuster_http_errors_total Total HTTP 5xx responses.
-")
-	fmt.Fprintf(w, "# TYPE worldbuster_http_errors_total counter
-")
-	fmt.Fprintf(w, "worldbuster_http_errors_total %d
-", m.errors.Load())
-	fmt.Fprintf(w, "# HELP worldbuster_http_in_flight Current HTTP requests in flight.
-")
-	fmt.Fprintf(w, "# TYPE worldbuster_http_in_flight gauge
-")
-	fmt.Fprintf(w, "worldbuster_http_in_flight %d
-", m.inFlight.Load())
-	fmt.Fprintf(w, "# HELP worldbuster_http_average_latency_nanoseconds Average HTTP latency.
-")
-	fmt.Fprintf(w, "# TYPE worldbuster_http_average_latency_nanoseconds gauge
-")
-	fmt.Fprintf(w, "worldbuster_http_average_latency_nanoseconds %d
-", average)
+	fmt.Fprintf(w, "# HELP worldbuster_http_requests_total Total HTTP requests handled.\n")
+	fmt.Fprintf(w, "# TYPE worldbuster_http_requests_total counter\n")
+	fmt.Fprintf(w, "worldbuster_http_requests_total %d\n", requests)
+	fmt.Fprintf(w, "# HELP worldbuster_http_errors_total Total HTTP 5xx responses.\n")
+	fmt.Fprintf(w, "# TYPE worldbuster_http_errors_total counter\n")
+	fmt.Fprintf(w, "worldbuster_http_errors_total %d\n", m.errors.Load())
+	fmt.Fprintf(w, "# HELP worldbuster_http_in_flight Current HTTP requests in flight.\n")
+	fmt.Fprintf(w, "# TYPE worldbuster_http_in_flight gauge\n")
+	fmt.Fprintf(w, "worldbuster_http_in_flight %d\n", m.inFlight.Load())
+	fmt.Fprintf(w, "# HELP worldbuster_http_average_latency_nanoseconds Average HTTP latency.\n")
+	fmt.Fprintf(w, "# TYPE worldbuster_http_average_latency_nanoseconds gauge\n")
+	fmt.Fprintf(w, "worldbuster_http_average_latency_nanoseconds %d\n", average)
 }
 
 type statusWriter struct {
