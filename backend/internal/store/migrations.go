@@ -21,7 +21,9 @@ func ApplyMigrations(ctx context.Context, db *DB, dir string) error {
 	if _, err := db.SQL.ExecContext(ctx, `SELECT pg_advisory_lock(hashtext('worldbuster:migrations'))`); err != nil {
 		return err
 	}
-	defer func() { _, _ = db.SQL.ExecContext(context.Background(), `SELECT pg_advisory_unlock(hashtext('worldbuster:migrations'))`) }()
+	defer func() {
+		_, _ = db.SQL.ExecContext(context.Background(), `SELECT pg_advisory_unlock(hashtext('worldbuster:migrations'))`)
+	}()
 
 	if _, err := db.SQL.ExecContext(ctx, `
 		CREATE TABLE IF NOT EXISTS schema_migrations (
