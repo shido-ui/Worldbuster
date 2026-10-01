@@ -107,7 +107,6 @@ jobs:
       - name: Fresh database migration test
         env:
           WORLDBUSTER_DATABASE_URL: postgres://worldbuster:worldbuster@localhost:5432/worldbuster?sslmode=disable
-          WORLDBUSTER_MIGRATIONS_DIR: "${{ github.workspace }}/database/migrations"
         run: go test ./backend/internal/store -run TestApplyMigrationsFreshPostgres -count=1
 
       - name: Fresh database migration and API smoke test
