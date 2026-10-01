@@ -79,7 +79,7 @@ func (r MissionRepository) Complete(ctx context.Context, missionID, playerID str
 	if err != nil {
 		return PlayerMissionRecord{}, economy.LedgerEntry{}, err
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 	var progress, target int64
 	var rewardCash, rewardXP int64
 	var status string
