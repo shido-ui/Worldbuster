@@ -8,7 +8,7 @@
 - TypeScript/React: web client
 - Python: isolated AI/analytics services
 - PostgreSQL: authoritative persistence
-- Redis: cache/session/rate limiting/hot state
+- Shared cache/session infrastructure: intentionally deferred until a concrete workload requires it
 
 ## Runtime
 Client -> API -> auth -> validation -> rules -> transaction -> domain events -> secondary systems -> response.
