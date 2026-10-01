@@ -59,7 +59,7 @@ func TestSlowSubscriberDoesNotBlockPublish(t *testing.T) {
 	defer s.Unsubscribe(ch)
 	for i := 0; i < 64; i++ {
 		done := make(chan struct{})
-		go func() { s.Publish("LIVE", "", "", nil); close(done) }()
+		go func() { _, _ = s.Publish("LIVE", "", "", nil); close(done) }()
 		select {
 		case <-done:
 		case <-time.After(time.Second):
