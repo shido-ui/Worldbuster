@@ -18,7 +18,9 @@ PostgreSQL is the authoritative persistent store when WORLDBUSTER_DATABASE_URL i
 | 012_skills.sql | player skills |
 | 013_unlocks.sql | player unlocks |
 
-At startup, ApplyMigrations acquires a PostgreSQL advisory lock, executes pending SQL migrations in lexical order, and records each version with a SHA-256 checksum. Previously applied migrations are verified against their stored checksum; legacy rows without checksums are backfilled once. A changed applied migration fails startup instead of silently drifting the schema.
+At startup, ApplyMigrations acquires a PostgreSQL advisory lock, executes pending SQL migrations in lexical order, and records each version with a SHA-256 checksum. Previously applied migrations are verified against their stored checksum; legacy rows without checksums are backfilled once. A changed applied migration fails startup instead of silently drifting the schema. Historical duplicate-number files are retained for compatibility with databases that may already record those filenames; they are not renamed in place. Migration reconciliation is additive rather than destructive.
+
+Versioned non-schema world content lives under `database/seed/content.json` and is loaded through `backend/internal/seed`. This keeps boot-time game content out of application wiring while allowing fixture validation in tests.
 
 Identity flow: session -> account -> player profile. Authoritative operations resolve the player from the authenticated account rather than trusting a client-supplied player ID.
 
