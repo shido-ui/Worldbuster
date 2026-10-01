@@ -11,9 +11,9 @@ import (
 
 type PlayerContext struct {
 	Auth      AuthBackend
-	Profile   store.PlayerRepository
-	Economy   store.EconomyRepository
-	Inventory store.InventoryRepository
+	Profile   store.PlayerStore
+	Economy   store.EconomyStore
+	Inventory store.InventoryStore
 }
 
 func NewPlayerContext(db *store.DB, authBackend AuthBackend) *PlayerContext {
