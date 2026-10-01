@@ -22,7 +22,7 @@ func (r EconomyBalanceRepository) Rebalance(ctx context.Context, limit int) (Bal
 	if err != nil {
 		return BalanceCycleResult{}, err
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 	rows, err := tx.QueryContext(ctx, `SELECT id::text,base_price,current_price,supply,demand FROM market_assets ORDER BY updated_at LIMIT $1 FOR UPDATE`, limit)
 	if err != nil {
 		return BalanceCycleResult{}, err
