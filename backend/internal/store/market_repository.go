@@ -117,7 +117,7 @@ func (r MarketRepository) Buy(ctx context.Context, buyer, orderID string, quanti
 	if err != nil {
 		return MarketOrder{}, err
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 	var x MarketOrder
 	err = tx.QueryRowContext(ctx, "SELECT id::text,asset_id::text,seller_account_id::text,quantity,unit_price,status,created_at FROM market_orders WHERE id=$1 FOR UPDATE", orderID).Scan(&x.ID, &x.AssetID, &x.SellerAccountID, &x.Quantity, &x.UnitPrice, &x.Status, &x.CreatedAt)
 	if err != nil {
@@ -239,7 +239,7 @@ func (r MarketRepository) Cancel(ctx context.Context, accountID, orderID string)
 	if err != nil {
 		return MarketOrder{}, err
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 	var x MarketOrder
 	if err = tx.QueryRowContext(ctx, "SELECT id::text,asset_id::text,seller_account_id::text,quantity,unit_price,status,created_at FROM market_orders WHERE id=$1 FOR UPDATE", orderID).Scan(&x.ID, &x.AssetID, &x.SellerAccountID, &x.Quantity, &x.UnitPrice, &x.Status, &x.CreatedAt); err != nil {
 		return MarketOrder{}, err
