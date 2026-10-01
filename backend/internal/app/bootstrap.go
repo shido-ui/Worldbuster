@@ -201,10 +201,8 @@ func buildDependencies(ctx context.Context, db *store.DB, logger *slog.Logger) (
 		if err := jobService.Employ(character.ID, "general-work", "worker", 0, 0); err != nil {
 			return Dependencies{}, nil, fmt.Errorf("seed employment for %s: %w", character.ID, err)
 		}
-		if db.SQL != nil {
-			if err := simRepo.EnsureCharacter(ctx, character); err != nil {
-				return Dependencies{}, nil, fmt.Errorf("persist simulation character %s: %w", character.ID, err)
-			}
+		if err := simRepo.EnsureCharacter(ctx, character); err != nil {
+			return Dependencies{}, nil, fmt.Errorf("persist simulation character %s: %w", character.ID, err)
 		}
 	}
 
@@ -219,9 +217,7 @@ func buildDependencies(ctx context.Context, db *store.DB, logger *slog.Logger) (
 			logger.Error("simulation persistence failed", "operation", operation, "character", characterID, "error", err)
 		},
 	}
-	if db.SQL != nil {
-		runner.Persistence = simRepo
-	}
+	runner.Persistence = simRepo
 
 	runtime := simulation.NewRuntime(
 		runner,
@@ -230,8 +226,7 @@ func buildDependencies(ctx context.Context, db *store.DB, logger *slog.Logger) (
 		},
 	)
 
-	if db.SQL != nil {
-		prodRepo := store.ProductionRepository{DB: db}
+	prodRepo := store.ProductionRepository{DB: db}
 		for i, character := range generated {
 			if i >= 5 {
 				break
@@ -253,7 +248,6 @@ func buildDependencies(ctx context.Context, db *store.DB, logger *slog.Logger) (
 				return Dependencies{}, nil, fmt.Errorf("seed NPC business inventory: %w", err)
 			}
 		}
-	}
 
 	return Dependencies{
 			DB: db, Auth: authBackend, World: ws, Travel: travel,
@@ -276,10 +270,6 @@ func buildSchedulerJobs(deps Dependencies, runtime *simulationRuntime, logger *s
 				return nil
 			},
 		},
-	}
-
-	if deps.DB.SQL == nil {
-		return jobs
 	}
 
 	jobs = append(jobs,
