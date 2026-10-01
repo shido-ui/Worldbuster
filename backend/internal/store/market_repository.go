@@ -157,7 +157,7 @@ func (r MarketRepository) Buy(ctx context.Context, buyer, orderID string, quanti
 		}
 	}
 	if err := rows.Err(); err != nil {
-		rows.Close()
+		_ = rows.Close()
 		return MarketOrder{}, err
 	}
 	if err := rows.Close(); err != nil {
