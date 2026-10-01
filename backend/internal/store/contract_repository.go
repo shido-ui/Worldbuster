@@ -29,7 +29,7 @@ func (r ContractRepository) ListOpen(ctx context.Context) ([]ContractRecord, err
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	out := []ContractRecord{}
 	for rows.Next() {
 		var x ContractRecord
