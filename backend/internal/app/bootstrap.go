@@ -24,6 +24,7 @@ import (
 	"github.com/shido-ui/Worldbuster/backend/internal/organization"
 	"github.com/shido-ui/Worldbuster/backend/internal/progression"
 	"github.com/shido-ui/Worldbuster/backend/internal/scheduler"
+	"github.com/shido-ui/Worldbuster/backend/internal/seed"
 	"github.com/shido-ui/Worldbuster/backend/internal/simulation"
 	"github.com/shido-ui/Worldbuster/backend/internal/social"
 	"github.com/shido-ui/Worldbuster/backend/internal/store"
@@ -148,27 +149,25 @@ func buildDependencies(ctx context.Context, db *store.DB, logger *slog.Logger) (
 	socialService := social.NewService()
 	eventService := events.NewService()
 
-	if err := inventoryService.RegisterItem(inventory.Item{
-		ID: "water", Name: "Water", Category: "supply", Stackable: true, MaxStack: 10,
-	}); err != nil {
-		return Dependencies{}, nil, fmt.Errorf("seed water item: %w", err)
+	seedDir := os.Getenv("WORLDBUSTER_SEED_DIR")
+	content, err := seed.LoadContent(seedDir)
+	if err != nil {
+		return Dependencies{}, nil, err
 	}
-	if err := jobService.Register(job.Job{
-		ID:         "general-work",
-		Name:       "General Workforce",
-		Department: "Operations",
-		Positions: []job.Position{{
-			ID: "worker", JobID: "general-work", Name: "Worker", Level: 1,
-			BaseSalary: 100, RequiredEducation: 0, RequiredStat: 0,
-		}},
-	}); err != nil {
-		return Dependencies{}, nil, fmt.Errorf("seed general job: %w", err)
+	for _, item := range content.Items {
+		if err := inventoryService.RegisterItem(item); err != nil {
+			return Dependencies{}, nil, fmt.Errorf("seed item %s: %w", item.ID, err)
+		}
 	}
-	if err := progressionService.RegisterCourse(progression.Course{
-		ID: "orientation", Name: "World Orientation", DurationHours: 1,
-		EducationGain: 1, RequiredLevel: 1,
-	}); err != nil {
-		return Dependencies{}, nil, fmt.Errorf("seed orientation course: %w", err)
+	for _, seededJob := range content.Jobs {
+		if err := jobService.Register(seededJob); err != nil {
+			return Dependencies{}, nil, fmt.Errorf("seed job %s: %w", seededJob.ID, err)
+		}
+	}
+	for _, course := range content.Courses {
+		if err := progressionService.RegisterCourse(course); err != nil {
+			return Dependencies{}, nil, fmt.Errorf("seed course %s: %w", course.ID, err)
+		}
 	}
 
 	var authBackend api.AuthBackend
@@ -186,8 +185,10 @@ func buildDependencies(ctx context.Context, db *store.DB, logger *slog.Logger) (
 		Travel: travel, Locations: locations,
 	}
 
-	generator := simulation.NewPopulationGenerator(42, simulation.PopulationProfile{
-		Names: []string{"Aster", "Vale", "Rin", "Kade", "Mira", "Nox", "Sora", "Iris"},
+	generator := simulation.NewPopulationGenerator(content.Population.Seed, simulation.PopulationProfile{
+		Names:           content.Population.Names,
+		JobWeights:      content.Population.JobWeights,
+		PersonalityBias: content.Population.PersonalityBias,
 	})
 	populationSize := 50
 	if raw := os.Getenv("WORLDBUSTER_SIM_POPULATION"); raw != "" {
