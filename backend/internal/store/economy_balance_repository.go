@@ -27,7 +27,7 @@ func (r EconomyBalanceRepository) Rebalance(ctx context.Context, limit int) (Bal
 	if err != nil {
 		return BalanceCycleResult{}, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	out := BalanceCycleResult{}
 	for rows.Next() {
 		var id string
