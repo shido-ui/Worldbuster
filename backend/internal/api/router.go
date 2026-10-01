@@ -38,6 +38,8 @@ type Router struct {
 	news                    *NewsAPI
 	achievements            *AchievementsAPI
 	admin                   *AdminAPI
+	metrics                 *Metrics
+	ready                   ReadinessCheck
 	world                   *world.Service
 	auth                    AuthBackend
 	travel                  *world.TravelService
@@ -56,6 +58,10 @@ func NewRouter(w *world.Service, a AuthBackend, t *world.TravelService, i *inven
 func (r *Router) Handler() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/health", r.health)
+	mux.HandleFunc("/ready", r.readyHandler)
+	if r.metrics != nil {
+		mux.HandleFunc("/metrics", r.metrics.Handler)
+	}
 	mux.HandleFunc("/api/v1/world", r.worldState)
 	if r.playerContext != nil {
 		mux.HandleFunc("/api/v1/player/dashboard", r.playerDashboard)
@@ -184,7 +190,7 @@ func (r *Router) Handler() http.Handler {
 	mux.HandleFunc("/api/v1/auth/login", ah.login)
 	mux.HandleFunc("/api/v1/auth/me", ah.me)
 	mux.HandleFunc("/api/v1/auth/logout", ah.logout)
-	return securityHeaders(RateLimitMiddleware(NewRateLimiter(120, time.Minute), mux))
+	return RequestIDMiddleware(securityHeaders(RateLimitMiddleware(NewRateLimiter(120, time.Minute), metricsHandler(r.metrics, mux))))
 }
 func (r *Router) health(w http.ResponseWriter, _ *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{"status": "ok", "service": "worldbuster", "time": time.Now().UTC()})
@@ -257,3 +263,32 @@ func (r *Router) WithNews(api *NewsAPI) *Router { r.news = api; return r }
 func (r *Router) WithAchievements(api *AchievementsAPI) *Router { r.achievements = api; return r }
 
 func (r *Router) WithAdmin(api *AdminAPI) *Router { r.admin = api; return r }
+
+func metricsHandler(metrics *Metrics, next http.Handler) http.Handler {
+	if metrics == nil {
+		return next
+	}
+	return metrics.Middleware(next)
+}
+
+func (r *Router) readyHandler(w http.ResponseWriter, req *http.Request) {
+	if r.ready == nil {
+		writeJSON(w, http.StatusServiceUnavailable, map[string]string{"status": "not_ready"})
+		return
+	}
+	if err := r.ready(req.Context()); err != nil {
+		writeJSON(w, http.StatusServiceUnavailable, map[string]string{"status": "not_ready", "error": err.Error()})
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]string{"status": "ready"})
+}
+
+func (r *Router) WithMetrics(metrics *Metrics) *Router {
+	r.metrics = metrics
+	return r
+}
+
+func (r *Router) WithReadiness(check ReadinessCheck) *Router {
+	r.ready = check
+	return r
+}
