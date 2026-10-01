@@ -227,27 +227,27 @@ func buildDependencies(ctx context.Context, db *store.DB, logger *slog.Logger) (
 	)
 
 	prodRepo := store.ProductionRepository{DB: db}
-		for i, character := range generated {
-			if i >= 5 {
-				break
-			}
-			businessID := simulation.DeterministicBusinessID(character.ID, simulation.BusinessProduction)
-			business := simulation.BusinessState{
-				ID: businessID, OwnerID: character.ID, Name: character.Name + " Works",
-				Type: simulation.BusinessProduction, Cash: 500, Level: 1, Active: true,
-			}
-			persistedID, err := prodRepoCreate(db, business)
-			if err != nil {
-				return Dependencies{}, nil, fmt.Errorf("seed NPC business: %w", err)
-			}
-			input := "raw-water"
-			if i%2 == 1 {
-				input = "fiber"
-			}
-			if err := prodRepo.SeedBusinessInventory(ctx, persistedID, input, 25); err != nil {
-				return Dependencies{}, nil, fmt.Errorf("seed NPC business inventory: %w", err)
-			}
+	for i, character := range generated {
+		if i >= 5 {
+			break
 		}
+		businessID := simulation.DeterministicBusinessID(character.ID, simulation.BusinessProduction)
+		business := simulation.BusinessState{
+			ID: businessID, OwnerID: character.ID, Name: character.Name + " Works",
+			Type: simulation.BusinessProduction, Cash: 500, Level: 1, Active: true,
+		}
+		persistedID, err := prodRepoCreate(db, business)
+		if err != nil {
+			return Dependencies{}, nil, fmt.Errorf("seed NPC business: %w", err)
+		}
+		input := "raw-water"
+		if i%2 == 1 {
+			input = "fiber"
+		}
+		if err := prodRepo.SeedBusinessInventory(ctx, persistedID, input, 25); err != nil {
+			return Dependencies{}, nil, fmt.Errorf("seed NPC business inventory: %w", err)
+		}
+	}
 
 	return Dependencies{
 			DB: db, Auth: authBackend, World: ws, Travel: travel,
