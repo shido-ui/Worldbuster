@@ -16,6 +16,7 @@ import (
 	_ "github.com/lib/pq"
 
 	"github.com/shido-ui/Worldbuster/backend/internal/api"
+	"github.com/shido-ui/Worldbuster/backend/internal/cache"
 	"github.com/shido-ui/Worldbuster/backend/internal/economy"
 	"github.com/shido-ui/Worldbuster/backend/internal/events"
 	"github.com/shido-ui/Worldbuster/backend/internal/inventory"
@@ -145,6 +146,10 @@ func buildDependencies(ctx context.Context, db *store.DB, logger *slog.Logger) (
 	socialService := social.NewService()
 	eventService := events.NewService()
 
+	redisClient, err := buildRedisClient(ctx)
+	if err != nil {
+		return Dependencies{}, nil, err
+	}
 	seedDir := os.Getenv("WORLDBUSTER_SEED_DIR")
 	content, err := seed.LoadContent(seedDir)
 	if err != nil {
@@ -250,7 +255,7 @@ func buildDependencies(ctx context.Context, db *store.DB, logger *slog.Logger) (
 	}
 
 	return Dependencies{
-			DB: db, Auth: authBackend, World: ws, Travel: travel,
+			DB: db, Cache: redisClient, Auth: authBackend, World: ws, Travel: travel,
 			Inventory: inventoryService, Economy: economyService,
 			Organization: organizationService, Job: jobService,
 			Progression: progressionService, Social: socialService, Events: eventService,
@@ -381,4 +386,21 @@ func publishEvent(service *events.Service, eventType, actorID, targetID string, 
 	if _, err := service.Publish(eventType, actorID, targetID, payload); err != nil {
 		logger.Error("event publish failed", "eventType", eventType, "error", err)
 	}
+}
+
+func buildRedisClient(ctx context.Context) (*cache.Client, error) {
+	addr := os.Getenv("WORLDBUSTER_REDIS_ADDR")
+	if addr == "" {
+		return nil, nil
+	}
+	password := os.Getenv("WORLDBUSTER_REDIS_PASSWORD")
+	client, err := cache.New(addr, password, 0)
+	if err != nil {
+		return nil, err
+	}
+	if err := client.Ping(ctx); err != nil {
+		_ = client.Close()
+		return nil, fmt.Errorf("redis startup failed: %w", err)
+	}
+	return client, nil
 }
