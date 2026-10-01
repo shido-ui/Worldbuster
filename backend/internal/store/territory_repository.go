@@ -32,7 +32,7 @@ func (r TerritoryRepository) List(ctx context.Context) ([]TerritoryRecord, error
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	out := []TerritoryRecord{}
 	for rows.Next() {
 		var x TerritoryRecord
