@@ -27,7 +27,7 @@ func (r WorldEventRepository) Definitions(ctx context.Context) ([]WorldEventDefi
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	out := []WorldEventDefinition{}
 	for rows.Next() {
 		var x WorldEventDefinition
@@ -70,7 +70,7 @@ func (r WorldEventRepository) Recent(ctx context.Context) ([]WorldEventInstance,
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	out := []WorldEventInstance{}
 	for rows.Next() {
 		var x WorldEventInstance
