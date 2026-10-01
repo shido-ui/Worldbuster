@@ -85,7 +85,7 @@ func (h *eventHandler) stream(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if _, _, err := h.context.Resolve(r.Context(), r); err != nil {
-		http.Error(w, "authentication required", 401)
+		http.Error(w, "authentication required", http.StatusUnauthorized)
 		return
 	}
 	f, ok := w.(http.Flusher)
