@@ -65,7 +65,6 @@ func fmtUUID(b [16]byte) string {
 	return string(out)
 }
 
-
 func DeterministicBusinessID(ownerID string, businessType BusinessType) string {
 	sum := sha256.Sum256([]byte("worldbuster:business:" + ownerID + ":" + string(businessType)))
 	var b [16]byte
