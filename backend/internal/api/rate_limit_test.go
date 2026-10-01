@@ -7,8 +7,11 @@ import (
 
 func TestRateLimiter(t *testing.T) {
 	r := NewRateLimiter(2, time.Minute)
-	if !r.Allow("x") || !r.Allow("x") {
-		t.Fatal("expected first two requests allowed")
+	if !r.Allow("x") {
+		t.Fatal("expected first request allowed")
+	}
+	if !r.Allow("x") {
+		t.Fatal("expected second request allowed")
 	}
 	if r.Allow("x") {
 		t.Fatal("expected third request blocked")
