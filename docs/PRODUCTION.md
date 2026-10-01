@@ -4,7 +4,7 @@
 - [ ] TLS termination configured
 - [ ] Strong database credentials stored as secrets
 - [ ] PostgreSQL backups configured and restore tested
-- [ ] Redis persistence/availability strategy selected
+- [ ] Shared-state/cache infrastructure selected when required
 - [ ] API health checks wired to deployment platform
 - [ ] CPU/memory/database metrics collected
 - [ ] Error logs centralized
