@@ -27,7 +27,7 @@ func (r JobRepository) List(ctx context.Context) ([]JobRecord, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	out := []JobRecord{}
 	for rows.Next() {
 		var j JobRecord
@@ -95,7 +95,7 @@ func (r JobRepository) SettleDueSalaries(ctx context.Context, intervalMinutes in
 		if err != nil {
 			return err
 		}
-		defer rows.Close()
+		defer func() { _ = rows.Close() }()
 		type due struct {
 			player, account, job string
 			salary               int64
