@@ -39,7 +39,25 @@ func TestApplyMigrationsFreshPostgres(t *testing.T) {
 	db := New(sqlDB)
 	migrationDir := os.Getenv("WORLDBUSTER_MIGRATIONS_DIR")
 	if migrationDir == "" {
-		migrationDir = filepath.Join("..", "..", "..", "database", "migrations")
+		migrationDir = filepath.Join("database", "migrations")
+	}
+	if info, statErr := os.Stat(migrationDir); statErr != nil || !info.IsDir() {
+		wd, err := os.Getwd()
+		if err != nil {
+			t.Fatal(err)
+		}
+		migrationDir = ""
+		for i := 0; i < 8; i++ {
+			candidate := filepath.Join(wd, "database", "migrations")
+			if info, statErr := os.Stat(candidate); statErr == nil && info.IsDir() {
+				migrationDir = candidate
+				break
+			}
+			wd = filepath.Dir(wd)
+		}
+		if migrationDir == "" {
+			t.Fatal("could not locate database/migrations")
+		}
 	}
 
 	if err := ApplyMigrations(ctx, db, migrationDir); err != nil {
