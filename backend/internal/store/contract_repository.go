@@ -55,7 +55,7 @@ func (r ContractRepository) Accept(ctx context.Context, id, playerID string) (Co
 	if err != nil {
 		return ContractClaimRecord{}, err
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 	var x ContractClaimRecord
 	err = tx.QueryRowContext(ctx, "INSERT INTO contract_claims(contract_id,player_id) SELECT id,$2 FROM contracts WHERE id=$1 AND status='OPEN' AND (expires_at IS NULL OR expires_at>NOW()) RETURNING contract_id::text,player_id::text,accepted_at,completed_at", id, playerID).Scan(&x.ContractID, &x.PlayerID, &x.AcceptedAt, &x.CompletedAt)
 	if err == sql.ErrNoRows {
