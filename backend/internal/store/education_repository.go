@@ -34,7 +34,7 @@ func (r EducationRepository) ListCourses(ctx context.Context) ([]CourseRecord, e
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	out := []CourseRecord{}
 	for rows.Next() {
 		var c CourseRecord
@@ -101,7 +101,7 @@ func (r EducationRepository) CompleteDue(ctx context.Context) (int, error) {
 		if err != nil {
 			return err
 		}
-		defer rows.Close()
+		defer func() { _ = rows.Close() }()
 		type due struct {
 			player string
 			course string
