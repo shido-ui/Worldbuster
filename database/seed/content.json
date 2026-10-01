@@ -1,0 +1,68 @@
+{
+  "items": [
+    {
+      "id": "water",
+      "name": "Water",
+      "category": "supply",
+      "stackable": true,
+      "maxStack": 10
+    }
+  ],
+  "jobs": [
+    {
+      "id": "general-work",
+      "name": "General Workforce",
+      "department": "Operations",
+      "positions": [
+        {
+          "id": "worker",
+          "jobId": "general-work",
+          "name": "Worker",
+          "level": 1,
+          "baseSalary": 100,
+          "requiredEducation": 0,
+          "requiredStat": 0
+        }
+      ]
+    }
+  ],
+  "courses": [
+    {
+      "id": "orientation",
+      "name": "World Orientation",
+      "durationHours": 1,
+      "educationGain": 1,
+      "requiredLevel": 1
+    }
+  ],
+  "population": {
+    "seed": 42,
+    "names": [
+      "Aster",
+      "Vale",
+      "Rin",
+      "Kade",
+      "Mira",
+      "Nox",
+      "Sora",
+      "Iris",
+      "Tarin",
+      "Veya",
+      "Orin",
+      "Luma",
+      "Cael",
+      "Neri",
+      "Seth",
+      "Elia"
+    ],
+    "jobWeights": {
+      "general-work": 100
+    },
+    "personalityBias": {
+      "curiosity": 5,
+      "sociability": 5,
+      "riskTolerance": 5,
+      "discipline": 5
+    }
+  }
+}
