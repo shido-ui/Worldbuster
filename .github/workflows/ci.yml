@@ -20,6 +20,10 @@ jobs:
         run: |
           go mod tidy
           git diff --exit-code -- go.mod go.sum
+      - name: Go lint
+        uses: golangci/golangci-lint-action@v8
+        with:
+          version: v2.4
       - name: Go test
         run: go test ./...
       - name: Go race test
@@ -90,7 +94,10 @@ jobs:
         with:
           go-version: "1.24"
           cache: false
-      - run: go mod tidy
+      - name: Verify Go modules are tidy
+        run: |
+          go mod tidy
+          git diff --exit-code -- go.mod go.sum
       - name: Build server
         run: go build -o /tmp/worldbuster ./backend/cmd/worldbuster
       - name: Fresh database migration and API smoke test
