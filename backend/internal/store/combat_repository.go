@@ -30,7 +30,7 @@ func (r CombatRepository) Resolve(ctx context.Context, attackerID, defenderID st
 	if err != nil {
 		return CombatRecord{}, err
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 	var a, d struct {
 		level, strength, defense, speed, endurance, energy int
 		power, defenseBonus, speedBonus                    int
